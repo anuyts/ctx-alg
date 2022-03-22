@@ -3,8 +3,13 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Data.List
+open import Cubical.Categories.Category
+open import Cubical.Categories.Constructions.TypeProduct
+open import Cubical.Categories.Instances.Sets
 
 module Mat.Signature where
+
+open Category
 
 record Signature : Type where
   no-eta-equality
@@ -20,6 +25,7 @@ record Signature : Type where
   Precarrier : Type
   Precarrier = Sort → hSet _
 
-  --catPrecarrier : 
+  catPrecarrier : Category _ _
+  catPrecarrier = ΠC Sort λ _ → SET _
 
 open Signature {{...}} public

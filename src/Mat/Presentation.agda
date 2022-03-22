@@ -23,44 +23,51 @@ record Presentation {{sign : Signature}} : Type where
     Operation : Arity → Sort → Type
     isSetOperation : {sortsIn : Arity} → {sortOut : Sort} → isSet (Operation sortsIn sortOut)
 
-  record AppliedOperation (hSetSortsIn : Precarrier) (sortOut : Sort) : Type where
+  record AppliedOperation (precarrier : Precarrier) (sortOut : Sort) : Type where
     eta-equality
     constructor applyOperation
     field
       {sortsMid} : Arity
       operation : Operation sortsMid sortOut
-      args : ListP (λ sortMid → typ (hSetSortsIn sortMid)) sortsMid
+      args : ListP (λ sortMid → typ (precarrier sortMid)) sortsMid
   open AppliedOperation
 
-  RepAppliedOperation : (hSetSortsIn : Precarrier) (sortOut : Sort) → Type
-  RepAppliedOperation hSetSortsIn sortOut =
-    Σ[ sortsMid ∈ Arity ] Operation sortsMid sortOut × ListP (λ sortMid → typ (hSetSortsIn sortMid)) sortsMid
+  RepAppliedOperation : (precarrier : Precarrier) (sortOut : Sort) → Type
+  RepAppliedOperation precarrier sortOut =
+    Σ[ sortsMid ∈ Arity ] Operation sortsMid sortOut × ListP (λ sortMid → typ (precarrier sortMid)) sortsMid
 
-  isoRepAppliedOperation : (hSetSortsIn : Precarrier) (sortOut : Sort)
-    → AppliedOperation hSetSortsIn sortOut ≅ RepAppliedOperation hSetSortsIn sortOut
-  fun (isoRepAppliedOperation hSetSortsIn sortOut) (applyOperation o args) = _ , o , args
-  inv (isoRepAppliedOperation hSetSortsIn sortOut) (_ , o , args) = applyOperation o args
-  rightInv (isoRepAppliedOperation hSetSortsIn sortOut) (_ , o , args) = refl
-  leftInv (isoRepAppliedOperation hSetSortsIn sortOut) (applyOperation o args) = refl
+  isoRepAppliedOperation : (precarrier : Precarrier) (sortOut : Sort)
+    → AppliedOperation precarrier sortOut ≅ RepAppliedOperation precarrier sortOut
+  fun (isoRepAppliedOperation precarrier sortOut) (applyOperation o args) = _ , o , args
+  inv (isoRepAppliedOperation precarrier sortOut) (_ , o , args) = applyOperation o args
+  rightInv (isoRepAppliedOperation precarrier sortOut) (_ , o , args) = refl
+  leftInv (isoRepAppliedOperation precarrier sortOut) (applyOperation o args) = refl
 
-  pathRepAppliedOperation : (hSetSortsIn : Precarrier) (sortOut : Sort)
-    → AppliedOperation hSetSortsIn sortOut ≡ RepAppliedOperation hSetSortsIn sortOut
-  pathRepAppliedOperation hSetSortsIn sortOut = ua (isoToEquiv (isoRepAppliedOperation hSetSortsIn sortOut))
+  pathRepAppliedOperation : (precarrier : Precarrier) (sortOut : Sort)
+    → AppliedOperation precarrier sortOut ≡ RepAppliedOperation precarrier sortOut
+  pathRepAppliedOperation precarrier sortOut = ua (isoToEquiv (isoRepAppliedOperation precarrier sortOut))
 
-  isSetRepAppliedOperation : (hSetSortsIn : Precarrier) (sortOut : Sort) → isSet (RepAppliedOperation hSetSortsIn sortOut)
-  isSetRepAppliedOperation hSetSortsIn sortOut =
+  isSetRepAppliedOperation : (precarrier : Precarrier) (sortOut : Sort) → isSet (RepAppliedOperation precarrier sortOut)
+  isSetRepAppliedOperation precarrier sortOut =
     isOfHLevelΣ 2 isSetArity (λ sortsMid →
-      isOfHLevelProd 2 isSetOperation (isOfHLevelSucSuc-ListP 0 (λ sortMid → str (hSetSortsIn sortMid)))
+      isOfHLevelProd 2 isSetOperation (isOfHLevelSucSuc-ListP 0 (λ sortMid → str (precarrier sortMid)))
     )
 
-  isSetAppliedOperation : ∀ {hSetSortsIn sortOut} → isSet (AppliedOperation hSetSortsIn sortOut)
-  isSetAppliedOperation {hSetSortsIn} {sortOut} =
-    subst⁻ isSet (pathRepAppliedOperation hSetSortsIn sortOut) (isSetRepAppliedOperation hSetSortsIn sortOut)
+  isSetAppliedOperation : ∀ {precarrier sortOut} → isSet (AppliedOperation precarrier sortOut)
+  isSetAppliedOperation {precarrier} {sortOut} =
+    subst⁻ isSet (pathRepAppliedOperation precarrier sortOut) (isSetRepAppliedOperation precarrier sortOut)
 
-  ftrAppliedOperation : Functor (SET _) (SET _)
-  F-ob ftrAppliedOperation = {!AppliedOperation A , ?!}
-  F-hom ftrAppliedOperation = {!!}
-  F-id ftrAppliedOperation = {!!}
-  F-seq ftrAppliedOperation = {!!}
+  precarrierAppliedOperation : Precarrier → Precarrier
+  fst (precarrierAppliedOperation precarrier sortOut) = AppliedOperation precarrier sortOut
+  snd (precarrierAppliedOperation precarrier sortOut) = isSetAppliedOperation
+
+  ftrAppliedOperation : Functor catPrecarrier catPrecarrier
+  F-ob ftrAppliedOperation = precarrierAppliedOperation
+  F-hom ftrAppliedOperation {x = precX} {y = precY} φ sortOut (applyOperation {sortsMid} o args) =
+    applyOperation o (mapOverIdfun φ sortsMid args)
+  F-id ftrAppliedOperation {x = precX} i sortOut (applyOperation {sortsMid} o args) =
+    applyOperation o (mapOverIdfun-idfun sortsMid i args)
+  F-seq ftrAppliedOperation {x = precX} {y = precY} {z = precZ} φ χ i sortOut (applyOperation {sortsMid} o args) =
+    applyOperation o (mapOverIdfun-∘ χ φ sortsMid i args)
 
 open Presentation {{...}} public
