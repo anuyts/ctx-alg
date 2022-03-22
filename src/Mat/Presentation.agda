@@ -9,6 +9,7 @@ open import Cubical.Foundations.Structure
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.Instances.Sets
+open import Cubical.Categories.Constructions.TypeProduct
 
 open import Mat.Signature
 
