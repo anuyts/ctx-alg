@@ -3,7 +3,7 @@
 open import Cubical.Foundations.Everything renaming (Iso to _≅_)
 open import Cubical.Data.List
 open import Cubical.Data.List.Properties
-open import Cubical.Data.ListP
+open import Cubical.Data.List.Dependent
 open import Cubical.Data.Prod
 open import Cubical.Foundations.Structure
 open import Cubical.Categories.Category
@@ -49,7 +49,7 @@ record Presentation {{sign : Signature}} : Type where
   isSetRepAppliedOperation : (hSetSortsIn : Precarrier) (sortOut : Sort) → isSet (RepAppliedOperation hSetSortsIn sortOut)
   isSetRepAppliedOperation hSetSortsIn sortOut =
     isOfHLevelΣ 2 isSetArity (λ sortsMid →
-      isOfHLevelProd 2 isSetOperation (isSetListP (λ sortMid → str (hSetSortsIn sortMid)))
+      isOfHLevelProd 2 isSetOperation (isOfHLevelSucSuc-ListP 0 (λ sortMid → str (hSetSortsIn sortMid)))
     )
 
   isSetAppliedOperation : ∀ {hSetSortsIn sortOut} → isSet (AppliedOperation hSetSortsIn sortOut)

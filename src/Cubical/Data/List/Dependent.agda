@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --safe #-}
+{-# OPTIONS --safe --cubical #-}
 
 open import Cubical.Foundations.Everything renaming (Iso to _≅_)
 open import Cubical.Data.List
@@ -6,7 +6,7 @@ open import Cubical.Data.Unit
 open import Cubical.Data.Prod
 open import Cubical.Data.Nat
 
-module Cubical.Data.ListP where
+module Cubical.Data.List.Dependent where
 
 open _≅_
 
@@ -14,6 +14,7 @@ data ListP {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) : (as : List A) →
   [] : ListP B []
   _∷_ : {x : A} (y : B x) {xs : List A} (ys : ListP B xs) → ListP B (x ∷ xs)
 
+-- Represent ListP via known operations in order to derive properties more easily.
 RepListP : ∀ {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) (as : List A) → Type (ℓ-max ℓA ℓB)
 RepListP B [] = Lift Unit
 RepListP B (a ∷ as) = B a × RepListP B as
@@ -34,21 +35,19 @@ equivRepListP B as = isoToEquiv (isoRepListP B as)
 pathRepListP : ∀ {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) (as : List A) → ListP B as ≡ RepListP B as
 pathRepListP B as = ua (equivRepListP B as)
 
-isOfHLevelRepListP : ∀ {ℓA ℓB} (n : HLevel)
-  → {A : Type ℓA}
-  → {B : A → Type ℓB} → ((a : A) → isOfHLevel (suc (suc n)) (B a))
-  → (as : List A)
-  → isOfHLevel (suc (suc n)) (RepListP B as)
-isOfHLevelRepListP n isHB [] = isOfHLevelLift (suc (suc n)) (isOfHLevelUnit (suc (suc n)))
-isOfHLevelRepListP n isHB (a ∷ as) = isOfHLevelProd (suc (suc n)) (isHB a) (isOfHLevelRepListP n isHB as)
+private
+  isOfHLevelSucSuc-RepListP : ∀ {ℓA ℓB} (n : HLevel)
+    → {A : Type ℓA}
+    → {B : A → Type ℓB} → ((a : A) → isOfHLevel (suc (suc n)) (B a))
+    → (as : List A)
+    → isOfHLevel (suc (suc n)) (RepListP B as)
+  isOfHLevelSucSuc-RepListP n isHB [] = isOfHLevelLift (suc (suc n)) (isOfHLevelUnit (suc (suc n)))
+  isOfHLevelSucSuc-RepListP n isHB (a ∷ as) = isOfHLevelProd (suc (suc n)) (isHB a) (isOfHLevelSucSuc-RepListP n isHB as)
 
-isOfHLevelListP : ∀ {ℓA ℓB} (n : HLevel)
+isOfHLevelSucSuc-ListP : ∀ {ℓA ℓB} (n : HLevel)
   → {A : Type ℓA}
   → {B : A → Type ℓB} → ((a : A) → isOfHLevel (suc (suc n)) (B a))
   → {as : List A}
   → isOfHLevel (suc (suc n)) (ListP B as)
-isOfHLevelListP n {A} {B} isHB {as} =
-  transport⁻ (λ i → isOfHLevel (suc (suc n)) (pathRepListP B as i)) (isOfHLevelRepListP n isHB as)
-
-isSetListP : ∀ {ℓA ℓB} {A : Type ℓA} {B : A → Type ℓB} → (∀ a → isSet (B a)) → ∀ {as} → isSet (ListP B as)
-isSetListP isSetB = isOfHLevelListP 0 isSetB
+isOfHLevelSucSuc-ListP n {A} {B} isHB {as} =
+  subst⁻ (isOfHLevel (suc (suc n))) (pathRepListP B as) (isOfHLevelSucSuc-RepListP n isHB as)
