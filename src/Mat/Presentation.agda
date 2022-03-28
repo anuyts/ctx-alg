@@ -29,6 +29,11 @@ record Presentation {{sign : Signature}} : Type where
     Operation : Sort → Type
     arity : ∀ {sortOut} → Operation sortOut → Arity
     isSetOperation : {sortOut : Sort} → isSet (Operation sortOut)
+  --  Equation : Type
+  --  XEquation : Equation → Type
+
+  --field
+  --  lhsRep : (e : Equation) → {!!}
 
   record Term1 (X : MType) (sortOut : Sort) : Type where
     inductive
