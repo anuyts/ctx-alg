@@ -20,10 +20,12 @@ open import Cubical.Categories.Constructions.TypeProduct
 open import Mat.Signature
 open import Mat.Free.Presentation
 
-module Mat.Free.Term {{sign : Signature}} {{fmat : PresentationF}} where
+module Mat.Free.Term {sign : Signature} (fmat : PresentationF sign) where
 
 open _≅_
 open Functor
+open Signature sign
+open PresentationF fmat
 
 data TermF (X : MType) : (sortOut : Sort) → Type
 isSetTermF : (msetX : MSet) (sortOut : Sort) → isSet (TermF (mtyp msetX) sortOut)

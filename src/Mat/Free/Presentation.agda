@@ -20,7 +20,9 @@ module Mat.Free.Presentation where
 open _≅_
 open Functor
 
-record PresentationF {{sign : Signature}} : Type where
+record PresentationF (sign : Signature) : Type where
+  open Signature sign
+
   field
     Operation : Sort → Type
     arity : ∀ {sortOut} → Operation sortOut → Arity
@@ -72,5 +74,3 @@ record PresentationF {{sign : Signature}} : Type where
     term1 o λ p → φ (arity o ! p) (args p)
   F-id ftrTerm1 {x = msetX} = refl
   F-seq ftrTerm1 {x = msetX} {y = msetY} {z = precZ} φ χ = refl
-
-open PresentationF {{...}} public

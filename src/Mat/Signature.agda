@@ -42,5 +42,3 @@ record Signature : Type where
 
   isSetArguments : ∀ precarrier arity → isSet (Arguments (mtyp precarrier) arity)
   isSetArguments precarrier arity = isOfHLevelΠ 2 λ p → str (precarrier (arity ! p))
-
-open Signature {{...}} public
