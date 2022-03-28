@@ -23,6 +23,7 @@ open import Mat.Free.Presentation
 module Mat.Free.Term {{sign : Signature}} {{fmat : PresentationF}} where
 
 open _≅_
+open Functor
 
 data TermF (X : MType) : (sortOut : Sort) → Type
 isSetTermF : (msetX : MSet) (sortOut : Sort) → isSet (TermF (mtyp msetX) sortOut)
@@ -76,3 +77,22 @@ isSetRepTermF : (msetX : MSet) (sortOut : Sort) → isSet (RepTermF (mtyp msetX)
 isSetRepTermF msetX sortOut = isOfHLevelSuc-IW 1 (λ sort → isSet⊎ (str (msetX sort)) isSetOperation) sortOut
 
 isSetTermF msetX sortOut = subst⁻ isSet (pathRepTermF (mtyp msetX) sortOut) (isSetRepTermF msetX sortOut)
+
+mapTermF : ∀ {X Y} → (∀ sort → X sort → Y sort) → ∀ sort → TermF X sort → TermF Y sort
+mapTermF f sort (varF x) = varF (f sort x)
+mapTermF f sort (astF (term1 o args)) = astF (term1 o λ p → mapTermF f (arity o ! p) (args p))
+
+mapTermF-id : ∀ {X} → mapTermF (λ sort → idfun (X sort)) ≡ (λ sort → idfun (TermF X sort))
+mapTermF-id i sort (varF x) = varF x
+mapTermF-id i sort (astF (term1 o args)) = astF (term1 o (λ p → mapTermF-id i (arity o ! p) (args p)))
+
+mapTermF-∘ : ∀ {X Y Z : MType} → (g : ∀ sort → Y sort → Z sort) → (f : ∀ sort → X sort → Y sort) →
+  mapTermF (λ sort → g sort ∘ f sort) ≡ (λ sort → mapTermF g sort ∘ mapTermF f sort)
+mapTermF-∘ g f i sort (varF x) = varF (g sort (f sort x))
+mapTermF-∘ g f i sort (astF (term1 o args)) = astF (term1 o (λ p → mapTermF-∘ g f i (arity o ! p) (args p)))
+
+ftrTermF : Functor catMSet catMSet
+F-ob ftrTermF = msetTermF
+F-hom ftrTermF = mapTermF
+F-id ftrTermF = mapTermF-id
+F-seq ftrTermF f g = mapTermF-∘ g f
