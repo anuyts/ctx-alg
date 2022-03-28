@@ -30,102 +30,101 @@ record Presentation {{sign : Signature}} : Type where
     arity : ∀ {sortOut} → Operation sortOut → Arity
     isSetOperation : {sortOut : Sort} → isSet (Operation sortOut)
 
-  record Term1 (precarrier : Precarrier) (sortOut : Sort) : Type where
+  record Term1 (X : MType) (sortOut : Sort) : Type where
     inductive
     eta-equality
     constructor term1
     field
       operation : Operation sortOut
-      arguments : Arguments precarrier (arity operation)
+      arguments : Arguments X (arity operation)
   open Term1
+  
+  RepTerm1 : (X : MType) (sortOut : Sort) → Type
+  RepTerm1 X sortOut = Σ[ o ∈ Operation sortOut ] Arguments X (arity o)
 
-  RepTerm1 : (precarrier : Precarrier) (sortOut : Sort) → Type
-  RepTerm1 precarrier sortOut =
-    Σ[ o ∈ Operation sortOut ] Arguments precarrier (arity o)
+  isoRepTerm1 : (X : MType) (sortOut : Sort)
+    → Term1 X sortOut ≅ RepTerm1 X sortOut
+  fun (isoRepTerm1 X sortOut) (term1 o args) = o , args
+  inv (isoRepTerm1 X sortOut) (o , args) = term1 o args
+  rightInv (isoRepTerm1 X sortOut) (o , args) = refl
+  leftInv (isoRepTerm1 X sortOut) (term1 o args) = refl
 
-  isoRepTerm1 : (precarrier : Precarrier) (sortOut : Sort)
-    → Term1 precarrier sortOut ≅ RepTerm1 precarrier sortOut
-  fun (isoRepTerm1 precarrier sortOut) (term1 o args) = o , args
-  inv (isoRepTerm1 precarrier sortOut) (o , args) = term1 o args
-  rightInv (isoRepTerm1 precarrier sortOut) (o , args) = refl
-  leftInv (isoRepTerm1 precarrier sortOut) (term1 o args) = refl
+  pathRepTerm1 : (X : MType) (sortOut : Sort)
+    → Term1 X sortOut ≡ RepTerm1 X sortOut
+  pathRepTerm1 X sortOut = ua (isoToEquiv (isoRepTerm1 X sortOut))
 
-  pathRepTerm1 : (precarrier : Precarrier) (sortOut : Sort)
-    → Term1 precarrier sortOut ≡ RepTerm1 precarrier sortOut
-  pathRepTerm1 precarrier sortOut = ua (isoToEquiv (isoRepTerm1 precarrier sortOut))
+  isSetRepTerm1 : (msetX : MSet) (sortOut : Sort) → isSet (RepTerm1 (mtyp msetX) sortOut)
+  isSetRepTerm1 msetX sortOut =
+    isOfHLevelΣ 2 isSetOperation (λ o → isSetArguments msetX (arity o))
 
-  isSetRepTerm1 : (precarrier : Precarrier) (sortOut : Sort) → isSet (RepTerm1 precarrier sortOut)
-  isSetRepTerm1 precarrier sortOut =
-    isOfHLevelΣ 2 isSetOperation (λ o → isSetArguments precarrier (arity o))
+  isSetTerm1 : (msetX : MSet) (sortOut : Sort) →  isSet (Term1 (mtyp msetX) sortOut)
+  isSetTerm1 msetX sortOut =
+    subst⁻ isSet (pathRepTerm1 (mtyp msetX) sortOut) (isSetRepTerm1 msetX sortOut)
 
-  isSetTerm1 : ∀ {precarrier sortOut} → isSet (Term1 precarrier sortOut)
-  isSetTerm1 {precarrier} {sortOut} =
-    subst⁻ isSet (pathRepTerm1 precarrier sortOut) (isSetRepTerm1 precarrier sortOut)
+  msetTerm1 : MSet → MSet
+  fst (msetTerm1 mset sortOut) = Term1 (mtyp mset) sortOut
+  snd (msetTerm1 mset sortOut) = isSetTerm1 mset sortOut
 
-  precarrierTerm1 : Precarrier → Precarrier
-  fst (precarrierTerm1 precarrier sortOut) = Term1 precarrier sortOut
-  snd (precarrierTerm1 precarrier sortOut) = isSetTerm1
-
-  ftrTerm1 : Functor catPrecarrier catPrecarrier
-  F-ob ftrTerm1 = precarrierTerm1
-  F-hom ftrTerm1 {x = precX} {y = precY} φ sortOut (term1 o args) =
+  ftrTerm1 : Functor catMSet catMSet
+  F-ob ftrTerm1 = msetTerm1
+  F-hom ftrTerm1 {x = msetX} {y = msetY} φ sortOut (term1 o args) =
     term1 o λ p → φ (arity o ! p) (args p)
-  F-id ftrTerm1 {x = precX} = refl
-  F-seq ftrTerm1 {x = precX} {y = precY} {z = precZ} φ χ = refl
+  F-id ftrTerm1 {x = msetX} = refl
+  F-seq ftrTerm1 {x = msetX} {y = msetY} {z = precZ} φ χ = refl
 
   module _ where
 
-    data TermF (metavar : Precarrier) : (sortOut : Sort) → Type
-    isSetTermF : (metavar : Precarrier) (sortOut : Sort) → isSet (TermF metavar sortOut)
+    data TermF (X : MType) : (sortOut : Sort) → Type
+    isSetTermF : (msetX : MSet) (sortOut : Sort) → isSet (TermF (mtyp msetX) sortOut)
   
-    precarrierTermF : Precarrier → Precarrier
-    fst (precarrierTermF metavar sortOut) = TermF metavar sortOut
-    snd (precarrierTermF metavar sortOut) = isSetTermF metavar sortOut
+    msetTermF : MSet → MSet
+    fst (msetTermF msetX sortOut) = TermF (mtyp msetX) sortOut
+    snd (msetTermF msetX sortOut) = isSetTermF msetX sortOut
   
-    data TermF metavar where
-      varF : ∀ {sortOut} → typ (metavar sortOut) → TermF metavar sortOut
-      astF : ∀ {sortOut} → Term1 (precarrierTermF metavar) sortOut → TermF metavar sortOut
+    data TermF X where
+      varF : ∀ {sortOut} → X sortOut → TermF X sortOut
+      astF : ∀ {sortOut} → Term1 (TermF X) sortOut → TermF X sortOut
 
-    RepTermF : (metavar : Precarrier) (sortOut : Sort) → Type
-    RepTermF metavar sortOut =
-      IW (λ sort → typ (metavar sort) ⊎ Operation sort)
+    RepTermF : (X : MType) (sortOut : Sort) → Type
+    RepTermF X sortOut =
+      IW (λ sort → X sort ⊎ Operation sort)
         (λ sort → ⊎.elim (λ v → ⊥) λ o → Fin (length (arity o)))
         (λ sort → ⊎.elim (λ v ()) (λ o p → arity o ! p))
         sortOut
 
-    toRepTermF : (metavar : Precarrier) (sortOut : Sort) → TermF metavar sortOut → RepTermF metavar sortOut
-    toRepTermF metavar sortOut (varF v) = node (inl v) (λ ())
-    toRepTermF metavar sortOut (astF (term1 o args)) =
-      node (inr o) λ p → toRepTermF metavar (arity o ! p) (args p)
+    toRepTermF : (X : MType) (sortOut : Sort) → TermF X sortOut → RepTermF X sortOut
+    toRepTermF X sortOut (varF v) = node (inl v) (λ ())
+    toRepTermF X sortOut (astF (term1 o args)) =
+      node (inr o) λ p → toRepTermF X (arity o ! p) (args p)
 
-    fromRepTermF : (metavar : Precarrier) (sortOut : Sort) → RepTermF metavar sortOut → TermF metavar sortOut
-    fromRepTermF metavar sortOut (node (inl v) u) = varF v
-    fromRepTermF metavar sortOut (node (inr o) args) = astF (term1 o λ p → fromRepTermF metavar (arity o ! p) (args p))
+    fromRepTermF : (X : MType) (sortOut : Sort) → RepTermF X sortOut → TermF X sortOut
+    fromRepTermF X sortOut (node (inl v) u) = varF v
+    fromRepTermF X sortOut (node (inr o) args) = astF (term1 o λ p → fromRepTermF X (arity o ! p) (args p))
   
-    fromToRepTermF : (metavar : Precarrier) (sortOut : Sort) (t : TermF metavar sortOut)
-      → fromRepTermF metavar sortOut (toRepTermF metavar sortOut t) ≡ t
-    fromToRepTermF metavar sortOut (varF v) = refl
-    fromToRepTermF metavar sortOut (astF (term1 o args)) i =
-      astF (term1 o λ p → fromToRepTermF metavar (arity o ! p) (args p) i)
+    fromToRepTermF : (X : MType) (sortOut : Sort) (t : TermF X sortOut)
+      → fromRepTermF X sortOut (toRepTermF X sortOut t) ≡ t
+    fromToRepTermF X sortOut (varF v) = refl
+    fromToRepTermF X sortOut (astF (term1 o args)) i =
+      astF (term1 o λ p → fromToRepTermF X (arity o ! p) (args p) i)
 
-    toFromRepTermF : (metavar : Precarrier) (sortOut : Sort) (rt : RepTermF metavar sortOut)
-      → toRepTermF metavar sortOut (fromRepTermF metavar sortOut rt) ≡ rt
-    toFromRepTermF metavar sortOut (node (inl v) u) = cong (node (inl v)) (funExt (λ ()))
-    toFromRepTermF metavar sortOut (node (inr o) args) i =
-      node (inr o) (λ p → toFromRepTermF metavar (arity o ! p) (args p) i)
+    toFromRepTermF : (X : MType) (sortOut : Sort) (rt : RepTermF X sortOut)
+      → toRepTermF X sortOut (fromRepTermF X sortOut rt) ≡ rt
+    toFromRepTermF X sortOut (node (inl v) u) = cong (node (inl v)) (funExt (λ ()))
+    toFromRepTermF X sortOut (node (inr o) args) i =
+      node (inr o) (λ p → toFromRepTermF X (arity o ! p) (args p) i)
 
-    isoRepTermF : (metavar : Precarrier) (sortOut : Sort) → TermF metavar sortOut ≅ RepTermF metavar sortOut
-    fun (isoRepTermF metavar sortOut) = toRepTermF metavar sortOut
-    inv (isoRepTermF metavar sortOut) = fromRepTermF metavar sortOut
-    rightInv (isoRepTermF metavar sortOut) = toFromRepTermF metavar sortOut
-    leftInv (isoRepTermF metavar sortOut) = fromToRepTermF metavar sortOut
+    isoRepTermF : (X : MType) (sortOut : Sort) → TermF X sortOut ≅ RepTermF X sortOut
+    fun (isoRepTermF X sortOut) = toRepTermF X sortOut
+    inv (isoRepTermF X sortOut) = fromRepTermF X sortOut
+    rightInv (isoRepTermF X sortOut) = toFromRepTermF X sortOut
+    leftInv (isoRepTermF X sortOut) = fromToRepTermF X sortOut
 
-    pathRepTermF : (metavar : Precarrier) (sortOut : Sort) → TermF metavar sortOut ≡ RepTermF metavar sortOut
-    pathRepTermF metavar sortOut = ua (isoToEquiv (isoRepTermF metavar sortOut))
+    pathRepTermF : (X : MType) (sortOut : Sort) → TermF X sortOut ≡ RepTermF X sortOut
+    pathRepTermF X sortOut = ua (isoToEquiv (isoRepTermF X sortOut))
   
-    isSetRepTermF : (metavar : Precarrier) (sortOut : Sort) → isSet (RepTermF metavar sortOut)
-    isSetRepTermF metavar sortOut = isOfHLevelSuc-IW 1 (λ sort → isSet⊎ (str (metavar sort)) isSetOperation) sortOut
+    isSetRepTermF : (msetX : MSet) (sortOut : Sort) → isSet (RepTermF (mtyp msetX) sortOut)
+    isSetRepTermF msetX sortOut = isOfHLevelSuc-IW 1 (λ sort → isSet⊎ (str (msetX sort)) isSetOperation) sortOut
   
-    isSetTermF metavar sortOut = subst⁻ isSet (pathRepTermF metavar sortOut) (isSetRepTermF metavar sortOut)
+    isSetTermF msetX sortOut = subst⁻ isSet (pathRepTermF (mtyp msetX) sortOut) (isSetRepTermF msetX sortOut)
 
 open Presentation {{...}} public
