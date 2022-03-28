@@ -2,7 +2,10 @@
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Structure
 open import Cubical.Data.List
+open import Cubical.Data.FinData
+open import Cubical.Data.List.FinData
 open import Cubical.Categories.Category
 open import Cubical.Categories.Constructions.TypeProduct
 open import Cubical.Categories.Instances.Sets
@@ -27,5 +30,11 @@ record Signature : Type where
 
   catPrecarrier : Category _ _
   catPrecarrier = ΠC Sort λ _ → SET _
+
+  Arguments : Precarrier → Arity → Type
+  Arguments precarrier arity = (p : Fin (length arity)) → typ (precarrier (lookup arity p))
+
+  isSetArguments : ∀ precarrier arity → isSet (Arguments precarrier arity)
+  isSetArguments precarrier arity = isOfHLevelΠ 2 λ p → str (precarrier (lookup arity p))
 
 open Signature {{...}} public
