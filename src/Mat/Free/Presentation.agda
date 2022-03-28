@@ -19,12 +19,12 @@ open import Cubical.Categories.Constructions.TypeProduct
 
 open import Mat.Signature
 
-module Mat.Presentation where
+module Mat.Free.Presentation where
 
 open _≅_
 open Functor
 
-record Presentation {{sign : Signature}} : Type where
+record PresentationF {{sign : Signature}} : Type where
   field
     Operation : Sort → Type
     arity : ∀ {sortOut} → Operation sortOut → Arity
@@ -132,4 +132,4 @@ record Presentation {{sign : Signature}} : Type where
   
     isSetTermF msetX sortOut = subst⁻ isSet (pathRepTermF (mtyp msetX) sortOut) (isSetRepTermF msetX sortOut)
 
-open Presentation {{...}} public
+open PresentationF {{...}} public
