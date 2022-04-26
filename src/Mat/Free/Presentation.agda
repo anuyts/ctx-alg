@@ -20,19 +20,21 @@ module Mat.Free.Presentation where
 open _≅_
 open Functor
 
+-- Type of free MAT presentations (MAT presentations without equations)
 record PresentationF (sign : Signature) : Type where
   open Signature sign
 
   field
     Operation : Sort → Type
-    arity : ∀ {sortOut} → Operation sortOut → Arity
     isSetOperation : {sortOut : Sort} → isSet (Operation sortOut)
+    arity : ∀ {sortOut} → Operation sortOut → Arity
   --  Equation : Type
   --  XEquation : Equation → Type
 
   --field
   --  lhsRep : (e : Equation) → {!!}
 
+  -- Syntax functor
   record Term1 (X : MType) (sortOut : Sort) : Type where
     inductive
     eta-equality
@@ -41,7 +43,7 @@ record PresentationF (sign : Signature) : Type where
       operation : Operation sortOut
       arguments : Arguments X (arity operation)
   open Term1
-  
+
   RepTerm1 : (X : MType) (sortOut : Sort) → Type
   RepTerm1 X sortOut = Σ[ o ∈ Operation sortOut ] Arguments X (arity o)
 

@@ -37,6 +37,7 @@ record Signature : Type where
   catMSet : Category _ _
   catMSet = ΠC Sort λ _ → SET _
 
+  -- I'd prefer a dependent list
   Arguments : MType → Arity → Type
   Arguments X arity = (p : Fin (length arity)) → X (arity ! p)
 
