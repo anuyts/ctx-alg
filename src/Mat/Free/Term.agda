@@ -13,9 +13,11 @@ open import Cubical.Data.Empty
 open import Cubical.Data.Nat
 open import Cubical.Foundations.Structure
 open import Cubical.Categories.Category
-open import Cubical.Categories.Functor
+open import Cubical.Categories.Functor renaming (𝟙⟨_⟩ to ftrId)
 open import Cubical.Categories.Instances.Sets
 open import Cubical.Categories.Constructions.TypeProduct
+open import Cubical.Categories.Monad.Base
+open import Cubical.Categories.NaturalTransformation.Base
 
 open import Mat.Signature
 open import Mat.Free.Presentation
@@ -98,3 +100,41 @@ F-ob ftrTermF = msetTermF
 F-hom ftrTermF = mapTermF
 F-id ftrTermF = mapTermF-id
 F-seq ftrTermF f g = mapTermF-∘ g f
+
+-- It's a monad
+
+open NatTrans
+
+ηTermF : NatTrans (ftrId catMSet) ftrTermF
+N-ob ηTermF msetX sortOut = varF
+N-hom ηTermF {msetX} {msetY} f = refl
+
+joinTermF : ∀ {X} sort → TermF (TermF X) sort → TermF X sort
+joinTermF sort (varF t) = t
+joinTermF sort (astF (term1 o args)) = astF (term1 o (λ p → joinTermF (arity o ! p) (args p)))
+
+joinTermF-nat : ∀ {X Y : MType} f sort → (t : TermF (TermF X) sort)
+  → joinTermF {X = Y} sort (mapTermF (mapTermF f) sort t) ≡ mapTermF f sort (joinTermF sort t)
+joinTermF-nat f sort (varF t) = refl
+joinTermF-nat f sort (astF (term1 o args)) i = astF (term1 o λ p → joinTermF-nat f (arity o ! p) (args p) i)
+
+μTermF : NatTrans (funcComp ftrTermF ftrTermF) ftrTermF
+N-ob μTermF msetX = joinTermF
+N-hom μTermF {msetX} {msetY} f = funExt λ sort → funExt λ t → joinTermF-nat f sort t
+
+open IsMonad
+
+monadTermF : IsMonad ftrTermF
+η monadTermF = ηTermF
+μ monadTermF = μTermF
+idl-μ monadTermF = makeNatTransPathP (λ i → F-rUnit i) (λ i → ftrTermF) refl
+idr-μ monadTermF = makeNatTransPathP (λ i → F-lUnit i) (λ i → ftrTermF) lemma
+  where lemma : (λ msetX sort t → joinTermF sort (mapTermF (λ sortOut → varF) sort t)) ≡
+                (λ msetX sort t → t)
+        lemma i msetX sort (varF x) = varF x
+        lemma i msetX sort (astF (term1 o args)) = astF (term1 o λ p → lemma i msetX (arity o ! p) (args p))
+assoc-μ monadTermF = makeNatTransPathP (λ i → F-assoc i) (λ i → ftrTermF) lemma
+  where lemma : (λ msetX sort t → joinTermF sort (mapTermF joinTermF sort t)) ≡
+                (λ msetX sort t → joinTermF sort (joinTermF sort t))
+        lemma i msetX sort (varF ttx) = joinTermF sort ttx
+        lemma i msetX sort (astF (term1 o args)) = astF (term1 o λ p → lemma i msetX (arity o ! p) (args p))

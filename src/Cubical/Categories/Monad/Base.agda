@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-}
+{-# OPTIONS --safe --cubical #-}
 module Cubical.Categories.Monad.Base where
 
 open import Cubical.Foundations.Prelude
