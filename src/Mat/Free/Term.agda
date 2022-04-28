@@ -15,7 +15,7 @@ open import Cubical.Foundations.Structure
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor renaming (𝟙⟨_⟩ to ftrId)
 open import Cubical.Categories.Instances.Sets
-open import Cubical.Categories.Constructions.TypeProduct
+open import Cubical.Categories.Constructions.Product
 open import Cubical.Categories.Monad.Base
 open import Cubical.Categories.NaturalTransformation.Base
 

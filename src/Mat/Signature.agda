@@ -7,7 +7,7 @@ open import Cubical.Data.List
 open import Cubical.Data.FinData
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
 open import Cubical.Categories.Category
-open import Cubical.Categories.Constructions.TypeProduct
+open import Cubical.Categories.Constructions.Product
 open import Cubical.Categories.Instances.Sets
 
 module Mat.Signature where
