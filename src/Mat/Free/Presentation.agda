@@ -12,12 +12,14 @@ open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.Instances.Sets
 open import Cubical.Categories.Constructions.Product
+open import Cubical.Categories.Instances.FunctorAlgebras
 
 open import Mat.Signature
 
 module Mat.Free.Presentation where
 
 open _≅_
+open Category
 open Functor
 
 -- Type of free MAT presentations (MAT presentations without equations)
@@ -76,3 +78,15 @@ record PresentationF (sign : Signature) : Type where
     term1 o λ p → φ (arity o ! p) (args p)
   F-id ftrTerm1 {x = msetX} = refl
   F-seq ftrTerm1 {x = msetX} {y = msetY} {z = precZ} φ χ = refl
+
+  catModel1 : Category ℓ-zero ℓ-zero
+  catModel1 = AlgebrasCategory ftrTerm1
+
+  Model1 : Type ℓ-zero
+  Model1 = ob catModel1
+
+  Model1Hom : (m1A m1B : Model1) → Type ℓ-zero
+  Model1Hom = Hom[_,_] catModel1
+
+  ftrForgetModel1 : Functor catModel1 catMSet
+  ftrForgetModel1 = ForgetAlgebra ftrTerm1
