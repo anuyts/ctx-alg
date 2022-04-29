@@ -1,6 +1,6 @@
 {-# OPTIONS --cubical --type-in-type #-}
 
-open import Cubical.Foundations.Everything renaming (Iso to _≅_)
+open import Cubical.Foundations.Everything renaming (Iso to _≅_ ; funExt⁻ to _≡$_)
 open import Cubical.Data.List
 open import Cubical.Data.List.Properties
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
@@ -11,6 +11,7 @@ open import Cubical.Data.Sum
 open import Cubical.Data.Sum as ⊎
 open import Cubical.Data.Empty
 open import Cubical.Data.Nat
+open import Cubical.Data.Sigma.Properties
 open import Cubical.Foundations.Structure
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor renaming (𝟙⟨_⟩ to ftrId)
@@ -235,4 +236,42 @@ module _ where
 -- identity at Term1
 module _ where
   ftrModel1toFto1 : funcComp ftrModelFto1 ftrModel1toF ≡ ftrId catModel1
-  ftrModel1toFto1 = {!!}
+  ftrModel1toFto1 = Functor≡
+    (λ (algebra msetA α) → refl)
+    (λ where
+      {algebra msetA α} {algebra msetB β} (algebraHom f isalgF) → AlgebraHom≡ ftrTerm1 refl
+    )
+
+  ftrModelFto1toF : funcComp ftrModel1toF ftrModelFto1 ≡ ftrId catModelF
+  ftrModelFto1toF = Functor≡
+    (λ where
+      (algebra msetA α , isEMA) → Σ≡Prop
+        (λ algA → isPropIsEMAlgebra monadTermF)
+        (cong (algebra msetA) (funExt λ sort → funExt λ ta → lemma (algebra msetA α) isEMA sort ta))
+    )
+    (λ where
+      {algebra msetA α , isEMA} {algebra msetB β , isEMB} (algebraHom f isalgF) →
+        AlgebraHomPathP ftrTermF refl
+    )
+    where
+      open IsEMAlgebra
+      lemma : ∀ ((algebra msetA α) : Algebra ftrTermF) (isEMA : IsEMAlgebra monadTermF (algebra msetA α))
+        (sort : Sort) (ta : TermF (λ sort₁ → fst (msetA sort₁)) sort) →
+        algStrFModel1 (algebra msetA (λ sort' (term1 o args) → α sort' (astF (term1 o λ p → varF (args p))))) sort ta
+        ≡ α sort ta
+      lemma (algebra msetA α) isEMA sort (varF a) = sym ((str-η isEMA ≡$ sort) ≡$ a)
+      lemma (algebra msetA α) isEMA sort (astF (term1 o args)) =
+        α sort (astF (term1 o λ p → varF (algStrFModel1 (algebra msetA (λ sort' (term1 o' args') →
+                    α sort' (astF (term1 o' λ p₁ → varF (args' p₁))))) (arity o ! p) (args p))))
+          ≡⟨ cong (α sort) (cong astF (cong (term1 o) (funExt λ p
+              → cong varF (lemma (algebra msetA α) isEMA (arity o ! p) (args p))))) ⟩
+        -- (α ∘ Σ var ∘ Σ α) (astF (term1 o args))
+        α sort (astF (term1 o λ p → varF (α (arity o ! p) (args p))))
+          ≡⟨⟩
+        -- (α ∘ Σ Σ* α ∘ Σ var) (astF (term1 o args))
+        α sort (astF (term1 o λ p → mapTermF α (arity o ! p) (varF (args p))))
+          ≡⟨ sym ((str-μ isEMA ≡$ sort) ≡$ astF (term1 o λ p → varF (args p))) ⟩
+        -- (α ∘ Σ µ ∘ Σ var) (astF (term1 o args))
+        α sort (joinTermF sort (astF (term1 o λ p → varF (args p))))
+          ≡⟨⟩
+        α sort (astF (term1 o args)) ∎
