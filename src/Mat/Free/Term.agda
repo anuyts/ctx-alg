@@ -284,3 +284,17 @@ mor isoftrModel1toF = ftrModel1toF
 inv isoftrModel1toF = ftrModelFto1
 sec isoftrModel1toF = ftrModelFto1toF
 ret isoftrModel1toF = ftrModel1toFto1
+
+module _ where
+
+  Syntax : MType
+  Syntax = TermF (mtyp msetEmpty)
+
+  msetSyntax : MSet
+  msetSyntax = msetTermF msetEmpty
+
+  mFSyntax : ModelF
+  mFSyntax = F-ob ftrFreeModelF msetEmpty
+
+  m1Syntax : Model1
+  m1Syntax = F-ob ftrModelFto1 mFSyntax

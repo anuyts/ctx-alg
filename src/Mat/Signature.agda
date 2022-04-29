@@ -6,6 +6,7 @@ open import Cubical.Foundations.Structure
 open import Cubical.Data.List
 open import Cubical.Data.FinData
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
+open import Cubical.Data.Empty
 open import Cubical.Categories.Category
 open import Cubical.Categories.Constructions.Product
 open import Cubical.Categories.Instances.Sets
@@ -44,3 +45,6 @@ record Signature : Type where
 
   isSetArguments : ∀ precarrier arity → isSet (Arguments (mtyp precarrier) arity)
   isSetArguments precarrier arity = isOfHLevelΠ 2 λ p → str (precarrier (arity ! p))
+
+  msetEmpty : MSet
+  msetEmpty sort = ⊥ , (λ ())
