@@ -46,32 +46,36 @@ record PresentationF (sign : Signature) : Type where
       arguments : Arguments X (arity operation)
   open Term1
 
-  RepTerm1 : (X : MType) (sortOut : Sort) → Type
-  RepTerm1 X sortOut = Σ[ o ∈ Operation sortOut ] Arguments X (arity o)
+  -- Term1 is really a Σ-type
+  module _ where
+    RepTerm1 : (X : MType) (sortOut : Sort) → Type
+    RepTerm1 X sortOut = Σ[ o ∈ Operation sortOut ] Arguments X (arity o)
 
-  isoRepTerm1 : (X : MType) (sortOut : Sort)
-    → Term1 X sortOut ≅ RepTerm1 X sortOut
-  fun (isoRepTerm1 X sortOut) (term1 o args) = o , args
-  inv (isoRepTerm1 X sortOut) (o , args) = term1 o args
-  rightInv (isoRepTerm1 X sortOut) (o , args) = refl
-  leftInv (isoRepTerm1 X sortOut) (term1 o args) = refl
+    isoRepTerm1 : (X : MType) (sortOut : Sort)
+      → Term1 X sortOut ≅ RepTerm1 X sortOut
+    fun (isoRepTerm1 X sortOut) (term1 o args) = o , args
+    inv (isoRepTerm1 X sortOut) (o , args) = term1 o args
+    rightInv (isoRepTerm1 X sortOut) (o , args) = refl
+    leftInv (isoRepTerm1 X sortOut) (term1 o args) = refl
 
-  pathRepTerm1 : (X : MType) (sortOut : Sort)
-    → Term1 X sortOut ≡ RepTerm1 X sortOut
-  pathRepTerm1 X sortOut = ua (isoToEquiv (isoRepTerm1 X sortOut))
+    pathRepTerm1 : (X : MType) (sortOut : Sort)
+      → Term1 X sortOut ≡ RepTerm1 X sortOut
+    pathRepTerm1 X sortOut = ua (isoToEquiv (isoRepTerm1 X sortOut))
 
-  isSetRepTerm1 : (msetX : MSet) (sortOut : Sort) → isSet (RepTerm1 (mtyp msetX) sortOut)
-  isSetRepTerm1 msetX sortOut =
-    isOfHLevelΣ 2 isSetOperation (λ o → isSetArguments msetX (arity o))
+    isSetRepTerm1 : (msetX : MSet) (sortOut : Sort) → isSet (RepTerm1 (mtyp msetX) sortOut)
+    isSetRepTerm1 msetX sortOut =
+      isOfHLevelΣ 2 isSetOperation (λ o → isSetArguments msetX (arity o))
 
   isSetTerm1 : (msetX : MSet) (sortOut : Sort) →  isSet (Term1 (mtyp msetX) sortOut)
   isSetTerm1 msetX sortOut =
     subst⁻ isSet (pathRepTerm1 (mtyp msetX) sortOut) (isSetRepTerm1 msetX sortOut)
 
+  -- Term1 as an action on MSets
   msetTerm1 : MSet → MSet
   fst (msetTerm1 mset sortOut) = Term1 (mtyp mset) sortOut
   snd (msetTerm1 mset sortOut) = isSetTerm1 mset sortOut
 
+  -- Term1 as a functor on catMSet
   ftrTerm1 : Functor catMSet catMSet
   F-ob ftrTerm1 = msetTerm1
   F-hom ftrTerm1 {x = msetX} {y = msetY} φ sortOut (term1 o args) =
@@ -79,6 +83,7 @@ record PresentationF (sign : Signature) : Type where
   F-id ftrTerm1 {x = msetX} = refl
   F-seq ftrTerm1 {x = msetX} {y = msetY} {z = precZ} φ χ = refl
 
+  -- Models of the MAT presentation are algebras of ftrTerm1
   catModel1 : Category ℓ-zero ℓ-zero
   catModel1 = AlgebrasCategory ftrTerm1
 
@@ -88,5 +93,6 @@ record PresentationF (sign : Signature) : Type where
   Model1Hom : (m1A m1B : Model1) → Type ℓ-zero
   Model1Hom = Hom[_,_] catModel1
 
+  -- Forgetful functor sending models to their carrier
   ftrForgetModel1 : Functor catModel1 catMSet
   ftrForgetModel1 = ForgetAlgebra ftrTerm1
