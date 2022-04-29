@@ -14,8 +14,10 @@ open import Cubical.Data.Nat
 open import Cubical.Data.Sigma.Properties
 open import Cubical.Foundations.Structure
 open import Cubical.Categories.Category
+open import Cubical.Categories.Category.Precategory
 open import Cubical.Categories.Functor renaming (𝟙⟨_⟩ to ftrId)
 open import Cubical.Categories.Instances.Sets
+open import Cubical.Categories.Instances.Categories
 open import Cubical.Categories.Constructions.Product
 open import Cubical.Categories.Monad.Base
 open import Cubical.Categories.NaturalTransformation.Base
@@ -275,3 +277,10 @@ module _ where
         α sort (joinTermF sort (astF (term1 o λ p → varF (args p))))
           ≡⟨⟩
         α sort (astF (term1 o args)) ∎
+
+open PrecatIso
+isoftrModel1toF : PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModel1 catModelF
+mor isoftrModel1toF = ftrModel1toF
+inv isoftrModel1toF = ftrModelFto1
+sec isoftrModel1toF = ftrModelFto1toF
+ret isoftrModel1toF = ftrModel1toFto1
