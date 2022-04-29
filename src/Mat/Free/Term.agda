@@ -213,6 +213,6 @@ nt1toF : NatTrans ftrTerm1 ftrTermF
 N-ob nt1toF msetA sort (term1 o args) = astF (term1 o λ p → varF (args p))
 N-hom nt1toF f = refl
 
---ftrModelFto1 : Functor catModelF catModel1
---ftrModelFto1 = funcComp (AlgebrasFunctor {F = ftrTerm1} {G = ftrTermF} nt1toF) (ForgetEM monadTermF)
+ftrModelFto1 : Functor catModelF catModel1
+ftrModelFto1 = funcComp {-{D = AlgebrasCategory ftrTermF}{E = catModel1}{C = catModelF}-} (AlgebrasFunctor {F = ftrTerm1} {G = ftrTermF} nt1toF) (ForgetEM monadTermF)
   -- For some reason, this takes forever.
