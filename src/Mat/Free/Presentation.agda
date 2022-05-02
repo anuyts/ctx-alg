@@ -30,11 +30,6 @@ record PresentationF (sign : Signature) : Type where
     Operation : Sort → Type
     isSetOperation : {sortOut : Sort} → isSet (Operation sortOut)
     arity : ∀ {sortOut} → Operation sortOut → Arity
-  --  Equation : Type
-  --  XEquation : Equation → Type
-
-  --field
-  --  lhsRep : (e : Equation) → {!!}
 
   -- Syntax functor
   record Term1 (X : MType) (sortOut : Sort) : Type where
@@ -45,6 +40,9 @@ record PresentationF (sign : Signature) : Type where
       operation : Operation sortOut
       arguments : Arguments X (arity operation)
   open Term1
+
+  mapTerm1 : ∀ {X Y : MType} (f : (sort : Sort) → X sort → Y sort) → (sort : Sort) → Term1 X sort → Term1 Y sort
+  mapTerm1 f sort (term1 o args) = term1 o λ p → f (arity o ! p) (args p)
 
   -- Term1 is really a Σ-type
   module _ where
