@@ -23,6 +23,8 @@ open import Cubical.Categories.Monad.Base
 open import Cubical.Categories.NaturalTransformation.Base
 open import Cubical.Categories.Instances.FunctorAlgebras
 open import Cubical.Categories.Instances.EilenbergMoore
+open import Cubical.Categories.Adjoint
+open import Cubical.Categories.Limits.Initial
 
 open import Mat.Signature
 open import Mat.Free.Presentation
@@ -287,14 +289,31 @@ ret isoftrModel1toF = ftrModel1toFto1
 
 module _ where
 
-  Syntax : MType
-  Syntax = TermF (mtyp msetEmpty)
+  SyntaxF : MType
+  SyntaxF = TermF (mtyp msetEmpty)
 
-  msetSyntax : MSet
-  msetSyntax = msetTermF msetEmpty
+  msetSyntaxF : MSet
+  msetSyntaxF = msetTermF msetEmpty
 
-  mFSyntax : ModelF
-  mFSyntax = F-ob ftrFreeModelF msetEmpty
+  mFSyntaxF : ModelF
+  mFSyntaxF = F-ob ftrFreeModelF msetEmpty
 
-  m1Syntax : Model1
-  m1Syntax = F-ob ftrModelFto1 mFSyntax
+  open NaturalBijection
+
+  isInitial-mFSyntaxF : isInitial catModelF mFSyntaxF
+  isInitial-mFSyntaxF = isLeftAdjoint→preservesInitial
+    {C = catMSet}
+    {D = catModelF}
+    ftrFreeModelF
+    (ftrForgetModelF , emAdjunction monadTermF)
+    msetEmpty
+    isInitial-msetEmpty
+
+  m1SyntaxF : Model1
+  m1SyntaxF = F-ob ftrModelFto1 mFSyntaxF
+
+  {- Ways to prove initiality of m1SyntaxF:
+     - directly (seems stupid)
+     - prove that isomorphic precategories are equal
+     - prove that mutually inverse functors are adjoint
+  -}

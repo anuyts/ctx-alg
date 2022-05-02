@@ -10,6 +10,7 @@ open import Cubical.Data.Empty
 open import Cubical.Categories.Category
 open import Cubical.Categories.Constructions.Product
 open import Cubical.Categories.Instances.Sets
+open import Cubical.Categories.Limits.Initial
 
 module Mat.Signature where
 
@@ -48,3 +49,7 @@ record Signature : Type where
 
   msetEmpty : MSet
   msetEmpty sort = ⊥ , (λ ())
+
+  isInitial-msetEmpty : isInitial catMSet msetEmpty
+  fst (isInitial-msetEmpty msetX) sort ()
+  snd (isInitial-msetEmpty msetX) f = funExt λ sort → funExt (λ ())
