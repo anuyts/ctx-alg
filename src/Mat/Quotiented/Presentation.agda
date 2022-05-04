@@ -5,6 +5,9 @@ open import Cubical.Foundations.Function
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
+open import Cubical.Categories.Functor
+open import Cubical.Categories.NaturalTransformation
+open import Cubical.Categories.Monad.Base
 
 open import Mat.Signature
 open import Mat.Free.Presentation
@@ -16,6 +19,11 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
   open Signature sign
   open PresentationF presF
   open Mat.Free.Term presF
+  open Category hiding (_∘_)
+  open Functor
+  open IsMonad
+  open NatTrans
+  
   record EqTheory : Type where
 
     field
@@ -178,6 +186,24 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       (λ k → mapTerm-∘ g f i sort (et k))
       (λ k → mapTerm-∘ g f i sort (et' k)) j k
     mapTermF-mapTerm-∘ g f = cong mapTermF (mapTerm-∘ g f) ∙ mapTermF-∘ (mapTerm g) (mapTerm f)
+
+    ftrTerm : Functor catMSet catMSet
+    F-ob ftrTerm = msetTerm
+    F-hom ftrTerm = mapTerm
+    F-id ftrTerm = mapTerm-id
+    F-seq ftrTerm f g = mapTerm-∘ g f
+
+    ismonadTerm : IsMonad ftrTerm
+    N-ob (η ismonadTerm) msetX sort = var
+    N-hom (η ismonadTerm) f = refl
+    N-ob (μ ismonadTerm) msetX = joinTerm
+    N-hom (μ ismonadTerm) {msetX}{msetY} f = {!!}
+    idl-μ ismonadTerm = makeNatTransPathP F-rUnit (λ i → ftrTerm) refl
+    idr-μ ismonadTerm = makeNatTransPathP F-lUnit (λ i → ftrTerm) {!!}
+    assoc-μ ismonadTerm = makeNatTransPathP F-assoc (λ i → ftrTerm) {!!}
+
+    monadTerm : Monad catMSet
+    monadTerm = ftrTerm , ismonadTerm
 
 EqTheory = EqTheory.EqTheory
 
