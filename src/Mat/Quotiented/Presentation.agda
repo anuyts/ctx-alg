@@ -154,17 +154,11 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
           refl j
       )
       (byAxiom axiom (λ sort' y → mapTerm-id k sort' (f sort' y)) i)
-
-      {-idfun
-      (PathP
-        (λ k → astQ (mapTermF-mapTerm-id k sort (mapTermF f sort (lhs axiom)))
-             ≡ astQ (mapTermF-mapTerm-id k sort (mapTermF f sort (rhs axiom)))
-        )
-        {!byAxiom axiom (λ sort' y → mapTerm (λ sort₁ → idfun (_ sort₁)) sort' (f sort' y))!}
-        (byAxiom axiom f)
-      )
-      {!!} k i-}
-    mapTerm-id i sort (isSetTerm t t₁ x y i₁ i₂) = {!!}
+    mapTerm-id i sort (isSetTerm t1 t2 et et' j k) = isSetTerm
+      (mapTerm-id i sort t1)
+      (mapTerm-id i sort t2)
+      (λ k → mapTerm-id i sort (et k))
+      (λ k → mapTerm-id i sort (et' k)) j k
     mapTermF-mapTerm-id i sort (varF t) = varF (mapTerm-id i sort t)
     mapTermF-mapTerm-id i sort (astF (term1 o args)) = astF (term1 o λ p → mapTermF-mapTerm-id i (arity o ! p) (args p))
     mapTermF-mapTerm-id-∘ g sort t =
