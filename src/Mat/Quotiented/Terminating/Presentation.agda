@@ -206,7 +206,7 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       astQ-varF (mapTerm-∘ g f i sort t) j
     mapTerm-∘ g f i sort (astQ-astF (term1 o args) j) =
       astQ-astF (term1 o λ p → mapTermF-mapTerm-∘ g f i (arity o ! p) (args p)) j
-    mapTerm-∘ g f k sort (byAxiom axiom h i) = ?
+    mapTerm-∘ g f k sort (byAxiom axiom h i) = {!!}
       {-idfun
         (Square
           (λ i → mapTerm (λ sort₁ → g sort₁ ∘ f sort₁) sort (byAxiom axiom h i))
