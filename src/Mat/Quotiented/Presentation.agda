@@ -341,7 +341,7 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
 EqTheory = EqTheory.EqTheory
 
 record Presentation (sign : Signature) : Type where
-  constructor presentationQ
+  constructor presentation
   field
     getPresentationF : PresentationF sign
     getEqTheory : EqTheory getPresentationF

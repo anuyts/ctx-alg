@@ -1,6 +1,5 @@
 # MATs
-- avoid expanding term1
-- `Term` is a monad
+- principled structure
 - EM-category of `Term` is a full subcategory of EM-category of `TermF`
 - EM-category of `Term` is a full subcategory of category of algebras of `TermF` (which is isomorphic to the above)
 
