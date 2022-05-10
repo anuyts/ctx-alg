@@ -1,7 +1,7 @@
 {-# OPTIONS --cubical --type-in-type #-}
 
 open import Cubical.Foundations.Everything renaming (Iso to _≅_ ; funExt⁻ to _≡$_)
-open import Cubical.Data.List
+open import Cubical.Data.List hiding ([_])
 open import Cubical.Data.List.Properties
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
 open import Cubical.Data.Prod
@@ -14,7 +14,7 @@ open import Cubical.Data.Nat
 open import Cubical.Data.Sigma.Properties
 open import Cubical.Foundations.Structure
 open import Cubical.Categories.Category
-open import Cubical.Categories.Category.Precategory
+open import Cubical.Categories.Category.Precategory hiding (_[_,_] ; seq')
 open import Cubical.Categories.Functor renaming (𝟙⟨_⟩ to ftrId)
 open import Cubical.Categories.Instances.Sets
 open import Cubical.Categories.Instances.Categories
@@ -40,6 +40,8 @@ open PresentationF fmat
 open Algebra renaming (str to algStr)
 open AlgebraHom
 open IsEMAlgebra
+open NaturalBijection
+open _⊣_
 
 -- Free syntax monad
 data TermF (X : MType) : (sortOut : Sort) → Type
@@ -160,7 +162,7 @@ assoc-μ ismonadTermF = makeNatTransPathP (λ i → F-assoc i) (λ i → ftrTerm
 monadTermF : Monad catMSet
 monadTermF = ftrTermF , ismonadTermF
 
--- Models are Eilenberg-Moore categories of monadTermF
+-- Models are Eilenberg-Moore algebras of monadTermF
 catModelF : Category ℓ-zero ℓ-zero
 catModelF = EMCategory monadTermF
 
@@ -177,6 +179,44 @@ ftrForgetModelF = ForgetEMAlgebra monadTermF
 -- Free model functor
 ftrFreeModelF : Functor catMSet catModelF
 ftrFreeModelF = FreeEMAlgebra monadTermF
+
+adjModelF : ftrFreeModelF ⊣ ftrForgetModelF
+adjModelF = emAdjunction monadTermF
+
+-- Recursion/folding and properties
+
+mFFoldModelF : (msetX : MSet) → (mFA : ModelF)
+  → catMSet [ msetX , F-ob ftrForgetModelF mFA ]
+  → catModelF [ F-ob ftrFreeModelF msetX , mFA ]
+mFFoldModelF msetX mFA = _♯ adjModelF {c = msetX} {d = mFA}
+
+foldModelF : (msetX : MSet) → (mFA : ModelF)
+  → catMSet [ msetX , F-ob ftrForgetModelF mFA ]
+  → ∀ sort → TermF (mtyp msetX) sort → typ (carrier (fst mFA) sort)
+foldModelF msetX mFA f = mFFoldModelF msetX mFA f .carrierHom
+
+mFFoldModelF-nat :  (msetX : MSet) → (mFA mFB : ModelF)
+  → (mFG : catModelF [ mFA , mFB ])
+  → (f : catMSet [ msetX , F-ob ftrForgetModelF mFA ])
+  → mFFoldModelF msetX mFB (_⋆_
+      catMSet
+      {x = msetX}
+      {y = F-ob ftrForgetModelF mFA}
+      {z = F-ob ftrForgetModelF mFB}
+      f
+      (F-hom ftrForgetModelF {x = mFA} {y = mFB} mFG)
+    )
+  ≡ _⋆_ catModelF {x = F-ob ftrFreeModelF msetX} {mFA} {mFB} (mFFoldModelF msetX mFA f) mFG
+mFFoldModelF-nat msetX mFA mFB mFG f =
+  {!?
+    !}
+
+foldModelF-nat : (msetX : MSet) → (mFA mFB : ModelF)
+  → (mFG : catModelF [ mFA , mFB ])
+  → (f : catMSet [ msetX , F-ob ftrForgetModelF mFA ])
+  → foldModelF msetX mFB (λ sort → F-hom ftrForgetModelF {x = mFA} {y = mFB} mFG sort ∘ f sort)
+   ≡ (λ sort → F-hom ftrForgetModelF {x = mFA} {y = mFB} mFG sort ∘ foldModelF msetX mFA f sort)
+foldModelF-nat msetX mFA mFB mFG f = {!!}
 
 -- Sending models of Term1 to models of TermF
 module _ where
