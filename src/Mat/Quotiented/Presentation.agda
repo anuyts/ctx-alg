@@ -47,10 +47,13 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
         ≡ joinFQ (mapTermF f sortOut (rhs axiom))
       isSetTerm : ∀ {sortOut} → isSet (Term X sortOut)
 
+    pureTerm : {X : MType} → (sort : Sort) → X sort → Term X sort
+    pureTerm sort x = var x
+
     {-# TERMINATING #-}
     joinTerm : {X : MType} → (sort : Sort) → Term (Term X) sort → Term X sort
     joinTerm sort (var t) = t
-    joinTerm sort (ast (term1 o args)) = ast (term1 o λ p → joinTerm (arity o ! p) (args p))
+    joinTerm sort (ast t) = ast (mapTerm1 joinTerm sort t)
     joinTerm sort (joinFQ t) = joinFQ (mapTermF joinTerm sort t)
     joinTerm sort (joinFQ-varF t i) = joinFQ-varF (joinTerm sort t) i
     joinTerm sort (joinFQ-astF t i) = joinFQ-astF (mapTerm1 (mapTermF joinTerm) sort t) i
@@ -73,10 +76,10 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
     {-# TERMINATING #-}
     mapTerm : ∀ {X Y} → (∀ sort → X sort → Y sort) → ∀ sort → Term X sort → Term Y sort
     mapTerm f sort (var x) = var (f sort x)
-    mapTerm f sort (ast (term1 o args)) = ast (term1 o λ p → mapTerm f (arity o ! p) (args p))
+    mapTerm f sort (ast t) = ast (mapTerm1 (mapTerm f) sort t)
     mapTerm f sort (joinFQ t) = joinFQ (mapTermF (mapTerm f) sort t)
     mapTerm f sort (joinFQ-varF t i) = joinFQ-varF (mapTerm f sort t) i
-    mapTerm f sort (joinFQ-astF (term1 o args) i) = joinFQ-astF (term1 o λ p → mapTermF (mapTerm f) (arity o ! p) (args p)) i
+    mapTerm f sort (joinFQ-astF t i) = joinFQ-astF (mapTerm1 (mapTermF (mapTerm f)) sort t) i
     mapTerm f sort (byAxiom axiom g i) = hcomp
       (λ where
         j (i = i0) → joinFQ (mapTermF-∘ (mapTerm f) g j sort (lhs axiom))
@@ -89,21 +92,11 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       (λ k → mapTerm f sort (et k))
       (λ k → mapTerm f sort (et' k)) i j
 
-    mapTerm-byAxiom : ∀ {X Y : MType} → (f : ∀ sort → X sort → Y sort) → ∀ sortOut
-      → (axiom : Axiom sortOut) → (g : ∀ sort → mtyp (msetArity axiom) sort → Term X sort)
-      → PathP
-           (λ j → joinFQ (mapTermF-∘ (mapTerm f) g j sortOut (lhs axiom))
-                 ≡ joinFQ (mapTermF-∘ (mapTerm f) g j sortOut (rhs axiom))
-           )
-           (λ i → byAxiom axiom (λ sort y → mapTerm f sort (g sort y)) i)
-           (λ i → mapTerm f sortOut (byAxiom axiom g i))
-    mapTerm-byAxiom f sortOut axiom g = toPathP (isSetTerm _ _ _ _)
-
     {-# TERMINATING #-}
     mapTerm-id : ∀ {X} → mapTerm (λ sort → idfun (X sort)) ≡ (λ sort → idfun (Term X sort))
     mapTermF-mapTerm-id : ∀ {X} → mapTermF (mapTerm (λ sort → idfun (X sort))) ≡ (λ sort → idfun (TermF (Term X) sort))
     mapTerm-id i sort (var x) = var x
-    mapTerm-id i sort (ast (term1 o args)) = ast (term1 o λ p → mapTerm-id i (arity o ! p) (args p))
+    mapTerm-id i sort (ast t) = ast (mapTerm1 (mapTerm-id i) sort t)
     mapTerm-id i sort (joinFQ t) = joinFQ (mapTermF-mapTerm-id i sort t)
     mapTerm-id {X = X} i sort (joinFQ-varF t j) = --{!joinFQ-varF (mapTerm-id i sort t) j!}
       idfun
@@ -150,7 +143,7 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       → (f : ∀ sort → X sort → Y sort)
       → mapTermF (mapTerm (λ sort → g sort ∘ f sort)) ≡ (λ sort → mapTermF (mapTerm g) sort ∘ mapTermF (mapTerm f) sort)
     mapTerm-∘ g f i sort (var x) = var (g sort (f sort x))
-    mapTerm-∘ g f i sort (ast (term1 o args)) = ast (term1 o λ p → mapTerm-∘ g f i (arity o ! p) (args p))
+    mapTerm-∘ g f i sort (ast t) = ast (mapTerm1 (mapTerm-∘ g f i) sort t)
     mapTerm-∘ g f i sort (joinFQ t) = joinFQ (mapTermF-mapTerm-∘ g f i sort t)
     mapTerm-∘ g f i sort (joinFQ-varF t j) =
       idfun
@@ -186,7 +179,7 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       (λ k → mapTerm-∘ g f i sort (et k))
       (λ k → mapTerm-∘ g f i sort (et' k)) j k
     mapTermF-mapTerm-∘ g f = cong mapTermF (mapTerm-∘ g f) ∙ mapTermF-∘ (mapTerm g) (mapTerm f)
-    
+
     {-# TERMINATING #-}
     joinTerm-nat : ∀ {X Y : MType} → (f : ∀ sort → X sort → Y sort) →
       (λ sort → joinTerm sort ∘ mapTerm (mapTerm f) sort)
@@ -206,24 +199,26 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
           (λ i → joinTerm-nat f i sort t)
         )
         (toPathP (isSetTerm _ _ _ _)) i j
-    joinTerm-nat f i sort (joinFQ-astF t j) =
-      {!idfun
+    joinTerm-nat f i sort (joinFQ-astF t@(term1 o args) j) =
+      idfun
         (Square
-          (λ j → {!!})
-          (λ j → {!!})
-          (λ i → {!joinFQ (mapTermF-joinTerm-nat f i sort (astF t))!})
-          (λ i → {!ast (mapTerm1 (joinTerm-nat f i) sort (mapTerm1 (λ sort₁ → joinFQ) sort t))!})
+          (λ j → joinFQ-astF (mapTerm1 (mapTermF joinTerm) sort
+            (mapTerm1 (mapTermF (mapTerm (mapTerm f))) sort (term1 o args))) j)
+          (λ j → joinFQ-astF (mapTerm1 (mapTermF (mapTerm f)) sort
+            (mapTerm1 (mapTermF joinTerm) sort (term1 o args))) j)
+          (λ i → joinFQ (mapTermF-joinTerm-nat f i sort (astF t)))
+          (λ i → ast (mapTerm1 (joinTerm-nat f i) sort (mapTerm1 (λ sort₁ → joinFQ) sort t)))
         )
-        (toPathP (isSetTerm _ _ _ _)) i j!}
+        (toPathP (isSetTerm _ _ _ _)) i j
     joinTerm-nat f i sort (byAxiom axiom g j) =
-      {!idfun
+      idfun
         (Square
-          (λ j → {!!})
-          (λ j → {!!})
-          (λ i → {!!})
-          (λ i → {!!})
+          (λ j → (joinTerm sort ∘ mapTerm (mapTerm f) sort) (byAxiom axiom g j))
+          (λ j → (mapTerm f sort ∘ joinTerm sort) (byAxiom axiom g j))
+          (λ i → joinFQ (mapTermF-joinTerm-nat f i sort (mapTermF g sort (lhs axiom))))
+          (λ i → joinFQ (mapTermF-joinTerm-nat f i sort (mapTermF g sort (rhs axiom))))
         )
-        (toPathP (isSetTerm _ _ _ _)) i j!}
+        (toPathP (isSetTerm _ _ _ _)) i j
     joinTerm-nat f i sort (isSetTerm t1 t2 et et' j k) = isSetTerm
       (joinTerm-nat f i sort t1)
       (joinTerm-nat f i sort t2)
@@ -238,28 +233,92 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
         ≡⟨ mapTermF-∘ (mapTerm f) joinTerm ⟩
       (λ sort → mapTermF (mapTerm f) sort ∘ mapTermF joinTerm sort) ∎
 
-{-
     {-# TERMINATING #-}
-    joinTerm-nat : ∀ {X Y : MType} → (f : ∀ sort → X sort → Y sort) → ∀ sort → (t : Term (Term X) sort)
-      → joinTerm sort (mapTerm (mapTerm f) sort t) ≡ mapTerm f sort (joinTerm sort t)
-    mapTermF-joinTerm-nat : ∀ {X Y : MType} → (f : ∀ sort → X sort → Y sort) → ∀ sort → (t : TermF (Term (Term X)) sort)
-      → mapTermF joinTerm sort (mapTermF (mapTerm (mapTerm f)) sort t) ≡ mapTermF (mapTerm f) sort (mapTermF joinTerm sort t)
-    joinTerm-nat f sort (var t) = refl
-    joinTerm-nat f sort (ast t) i = ast (mapTerm1 (λ sort' t' → joinTerm-nat f sort' t' i) sort t)
-    joinTerm-nat f sort (joinFQ t) = cong joinFQ (mapTermF-joinTerm-nat f sort t)
-    joinTerm-nat f sort (joinFQ-varF t i) = {!!}
-    joinTerm-nat f sort (joinFQ-astF t i) = {!!}
-    joinTerm-nat f sort (byAxiom axiom f₁ i) = {!!}
-    joinTerm-nat f sort (isSetTerm t t₁ x y i i₁) = {!!}
-    mapTermF-joinTerm-nat f sort t =
-      mapTermF joinTerm sort (mapTermF (mapTerm (mapTerm f)) sort t)
-        ≡⟨ sym (λ i → mapTermF-∘ joinTerm (mapTerm (mapTerm f)) i sort t) ⟩
-      mapTermF (λ sort' t' → joinTerm sort' (mapTerm (mapTerm f) sort' t')) sort t
-        ≡⟨ cong (λ g → mapTermF g sort t) (funExt λ sort' → funExt λ t' → joinTerm-nat f sort' t') ⟩
-      mapTermF (λ sort' t' → mapTerm f sort' (joinTerm sort' t')) sort t
-        ≡⟨ (λ i → mapTermF-∘ (mapTerm f) joinTerm i sort t) ⟩
-      mapTermF (mapTerm f) sort (mapTermF joinTerm sort t) ∎
--}
+    joinTerm-lUnit : ∀ {X : MType} →
+      (λ sort → joinTerm sort ∘ mapTerm pureTerm sort) ≡ λ (sort : Sort) → idfun (Term X sort)
+    mapTermF-joinTerm-lUnit : ∀ {X : MType} →
+      (λ sort → mapTermF joinTerm sort ∘ mapTermF (mapTerm pureTerm) sort) ≡ λ (sort : Sort) → idfun (TermF (Term X) sort)
+    joinTerm-lUnit i sort (var x) = var x
+    joinTerm-lUnit i sort (ast t) = ast (mapTerm1 (joinTerm-lUnit i) sort t)
+    joinTerm-lUnit i sort (joinFQ t) = joinFQ (mapTermF-joinTerm-lUnit i sort t)
+    joinTerm-lUnit i sort (joinFQ-varF t j) =
+      idfun
+        (Square
+          (λ j → (joinTerm sort ∘ mapTerm pureTerm sort) (joinFQ-varF t j))
+          (λ j → joinFQ-varF t j)
+          (λ i → joinFQ (varF (joinTerm-lUnit i sort t)))
+          (λ i → joinTerm-lUnit i sort t)
+        )
+        (toPathP (isSetTerm _ _ _ _)) i j
+    joinTerm-lUnit i sort (joinFQ-astF t j) =
+      idfun
+        (Square
+          (λ j → (joinTerm sort ∘ mapTerm pureTerm sort) (joinFQ-astF t j))
+          (λ j → joinFQ-astF t j)
+          (λ i → joinFQ (astF (mapTerm1 (mapTermF-joinTerm-lUnit i) sort t)))
+          (λ i → ast (mapTerm1 (joinTerm-lUnit i) sort (mapTerm1 (λ sort₁ → joinFQ) sort t)))
+        )
+        (toPathP (isSetTerm _ _ _ _)) i j
+    joinTerm-lUnit i sort (byAxiom axiom f j) =
+      idfun
+        (Square
+          (λ j → (joinTerm sort ∘ mapTerm pureTerm sort) (byAxiom axiom f j))
+          (λ j → byAxiom axiom f j)
+          (λ i → joinFQ (mapTermF-joinTerm-lUnit i sort (mapTermF f sort (lhs axiom))))
+          (λ i → joinFQ (mapTermF-joinTerm-lUnit i sort (mapTermF f sort (rhs axiom))))
+        )
+        (toPathP (isSetTerm _ _ _ _)) i j
+    joinTerm-lUnit i sort (isSetTerm t1 t2 et et' j k) = isSetTerm
+      (joinTerm-lUnit i sort t1)
+      (joinTerm-lUnit i sort t2)
+      (λ j → joinTerm-lUnit i sort (et j))
+      (λ j → joinTerm-lUnit i sort (et' j)) j k
+    mapTermF-joinTerm-lUnit i sort (varF t) = varF (joinTerm-lUnit i sort t)
+    mapTermF-joinTerm-lUnit i sort (astF t) = astF (mapTerm1 (mapTermF-joinTerm-lUnit i) sort t)
+
+    {-# TERMINATING #-}
+    joinTerm-assoc : ∀ {X : MType} →
+      (λ (sort : Sort) → joinTerm {X = X} sort ∘ mapTerm joinTerm sort) ≡ (λ sort → joinTerm sort ∘ joinTerm sort)
+    mapTermF-joinTerm-assoc : ∀ {X : MType} →
+      (λ (sort : Sort) → mapTermF (joinTerm {X = X}) sort ∘ mapTermF (mapTerm joinTerm) sort)
+      ≡ (λ sort → mapTermF joinTerm sort ∘ mapTermF joinTerm sort)
+    joinTerm-assoc i sort (var t) = joinTerm sort t
+    joinTerm-assoc i sort (ast t) = ast (mapTerm1 (joinTerm-assoc i) sort t)
+    joinTerm-assoc i sort (joinFQ t) = joinFQ (mapTermF-joinTerm-assoc i sort t)
+    joinTerm-assoc i sort (joinFQ-varF t j) =
+      idfun
+        (Square
+          (λ j → (joinTerm sort ∘ mapTerm joinTerm sort) (joinFQ-varF t j))
+          (λ j → (joinTerm sort ∘ joinTerm sort) (joinFQ-varF t j))
+          (λ i → joinFQ (varF (joinTerm-assoc i sort t)))
+          (λ i → joinTerm-assoc i sort t)
+        )
+        (toPathP (isSetTerm _ _ _ _)) i j
+    joinTerm-assoc i sort (joinFQ-astF t j) =
+      idfun
+        (Square
+          (λ j → (joinTerm sort ∘ mapTerm joinTerm sort) (joinFQ-astF t j))
+          (λ j → (joinTerm sort ∘ joinTerm sort) (joinFQ-astF t j))
+          (λ i → joinFQ (astF (mapTerm1 (mapTermF-joinTerm-assoc i) sort t)))
+          (λ i → ast (mapTerm1 (joinTerm-assoc i) sort (mapTerm1 (λ sort₁ → joinFQ) sort t)))
+        )
+        (toPathP (isSetTerm _ _ _ _)) i j
+    joinTerm-assoc i sort (byAxiom axiom f j) =
+      idfun
+        (Square
+          (λ j → (joinTerm sort ∘ mapTerm joinTerm sort) (byAxiom axiom f j))
+          (λ j → (joinTerm sort ∘ joinTerm sort) (byAxiom axiom f j))
+          (λ i → joinFQ (mapTermF-joinTerm-assoc i sort (mapTermF f sort (lhs axiom))))
+          (λ i → joinFQ (mapTermF-joinTerm-assoc i sort (mapTermF f sort (rhs axiom))))
+        )
+        (toPathP (isSetTerm _ _ _ _)) i j
+    joinTerm-assoc i sort (isSetTerm t1 t2 et et' j k) = isSetTerm
+      (joinTerm-assoc i sort t1)
+      (joinTerm-assoc i sort t2)
+      (λ j → joinTerm-assoc i sort (et j))
+      (λ j → joinTerm-assoc i sort (et' j)) j k
+    mapTermF-joinTerm-assoc i sort (varF t) = varF (joinTerm-assoc i sort t)
+    mapTermF-joinTerm-assoc i sort (astF t) = astF (mapTerm1 (mapTermF-joinTerm-assoc i) sort t)
 
     ftrTerm : Functor catMSet catMSet
     F-ob ftrTerm = msetTerm
@@ -271,10 +330,10 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
     N-ob (η ismonadTerm) msetX sort = var
     N-hom (η ismonadTerm) f = refl
     N-ob (μ ismonadTerm) msetX = joinTerm
-    N-hom (μ ismonadTerm) {msetX}{msetY} f = {!!}
+    N-hom (μ ismonadTerm) {msetX}{msetY} f = joinTerm-nat f
     idl-μ ismonadTerm = makeNatTransPathP F-rUnit (λ i → ftrTerm) refl
-    idr-μ ismonadTerm = makeNatTransPathP F-lUnit (λ i → ftrTerm) {!!}
-    assoc-μ ismonadTerm = makeNatTransPathP F-assoc (λ i → ftrTerm) {!!}
+    idr-μ ismonadTerm = makeNatTransPathP F-lUnit (λ i → ftrTerm) (funExt λ msetX → joinTerm-lUnit)
+    assoc-μ ismonadTerm = makeNatTransPathP F-assoc (λ i → ftrTerm) (funExt λ msetX → joinTerm-assoc)
 
     monadTerm : Monad catMSet
     monadTerm = ftrTerm , ismonadTerm
