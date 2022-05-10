@@ -124,6 +124,10 @@ F-seq ftrTermF f g = mapTermF-∘ g f
 open NatTrans
 
 -- components of TermF as a monad
+
+pureTermF : ∀ {X} sort → X sort → TermF X sort
+pureTermF sort = varF
+
 ηTermF : NatTrans (ftrId catMSet) ftrTermF
 N-ob ηTermF msetX sortOut = varF
 N-hom ηTermF {msetX} {msetY} f = refl
@@ -208,15 +212,37 @@ mFFoldModelF-nat :  (msetX : MSet) → (mFA mFB : ModelF)
     )
   ≡ _⋆_ catModelF {x = F-ob ftrFreeModelF msetX} {mFA} {mFB} (mFFoldModelF msetX mFA f) mFG
 mFFoldModelF-nat msetX mFA mFB mFG f =
-  {!?
-    !}
+  sym (adjNatInD' adjModelF {c = msetX} {d = mFA} {d' = mFB} f mFG)
 
 foldModelF-nat : (msetX : MSet) → (mFA mFB : ModelF)
   → (mFG : catModelF [ mFA , mFB ])
   → (f : catMSet [ msetX , F-ob ftrForgetModelF mFA ])
   → foldModelF msetX mFB (λ sort → F-hom ftrForgetModelF {x = mFA} {y = mFB} mFG sort ∘ f sort)
    ≡ (λ sort → F-hom ftrForgetModelF {x = mFA} {y = mFB} mFG sort ∘ foldModelF msetX mFA f sort)
-foldModelF-nat msetX mFA mFB mFG f = {!!}
+foldModelF-nat msetX mFA mFB mFG f i = mFFoldModelF-nat msetX mFA mFB mFG f i .carrierHom
+
+mFFoldModelF-uniq : (msetX : MSet) → (mFA : ModelF)
+  → (f : catMSet [ msetX , F-ob ftrForgetModelF mFA ])
+  → (mFG : catModelF [ F-ob ftrFreeModelF msetX , mFA ])
+  → (λ sort → mFG .carrierHom sort ∘ pureTermF sort) ≡ f
+  → mFFoldModelF msetX mFA f ≡ mFG
+mFFoldModelF-uniq msetX mFA f mFG ef =
+  mFFoldModelF msetX mFA f
+    ≡⟨⟩
+  _♯ adjModelF {c = msetX} {d = mFA} f
+    ≡⟨ cong (_♯ adjModelF {c = msetX} {d = mFA}) (sym ef) ⟩
+  _♯ adjModelF {c = msetX} {d = mFA} (λ sort → mFG .carrierHom sort ∘ pureTermF sort)
+    ≡⟨⟩
+  _♯ adjModelF {c = msetX} {d = mFA} (_♭ adjModelF {c = msetX} {d = mFA} mFG)
+    ≡⟨ adjModelF .adjIso {c = msetX} {d = mFA} .leftInv mFG ⟩
+  mFG ∎
+
+foldModelF-uniq : (msetX : MSet) → (mFA : ModelF)
+  → (f : catMSet [ msetX , F-ob ftrForgetModelF mFA ])
+  → (mFG : catModelF [ F-ob ftrFreeModelF msetX , mFA ])
+  → (λ sort → mFG .carrierHom sort ∘ pureTermF sort) ≡ f
+  → foldModelF msetX mFA f ≡ mFG .carrierHom
+foldModelF-uniq msetX mFA f mFG ef i = mFFoldModelF-uniq msetX mFA f mFG ef i .carrierHom
 
 -- Sending models of Term1 to models of TermF
 module _ where
