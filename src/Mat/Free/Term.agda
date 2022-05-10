@@ -187,7 +187,7 @@ ftrFreeModelF = FreeEMAlgebra monadTermF
 adjModelF : ftrFreeModelF ⊣ ftrForgetModelF
 adjModelF = emAdjunction monadTermF
 
--- Recursion/folding and properties
+-- Recursion/folding (with metavariables) and properties
 
 mFFoldModelF : (msetX : MSet) → (mFA : ModelF)
   → catMSet [ msetX , F-ob ftrForgetModelF mFA ]
@@ -303,7 +303,7 @@ module _ where
     (AlgebrasFunctor {F = ftrTerm1} {G = ftrTermF} nt1toF)
     (ForgetEM monadTermF)
 
--- identity at Term1
+-- Isomorphism components of Model1 ↔ ModelF
 module _ where
   ftrModel1toFto1 : funcComp ftrModelFto1 ftrModel1toF ≡ ftrId catModel1
   ftrModel1toFto1 = Functor≡
@@ -346,6 +346,7 @@ module _ where
           ≡⟨⟩
         α sort (astF (term1 o args)) ∎
 
+-- Model1 ≅ ModelF
 open PrecatIso
 isoftrModel1toF : PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModel1 catModelF
 mor isoftrModel1toF = ftrModel1toF
@@ -353,6 +354,7 @@ inv isoftrModel1toF = ftrModelFto1
 sec isoftrModel1toF = ftrModelFto1toF
 ret isoftrModel1toF = ftrModel1toFto1
 
+-- Syntax object
 module _ where
 
   SyntaxF : MType

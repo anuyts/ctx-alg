@@ -2,14 +2,19 @@
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.Isomorphism renaming (Iso to _≅_)
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
 open import Cubical.Data.Sigma
+open import Cubical.Foundations.Structure hiding (str)
 open import Cubical.Categories.Category
+import Cubical.Categories.Category.Precategory as P
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Monad.Base
 open import Cubical.Categories.Instances.FunctorAlgebras
 open import Cubical.Categories.Instances.EilenbergMoore
+open import Cubical.Categories.Adjoint
+open import Cubical.Categories.Constructions.FullSubcategory
 
 open import Mat.Signature
 open import Mat.Free.Presentation
@@ -27,9 +32,14 @@ open EqTheory (getEqTheory mat)
 
 open Category hiding (_∘_)
 open Functor
+open Algebra
 open IsMonad
 open NatTrans
 open IsEMAlgebra
+open NaturalBijection
+open _⊣_
+open AlgebraHom
+open _≅_
 
 -- Syntax monad
 data Term (X : MType) : (sort : Sort) → Type where
@@ -186,7 +196,7 @@ joinTerm sort (isSetTerm t1 t2 et et' i j) = isSetTerm
   (joinTerm sort t2)
   (λ k → joinTerm sort (et k))
   (λ k → joinTerm sort (et' k)) i j
-  
+
 {-# TERMINATING #-}
 joinTerm-nat : ∀ {X Y : MType} → (f : ∀ sort → X sort → Y sort) →
   (λ sort → joinTerm sort ∘ mapTerm (mapTerm f) sort)
@@ -357,3 +367,74 @@ ftrForgetModel = ForgetEMAlgebra monadTerm
 -- Free model functor
 ftrFreeModel : Functor catMSet catModel
 ftrFreeModel = FreeEMAlgebra monadTerm
+
+adjModel : ftrFreeModel ⊣ ftrForgetModel
+adjModel = emAdjunction monadTerm
+
+-- Recursion/folding (with metavariables) and properties
+
+mFoldModel : (msetX : MSet) → (mA : Model)
+  → catMSet [ msetX , F-ob ftrForgetModel mA ]
+  → catModel [ F-ob ftrFreeModel msetX , mA ]
+mFoldModel msetX mA = _♯ adjModel {c = msetX} {d = mA}
+
+foldModel : (msetX : MSet) → (mA : Model)
+  → catMSet [ msetX , F-ob ftrForgetModel mA ]
+  → ∀ sort → Term (mtyp msetX) sort → typ (carrier (fst mA) sort)
+foldModel msetX mA f = mFoldModel msetX mA f .carrierHom
+
+mFoldModel-nat :  (msetX : MSet) → (mA mB : Model)
+  → (mG : catModel [ mA , mB ])
+  → (f : catMSet [ msetX , F-ob ftrForgetModel mA ])
+  → mFoldModel msetX mB (_⋆_
+      catMSet
+      {x = msetX}
+      {y = F-ob ftrForgetModel mA}
+      {z = F-ob ftrForgetModel mB}
+      f
+      (F-hom ftrForgetModel {x = mA} {y = mB} mG)
+    )
+  ≡ _⋆_ catModel {x = F-ob ftrFreeModel msetX} {mA} {mB} (mFoldModel msetX mA f) mG
+mFoldModel-nat msetX mA mB mG f =
+  sym (adjNatInD' adjModel {c = msetX} {d = mA} {d' = mB} f mG)
+
+foldModel-nat : (msetX : MSet) → (mA mB : Model)
+  → (mG : catModel [ mA , mB ])
+  → (f : catMSet [ msetX , F-ob ftrForgetModel mA ])
+  → foldModel msetX mB (λ sort → F-hom ftrForgetModel {x = mA} {y = mB} mG sort ∘ f sort)
+   ≡ (λ sort → F-hom ftrForgetModel {x = mA} {y = mB} mG sort ∘ foldModel msetX mA f sort)
+foldModel-nat msetX mA mB mG f i = mFoldModel-nat msetX mA mB mG f i .carrierHom
+
+mFoldModel-uniq : (msetX : MSet) → (mA : Model)
+  → (f : catMSet [ msetX , F-ob ftrForgetModel mA ])
+  → (mG : catModel [ F-ob ftrFreeModel msetX , mA ])
+  → (λ sort → mG .carrierHom sort ∘ pureTerm sort) ≡ f
+  → mFoldModel msetX mA f ≡ mG
+mFoldModel-uniq msetX mA f mG ef =
+  mFoldModel msetX mA f
+    ≡⟨⟩
+  _♯ adjModel {c = msetX} {d = mA} f
+    ≡⟨ cong (_♯ adjModel {c = msetX} {d = mA}) (sym ef) ⟩
+  _♯ adjModel {c = msetX} {d = mA} (λ sort → mG .carrierHom sort ∘ pureTerm sort)
+    ≡⟨⟩
+  _♯ adjModel {c = msetX} {d = mA} (_♭ adjModel {c = msetX} {d = mA} mG)
+    ≡⟨ adjModel .adjIso {c = msetX} {d = mA} .leftInv mG ⟩
+  mG ∎
+
+foldModel-uniq : (msetX : MSet) → (mA : Model)
+  → (f : catMSet [ msetX , F-ob ftrForgetModel mA ])
+  → (mG : catModel [ F-ob ftrFreeModel msetX , mA ])
+  → (λ sort → mG .carrierHom sort ∘ pureTerm sort) ≡ f
+  → foldModel msetX mA f ≡ mG .carrierHom
+foldModel-uniq msetX mA f mG ef i = mFoldModel-uniq msetX mA f mG ef i .carrierHom
+
+-- catModel as a full subcategory of catModelF
+respectsEqTheory : ModelF → Type
+respectsEqTheory mA = ∀ {sort} → (axiom : Axiom sort)
+  → (f : ∀ sort' → mtyp (msetArity axiom) sort' → mtyp (mA .fst .carrier) sort')
+  → (mA .fst .str sort ∘ mapTermF f sort) (lhs axiom)
+   ≡ (mA .fst .str sort ∘ mapTermF f sort) (rhs axiom)
+
+catModelFEq : Category ℓ-zero ℓ-zero
+catModelFEq = FullSubcategory catModelF respectsEqTheory
+
