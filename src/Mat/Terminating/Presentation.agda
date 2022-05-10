@@ -14,7 +14,7 @@ open import Mat.Signature
 open import Mat.Free.Presentation
 import Mat.Free.Term
 
-module Mat.Quotiented.Terminating.Presentation where
+module Mat.Terminating.Presentation where
 
 module EqTheory {sign : Signature} (presF : PresentationF sign) where
   open Signature sign
