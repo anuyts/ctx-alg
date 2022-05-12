@@ -602,23 +602,24 @@ ModelHom1Eq→IsTermAlgebraHom' m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (
   str (fst m1EqB) sort (mapTerm1 (Model1Eq→IsTermAlgebra m1EqB) sort (mapTerm1 (mapTerm f) sort t)) ∎
 ModelHom1Eq→IsTermAlgebraHom' m1EqA m1EqB m1EqF sort (joinFQ t) i =
   mapTermF-ModelHom1Eq→IsTermAlgebraHom' m1EqA m1EqB m1EqF sort t i
+-- The following all follows from Sethood but there seems to be a de Bruijn error in agda-cubical?
 ModelHom1Eq→IsTermAlgebraHom'
   m1EqA@(algebra msetA α1 , respectsEqA)
   m1EqB@(algebra msetB β1 , respectsEqB)
   m1EqF@(algebraHom f f-isalg1) sort (joinFQ-varF t j) i =
-  {!idfun
+  idfun
     (Square
-      (λ j → {!t sort
-                                   (Model1Eq→IsTermAlgebra
-                                    (algebra (carrier (fst m1EqA)) (str (fst m1EqA)) , snd m1EqA)
-                                    sort t)!})
-      (λ j → {!Model1Eq→IsTermAlgebra
-                                   (algebra msetB β1 , respectsEqB) sort (mapTerm t sort t)!})
-      (λ i → {!mapTermF-ModelHom1Eq→IsTermAlgebraHom' m1EqA
-                   (algebra msetB β1 , respectsEqB) t (algebraHom j sort) (varF t) i!})
-      (λ i → {!ModelHom1Eq→IsTermAlgebraHom' m1EqA
-                   (algebra msetB β1 , respectsEqB) (algebraHom t j) sort t i!})
-    ) (toPathP (snd (msetB sort) _ _ _ _)) i j!}
+      (λ j → f sort
+         (Model1Eq→IsTermAlgebra (algebra msetA α1 , respectsEqA) sort t))
+      (λ j → Model1Eq→IsTermAlgebra (algebra msetB β1 , respectsEqB)
+         sort (mapTerm f sort t))
+      (λ i → mapTermF-ModelHom1Eq→IsTermAlgebraHom'
+         (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
+         (algebraHom f f-isalg1) sort (varF t) {!i!})
+      (λ i → ModelHom1Eq→IsTermAlgebraHom'
+         (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
+         (algebraHom f f-isalg1) sort t i)
+    ) (toPathP (snd (msetB sort) _ _ _ _)) i j
 ModelHom1Eq→IsTermAlgebraHom' m1EqA m1EqB@(algebra msetB β1 , respectsEqB) m1EqF sort (joinFQ-astF t j) i =
   {!idfun
     (Square
@@ -636,7 +637,11 @@ ModelHom1Eq→IsTermAlgebraHom' m1EqA m1EqB@(algebra msetB β1 , respectsEqB) m1
       (λ i → {!!})
     ) (toPathP (snd (msetB sort) _ _ _ _)) i j!}
 ModelHom1Eq→IsTermAlgebraHom' m1EqA m1EqB@(algebra msetB β1 , respectsEqB) m1EqF sort (isSetTerm t1 t2 et et' j k) i =
-  {!!}
+  {!snd (msetB sort)
+    ?
+    ?
+    ?
+    ? j k!}
 mapTermF-ModelHom1Eq→IsTermAlgebraHom'
   m1EqA@(algebra msetA α1 , respectsEqA)
   m1EqB@(algebra msetB β1 , respectsEqB)
@@ -679,7 +684,7 @@ ModelHom1Eq→IsTermAlgebraHom m1EqA m1EqB m1EqF i sort t =
 
 ModelHom1Eq→ModelHom : ∀ m1EqA m1EqB → Model1EqHom m1EqA m1EqB → ModelHom (Model1Eq→Model m1EqA) (Model1Eq→Model m1EqB)
 carrierHom (ModelHom1Eq→ModelHom m1EqA m1EqB m1EqF) = carrierHom m1EqF
-strHom (ModelHom1Eq→ModelHom m1EqA m1EqB m1EqF) = {!!}
+strHom (ModelHom1Eq→ModelHom m1EqA m1EqB m1EqF) = ModelHom1Eq→IsTermAlgebraHom m1EqA m1EqB m1EqF
 
 ftrModel1Eq→Model : Functor catModel1Eq catModel
 F-ob ftrModel1Eq→Model = Model1Eq→Model
