@@ -357,42 +357,42 @@ monadTerm = ftrTerm , ismonadTerm
 ------------
 
 {-# TERMINATING #-}
-termFtoQ : ∀ {X : MType} sort → TermF X sort → Term X sort
-termFtoQ sort (varF x) = var x
-termFtoQ sort (astF t) = ast (mapTerm1 termFtoQ sort t)
+termF→Q : ∀ {X : MType} sort → TermF X sort → Term X sort
+termF→Q sort (varF x) = var x
+termF→Q sort (astF t) = ast (mapTerm1 termF→Q sort t)
 
 {-# TERMINATING #-}
-termFtoQ-nat : ∀ {X Y : MType} → (f : ∀ sort → X sort → Y sort)
-  → (λ (sort : Sort) → termFtoQ sort ∘ mapTermF f sort)
-   ≡ (λ (sort : Sort) → mapTerm f sort ∘ termFtoQ sort)
-termFtoQ-nat f i sort (varF x) = var (f sort x)
-termFtoQ-nat f i sort (astF t) = ast (mapTerm1 (termFtoQ-nat f i) sort t)
+termF→Q-nat : ∀ {X Y : MType} → (f : ∀ sort → X sort → Y sort)
+  → (λ (sort : Sort) → termF→Q sort ∘ mapTermF f sort)
+   ≡ (λ (sort : Sort) → mapTerm f sort ∘ termF→Q sort)
+termF→Q-nat f i sort (varF x) = var (f sort x)
+termF→Q-nat f i sort (astF t) = ast (mapTerm1 (termF→Q-nat f i) sort t)
 
 {-# TERMINATING #-}
-termFtoQ-joinTermF : ∀ {X : MType}
- → (λ (sort : Sort) → termFtoQ {X} sort ∘ joinTermF sort)
-  ≡ (λ (sort : Sort) → joinTerm sort ∘ termFtoQ sort ∘ mapTermF termFtoQ sort)
-termFtoQ-joinTermF i sort (varF t) = termFtoQ sort t
-termFtoQ-joinTermF i sort (astF t) = ast (mapTerm1 (termFtoQ-joinTermF i) sort t)
+termF→Q-joinTermF : ∀ {X : MType}
+ → (λ (sort : Sort) → termF→Q {X} sort ∘ joinTermF sort)
+  ≡ (λ (sort : Sort) → joinTerm sort ∘ termF→Q sort ∘ mapTermF termF→Q sort)
+termF→Q-joinTermF i sort (varF t) = termF→Q sort t
+termF→Q-joinTermF i sort (astF t) = ast (mapTerm1 (termF→Q-joinTermF i) sort t)
 
-ntTermFtoQ : NatTrans ftrTermF ftrTerm
-N-ob ntTermFtoQ msetX = termFtoQ
-N-hom ntTermFtoQ {msetX} {msetY} f = termFtoQ-nat f
+ntTermF→Q : NatTrans ftrTermF ftrTerm
+N-ob ntTermF→Q msetX = termF→Q
+N-hom ntTermF→Q {msetX} {msetY} f = termF→Q-nat f
 
-ismonadTermFtoQ : IsMonadHom monadTermF monadTerm ntTermFtoQ
-N-η ismonadTermFtoQ = makeNatTransPath refl
-N-μ ismonadTermFtoQ = makeNatTransPath (funExt λ msetX → termFtoQ-joinTermF)
+ismonadTermF→Q : IsMonadHom monadTermF monadTerm ntTermF→Q
+N-η ismonadTermF→Q = makeNatTransPath refl
+N-μ ismonadTermF→Q = makeNatTransPath (funExt λ msetX → termF→Q-joinTermF)
 
-monadTermFtoQ : MonadHom monadTermF monadTerm
-fst monadTermFtoQ = ntTermFtoQ
-snd monadTermFtoQ = ismonadTermFtoQ
+monadTermF→Q : MonadHom monadTermF monadTerm
+fst monadTermF→Q = ntTermF→Q
+snd monadTermF→Q = ismonadTermF→Q
 
 {-# TERMINATING #-}
-joinFQ-mapTermF-pureTerm : ∀ {X : MType} → (λ (sort : Sort) → joinFQ {X} ∘ mapTermF pureTerm sort) ≡ termFtoQ
+joinFQ-mapTermF-pureTerm : ∀ {X : MType} → (λ (sort : Sort) → joinFQ {X} ∘ mapTermF pureTerm sort) ≡ termF→Q
 joinFQ-mapTermF-pureTerm i sort (varF x) = joinFQ-varF (var x) i
 joinFQ-mapTermF-pureTerm i sort (astF t) = idfun
   ( (joinFQ ∘ mapTermF pureTerm sort) (astF t)
-  ≡ ast (mapTerm1 termFtoQ sort t)
+  ≡ ast (mapTerm1 termF→Q sort t)
   )
   (
     joinFQ (astF (mapTerm1 (mapTermF pureTerm) sort t))
@@ -401,6 +401,6 @@ joinFQ-mapTermF-pureTerm i sort (astF t) = idfun
       ≡⟨⟩
     ast (mapTerm1 (λ sort' → joinFQ ∘ mapTermF pureTerm sort') sort t)
       ≡⟨ cong ast (cong (λ f → mapTerm1 f sort t) joinFQ-mapTermF-pureTerm) ⟩
-    ast (mapTerm1 termFtoQ sort t) ∎
+    ast (mapTerm1 termF→Q sort t) ∎
   )
   i

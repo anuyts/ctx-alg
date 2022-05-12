@@ -258,74 +258,77 @@ foldModelF-uniq2 msetX mFA mFG mFH e =
 
 -- Sending models of Term1 to models of TermF
 module _ where
-  model1toF-algStr : ((algebra msetA α) : Model1) → IsAlgebra ftrTermF msetA
-  model1toF-algStr (algebra msetA α) sort (varF a) = a
-  model1toF-algStr (algebra msetA α) sort (astF (term1 o args)) =
-    α sort (term1 o λ p → model1toF-algStr (algebra msetA α) (arity o ! p) (args p))
+  model1→F-algStr : ((algebra msetA α) : Model1) → IsAlgebra ftrTermF msetA
+  model1→F-algStr (algebra msetA α) sort (varF a) = a
+  model1→F-algStr (algebra msetA α) sort (astF (term1 o args)) =
+    α sort (term1 o λ p → model1→F-algStr (algebra msetA α) (arity o ! p) (args p))
 
-  model1toF-algStr-joinTermF :
+  model1→F-algStr-joinTermF :
     ((algebra msetA α) : Model1) →
     ∀ sort →
     (tta : TermF (λ sort₁ → TermF (λ sort₂ → fst (msetA sort₂)) sort₁) sort) →
-    model1toF-algStr (algebra msetA α) sort (joinTermF sort tta) ≡
-    model1toF-algStr (algebra msetA α) sort (mapTermF (model1toF-algStr (algebra msetA α)) sort tta)
-  model1toF-algStr-joinTermF (algebra msetA α) sort (varF ta) = refl
-  model1toF-algStr-joinTermF (algebra msetA α) sort (astF (term1 o args)) =
-    cong (α sort) (cong (term1 o) (funExt λ p → model1toF-algStr-joinTermF (algebra msetA α) (arity o ! p) (args p)))
+    model1→F-algStr (algebra msetA α) sort (joinTermF sort tta) ≡
+    model1→F-algStr (algebra msetA α) sort (mapTermF (model1→F-algStr (algebra msetA α)) sort tta)
+  model1→F-algStr-joinTermF (algebra msetA α) sort (varF ta) = refl
+  model1→F-algStr-joinTermF (algebra msetA α) sort (astF (term1 o args)) =
+    cong (α sort) (cong (term1 o) (funExt λ p → model1→F-algStr-joinTermF (algebra msetA α) (arity o ! p) (args p)))
 
-  model1toF : Model1 → ModelF
-  carrier (fst (model1toF (algebra msetA α))) = msetA
-  algStr (fst (model1toF (algebra msetA α))) = model1toF-algStr (algebra msetA α)
-  str-η (snd (model1toF (algebra msetA α))) = refl
-  str-μ (snd (model1toF (algebra msetA α))) = funExt λ sort → funExt λ tta → model1toF-algStr-joinTermF (algebra msetA α) sort tta
+  model1→F : Model1 → ModelF
+  carrier (fst (model1→F (algebra msetA α))) = msetA
+  algStr (fst (model1→F (algebra msetA α))) = model1→F-algStr (algebra msetA α)
+  str-η (snd (model1→F (algebra msetA α))) = refl
+  str-μ (snd (model1→F (algebra msetA α))) = funExt λ sort → funExt λ tta → model1→F-algStr-joinTermF (algebra msetA α) sort tta
 
-  model1toF-ishom : ∀ {(algebra msetA α) (algebra msetB β) : Algebra ftrTerm1} → ((algebraHom f isalgF)
+  model1→F-ishom : ∀ {(algebra msetA α) (algebra msetB β) : Algebra ftrTerm1} → ((algebraHom f isalgF)
     : Model1Hom (algebra msetA α) (algebra msetB β)) → ∀ sort ta
-    → f sort (model1toF-algStr (algebra msetA α) sort ta) ≡ model1toF-algStr (algebra msetB β) sort (mapTermF f sort ta)
-  model1toF-ishom {algebra msetA α} {algebra msetB β} (algebraHom f commut) sort (varF a) = refl
-  model1toF-ishom {algebra msetA α} {algebra msetB β} (algebraHom f commut) sort (astF (term1 o args)) =
-    f sort (α sort (term1 o (λ p → model1toF-algStr (algebra msetA α) (arity o ! p) (args p))))
-      ≡⟨ commut' sort (term1 o λ p → model1toF-algStr (algebra msetA α) (arity o ! p) (args p)) ⟩
-    β sort (term1 o (λ p → f (arity o ! p) (model1toF-algStr (algebra msetA α) (arity o ! p) (args p))))
-      ≡⟨ cong (β sort) (cong (term1 o) (funExt λ p → model1toF-ishom (algebraHom f commut) (arity o ! p) (args p))) ⟩
-    β sort (term1 o (λ p → model1toF-algStr (algebra msetB β) (arity o ! p) (mapTermF f (arity o ! p) (args p)))) ∎
+    → f sort (model1→F-algStr (algebra msetA α) sort ta) ≡ model1→F-algStr (algebra msetB β) sort (mapTermF f sort ta)
+  model1→F-ishom {algebra msetA α} {algebra msetB β} (algebraHom f commut) sort (varF a) = refl
+  model1→F-ishom {algebra msetA α} {algebra msetB β} (algebraHom f commut) sort (astF (term1 o args)) =
+    f sort (α sort (term1 o (λ p → model1→F-algStr (algebra msetA α) (arity o ! p) (args p))))
+      ≡⟨ commut' sort (term1 o λ p → model1→F-algStr (algebra msetA α) (arity o ! p) (args p)) ⟩
+    β sort (term1 o (λ p → f (arity o ! p) (model1→F-algStr (algebra msetA α) (arity o ! p) (args p))))
+      ≡⟨ cong (β sort) (cong (term1 o) (funExt λ p → model1→F-ishom (algebraHom f commut) (arity o ! p) (args p))) ⟩
+    β sort (term1 o (λ p → model1→F-algStr (algebra msetB β) (arity o ! p) (mapTermF f (arity o ! p) (args p)))) ∎
     where commut' : ∀ sort ((term1 o' args') : Term1 (mtyp msetA) sort)
                   → f sort (α sort (term1 o' args')) ≡ β sort (term1 o' λ p → f (arity o' ! p) (args' p))
           commut' sort ta i = commut i sort ta
 
-  model1toF-hom : ∀ {m1A m1B} → (m1F : Model1Hom m1A m1B) → ModelFHom (model1toF m1A) (model1toF m1B)
-  carrierHom (model1toF-hom {algebra msetA α} {algebra msetB β} (algebraHom f commut)) = f
-  strHom (model1toF-hom {algebra msetA α} {algebra msetB β} (algebraHom f commut)) =
-    funExt λ sort → funExt λ ta → model1toF-ishom (algebraHom f commut) sort ta
+  model1→F-hom : ∀ {m1A m1B} → (m1F : Model1Hom m1A m1B) → ModelFHom (model1→F m1A) (model1→F m1B)
+  carrierHom (model1→F-hom {algebra msetA α} {algebra msetB β} (algebraHom f commut)) = f
+  strHom (model1→F-hom {algebra msetA α} {algebra msetB β} (algebraHom f commut)) =
+    funExt λ sort → funExt λ ta → model1→F-ishom (algebraHom f commut) sort ta
 
-  ftrModel1toF : Functor catModel1 catModelF
-  F-ob ftrModel1toF = model1toF
-  F-hom ftrModel1toF = model1toF-hom
-  F-id ftrModel1toF = AlgebraHom≡ ftrTermF refl
-  F-seq ftrModel1toF algF algG = AlgebraHom≡ ftrTermF refl
+  ftrModel1→F : Functor catModel1 catModelF
+  F-ob ftrModel1→F = model1→F
+  F-hom ftrModel1→F = model1→F-hom
+  F-id ftrModel1→F = AlgebraHom≡ ftrTermF refl
+  F-seq ftrModel1→F algF algG = AlgebraHom≡ ftrTermF refl
 
 -- sending models of TermF to models of Term1
 module _ where
-  nt1toF : NatTrans ftrTerm1 ftrTermF
-  N-ob nt1toF msetA sort (term1 o args) = astF (term1 o λ p → varF (args p))
-  N-hom nt1toF f = refl
+  nt1→F : NatTrans ftrTerm1 ftrTermF
+  N-ob nt1→F msetA sort (term1 o args) = astF (term1 o λ p → varF (args p))
+  N-hom nt1→F f = refl
 
-  ftrModelFto1 : Functor catModelF catModel1
-  ftrModelFto1 = funcComp {-{D = AlgebrasCategory ftrTermF}{E = catModel1}{C = catModelF}-}
-    (AlgebrasFunctor {F = ftrTerm1} {G = ftrTermF} nt1toF)
+  ftrModelF→1 : Functor catModelF catModel1
+  ftrModelF→1 = funcComp {-{D = AlgebrasCategory ftrTermF}{E = catModel1}{C = catModelF}-}
+    (AlgebrasFunctor {F = ftrTerm1} {G = ftrTermF} nt1→F)
     (ForgetEM monadTermF)
+
+  modelF→1 : ModelF → Model1
+  modelF→1 = F-ob ftrModelF→1
 
 -- Isomorphism components of Model1 ↔ ModelF
 module _ where
-  ftrModel1toFto1 : funcComp ftrModelFto1 ftrModel1toF ≡ ftrId catModel1
-  ftrModel1toFto1 = Functor≡
+  ftrModel1→F→1 : funcComp ftrModelF→1 ftrModel1→F ≡ ftrId catModel1
+  ftrModel1→F→1 = Functor≡
     (λ (algebra msetA α) → refl)
     (λ where
       {algebra msetA α} {algebra msetB β} (algebraHom f isalgF) → AlgebraHom≡ ftrTerm1 refl
     )
 
-  ftrModelFto1toF : funcComp ftrModel1toF ftrModelFto1 ≡ ftrId catModelF
-  ftrModelFto1toF = Functor≡
+  ftrModelF→1→F : funcComp ftrModel1→F ftrModelF→1 ≡ ftrId catModelF
+  ftrModelF→1→F = Functor≡
     (λ where
       (algebra msetA α , isEMA) → Σ≡Prop
         (λ algA → isPropIsEMAlgebra monadTermF)
@@ -339,11 +342,11 @@ module _ where
       open IsEMAlgebra
       lemma : ∀ ((algebra msetA α) : Algebra ftrTermF) (isEMA : IsEMAlgebra monadTermF (algebra msetA α))
         (sort : Sort) (ta : TermF (λ sort₁ → fst (msetA sort₁)) sort) →
-        model1toF-algStr (algebra msetA (λ sort' (term1 o args) → α sort' (astF (term1 o λ p → varF (args p))))) sort ta
+        model1→F-algStr (algebra msetA (λ sort' (term1 o args) → α sort' (astF (term1 o λ p → varF (args p))))) sort ta
         ≡ α sort ta
       lemma (algebra msetA α) isEMA sort (varF a) = sym ((str-η isEMA ≡$ sort) ≡$ a)
       lemma (algebra msetA α) isEMA sort (astF (term1 o args)) =
-        α sort (astF (term1 o λ p → varF (model1toF-algStr (algebra msetA (λ sort' (term1 o' args') →
+        α sort (astF (term1 o λ p → varF (model1→F-algStr (algebra msetA (λ sort' (term1 o' args') →
                     α sort' (astF (term1 o' λ p₁ → varF (args' p₁))))) (arity o ! p) (args p))))
           ≡⟨ cong (α sort) (cong astF (cong (term1 o) (funExt λ p
               → cong varF (lemma (algebra msetA α) isEMA (arity o ! p) (args p))))) ⟩
@@ -360,11 +363,11 @@ module _ where
 
 -- Model1 ≅ ModelF
 open PrecatIso
-isoftrModel1toF : PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModel1 catModelF
-mor isoftrModel1toF = ftrModel1toF
-inv isoftrModel1toF = ftrModelFto1
-sec isoftrModel1toF = ftrModelFto1toF
-ret isoftrModel1toF = ftrModel1toFto1
+isoftrModel1→F : PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModel1 catModelF
+mor isoftrModel1→F = ftrModel1→F
+inv isoftrModel1→F = ftrModelF→1
+sec isoftrModel1→F = ftrModelF→1→F
+ret isoftrModel1→F = ftrModel1→F→1
 
 -- Syntax object
 module _ where
@@ -390,7 +393,7 @@ module _ where
     isInitial-msetEmpty
 
   m1SyntaxF : Model1
-  m1SyntaxF = F-ob ftrModelFto1 mFSyntaxF
+  m1SyntaxF = F-ob ftrModelF→1 mFSyntaxF
 
   {- Ways to prove initiality of m1SyntaxF:
      - directly (seems stupid)
