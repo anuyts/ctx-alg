@@ -430,6 +430,18 @@ foldModel-uniq : (msetX : MSet) → (mA : Model)
   → foldModel msetX mA f ≡ mG .carrierHom
 foldModel-uniq msetX mA f mG ef i = mFoldModel-uniq msetX mA f mG ef i .carrierHom
 
+foldModel-uniq2 : (msetX : MSet) → (mA : Model)
+  → (mG mH : catModel [ F-ob ftrFreeModel msetX , mA ])
+  → (λ (sort : Sort) → mG .carrierHom sort ∘ pureTerm sort)
+   ≡ (λ (sort : Sort) → mH .carrierHom sort ∘ pureTerm sort)
+  → mG .carrierHom ≡ mH .carrierHom
+foldModel-uniq2 msetX mA mG mH e =
+  mG .carrierHom
+    ≡⟨ sym (foldModel-uniq msetX mA (λ sort → mG .carrierHom sort ∘ pureTerm sort) mG refl) ⟩
+  foldModel msetX mA (λ sort → mG .carrierHom sort ∘ pureTerm sort)
+    ≡⟨ foldModel-uniq msetX mA (λ sort → mG .carrierHom sort ∘ pureTerm sort) mH (sym e) ⟩
+  mH .carrierHom ∎
+
 -- catModel as a full subcategory of catModelF and catModel1
 respectsEqTheoryF : ModelF → Type
 respectsEqTheoryF mA = ∀ {sort} → (axiom : Axiom sort)
@@ -590,7 +602,10 @@ ModelHom1Eq→IsTermAlgebraHom' m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (
   str (fst m1EqB) sort (mapTerm1 (Model1Eq→IsTermAlgebra m1EqB) sort (mapTerm1 (mapTerm f) sort t)) ∎
 ModelHom1Eq→IsTermAlgebraHom' m1EqA m1EqB m1EqF sort (joinFQ t) i =
   mapTermF-ModelHom1Eq→IsTermAlgebraHom' m1EqA m1EqB m1EqF sort t i
-ModelHom1Eq→IsTermAlgebraHom' m1EqA m1EqB@(algebra msetB β1 , respectsEqB) m1EqF sort (joinFQ-varF t j) i =
+ModelHom1Eq→IsTermAlgebraHom'
+  m1EqA@(algebra msetA α1 , respectsEqA)
+  m1EqB@(algebra msetB β1 , respectsEqB)
+  m1EqF@(algebraHom f f-isalg1) sort (joinFQ-varF t j) i =
   {!idfun
     (Square
       (λ j → {!t sort

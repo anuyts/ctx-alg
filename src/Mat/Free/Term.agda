@@ -244,6 +244,18 @@ foldModelF-uniq : (msetX : MSet) → (mFA : ModelF)
   → foldModelF msetX mFA f ≡ mFG .carrierHom
 foldModelF-uniq msetX mFA f mFG ef i = mFFoldModelF-uniq msetX mFA f mFG ef i .carrierHom
 
+foldModelF-uniq2 : (msetX : MSet) → (mFA : ModelF)
+  → (mFG mFH : catModelF [ F-ob ftrFreeModelF msetX , mFA ])
+  → (λ (sort : Sort) → mFG .carrierHom sort ∘ pureTermF sort)
+   ≡ (λ (sort : Sort) → mFH .carrierHom sort ∘ pureTermF sort)
+  → mFG .carrierHom ≡ mFH .carrierHom
+foldModelF-uniq2 msetX mFA mFG mFH e =
+  mFG .carrierHom
+    ≡⟨ sym (foldModelF-uniq msetX mFA (λ sort → mFG .carrierHom sort ∘ pureTermF sort) mFG refl) ⟩
+  foldModelF msetX mFA (λ sort → mFG .carrierHom sort ∘ pureTermF sort)
+    ≡⟨ foldModelF-uniq msetX mFA (λ sort → mFG .carrierHom sort ∘ pureTermF sort) mFH (sym e) ⟩
+  mFH .carrierHom ∎
+
 -- Sending models of Term1 to models of TermF
 module _ where
   algStrFModel1 : ((algebra msetA α) : Model1) → IsAlgebra ftrTermF msetA
