@@ -186,6 +186,9 @@ ftrModel1Eq→FEq = MapFullSubcategory
   catModelF respectsEqTheoryF
   ftrModel1→F respectsEqTheory1→F
 
+model1Eq→FEq : Model1Eq → ModelFEq
+model1Eq→FEq = F-ob ftrModel1Eq→FEq
+
 respectsEqTheoryF→1 : (mFA : ModelF) → respectsEqTheoryF mFA → respectsEqTheory1 (modelF→1 mFA)
 respectsEqTheoryF→1 mFA respectsEqTheoryFA = subst
   respectsEqTheoryF
@@ -197,6 +200,9 @@ ftrModelFEq→1Eq = MapFullSubcategory
   catModelF respectsEqTheoryF
   catModel1 respectsEqTheory1
   ftrModelF→1 respectsEqTheoryF→1
+
+modelFEq→1Eq : ModelFEq → Model1Eq
+modelFEq→1Eq = F-ob ftrModelFEq→1Eq
 
 ftrModel1Eq→FEq→1Eq : funcComp ftrModelFEq→1Eq ftrModel1Eq→FEq ≡ funcId catModel1Eq
 ftrModel1Eq→FEq→1Eq =
@@ -499,10 +505,92 @@ modelQ→F-respectsEqTheoryF mA@(algebra msetA αQ , isEMA) {sort} axiom f = con
 ftrModelQ→FEq : Functor catModel catModelFEq
 ftrModelQ→FEq = ToFullSubcategory catModel catModelF respectsEqTheoryF ftrModelQ→F modelQ→F-respectsEqTheoryF
 
------
+modelQ→FEq : Model → ModelFEq
+modelQ→FEq = F-ob ftrModelQ→FEq
 
-isoftrModelQ→FEq : P.PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModelFEq catModel
-P≅.mor isoftrModelQ→FEq = {!!}
-P≅.inv isoftrModelQ→FEq = {!!}
-P≅.sec isoftrModelQ→FEq = {!!}
-P≅.ret isoftrModelQ→FEq = {!!}
+---------
+
+{-# TERMINATING #-}
+model1Eq→F→Q-algStr : (m1Eq : Model1Eq)
+  → (λ (sort : Sort) → model1Eq→Q-algStr m1Eq sort ∘ termF→Q sort)
+   ≡ (λ (sort : Sort) → model1→F-algStr (fst m1Eq) sort)
+model1Eq→F→Q-algStr m1Eq@(algebra msetA α , respectsEqTheory1A) i sort (varF x) = x
+model1Eq→F→Q-algStr m1Eq@(algebra msetA α , respectsEqTheory1A) i sort (astF t) =
+  α sort (mapTerm1 (model1Eq→F→Q-algStr m1Eq i) sort t)
+
+model1Eq→Q→FEq : modelQ→FEq ∘ model1Eq→Q ≡ model1Eq→FEq
+model1Eq→Q→FEq = funExt λ (m1Eq@(algebra msetA α , respectsEqTheory1A)) →
+  Σ≡Prop isProp-respectsEqTheoryF (
+    Σ≡Prop (λ _ → isPropIsEMAlgebra monadTermF) (cong₂ algebra
+      refl
+      (model1Eq→F→Q-algStr m1Eq)
+    )
+  )
+
+ftrModel1Eq→Q→FEq : funcComp ftrModelQ→FEq ftrModel1Eq→Q ≡ ftrModel1Eq→FEq
+ftrModel1Eq→Q→FEq = Functor≡
+  (funExt⁻ model1Eq→Q→FEq)
+  λ f → AlgebraHomPathP ftrTermF refl
+
+{-# TERMINATING #-}
+modelQ→1Eq→Q-algStr : (mA : Model)
+  → model1Eq→Q-algStr (modelFEq→1Eq (modelQ→FEq mA))
+   ≡ mA .fst .str
+modelQ→1Eq→Q-algStr mA = foldModel-uniq2 (mA .fst .carrier) mA
+  (algebraHom
+    (model1Eq→Q-algStr (modelFEq→1Eq (modelQ→FEq mA)))
+    ( model1Eq→Q-algStr-joinTerm (modelFEq→1Eq (modelQ→FEq mA))
+    ∙ funExt λ sort → cong (_∘ mapTerm (model1Eq→Q-algStr (modelFEq→1Eq (modelQ→FEq mA))) sort)
+      (funExt⁻ (modelQ→1Eq→Q-algStr mA) sort) -- induction
+    )
+  )
+  (algebraHom
+    (λ a → mA .fst .str a)
+    (mA .snd .str-μ)
+  )
+  (sym (mA .snd .str-η))
+
+modelQ→FEq→1Eq→Q : model1Eq→Q ∘ modelFEq→1Eq ∘ modelQ→FEq ≡ idfun Model
+modelQ→FEq→1Eq→Q = funExt λ mA →
+  Σ≡Prop (λ _ → isPropIsEMAlgebra monadTerm) (cong₂ algebra
+    refl
+    (modelQ→1Eq→Q-algStr mA)
+  )
+
+ftrModelQ→FEq→1Eq→Q : funcComp (funcComp ftrModel1Eq→Q ftrModelFEq→1Eq) ftrModelQ→FEq ≡ funcId catModel
+ftrModelQ→FEq→1Eq→Q = Functor≡
+  (funExt⁻ modelQ→FEq→1Eq→Q)
+  λ f → AlgebraHomPathP ftrTerm refl
+
+---------
+
+isoftrModelFEq≅Q : P.PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModelFEq catModel
+P≅.mor isoftrModelFEq≅Q = funcComp ftrModel1Eq→Q ftrModelFEq→1Eq
+P≅.inv isoftrModelFEq≅Q = ftrModelQ→FEq
+P≅.sec isoftrModelFEq≅Q = ftrModelQ→FEq→1Eq→Q
+P≅.ret isoftrModelFEq≅Q =
+  funcComp ftrModelQ→FEq (funcComp ftrModel1Eq→Q ftrModelFEq→1Eq)
+    ≡⟨ F-assoc ⟩
+  funcComp (funcComp ftrModelQ→FEq ftrModel1Eq→Q) ftrModelFEq→1Eq
+    ≡⟨ cong (λ F → funcComp F ftrModelFEq→1Eq) ftrModel1Eq→Q→FEq ⟩
+  funcComp ftrModel1Eq→FEq ftrModelFEq→1Eq
+    ≡⟨ ftrModelFEq→1Eq→FEq ⟩
+  funcId catModelFEq ∎
+
+isoftrModel1Eq≅Q : P.PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModel1Eq catModel
+P≅.mor isoftrModel1Eq≅Q = ftrModel1Eq→Q
+P≅.inv isoftrModel1Eq≅Q = funcComp ftrModelFEq→1Eq ftrModelQ→FEq
+P≅.sec isoftrModel1Eq≅Q =
+  funcComp ftrModel1Eq→Q (funcComp ftrModelFEq→1Eq ftrModelQ→FEq)
+    ≡⟨ F-assoc ⟩
+  funcComp (funcComp ftrModel1Eq→Q ftrModelFEq→1Eq) ftrModelQ→FEq
+    ≡⟨ ftrModelQ→FEq→1Eq→Q ⟩
+  funcId catModel ∎
+P≅.ret isoftrModel1Eq≅Q =
+  funcComp (funcComp ftrModelFEq→1Eq ftrModelQ→FEq) ftrModel1Eq→Q
+    ≡⟨ sym F-assoc ⟩
+  funcComp ftrModelFEq→1Eq (funcComp ftrModelQ→FEq ftrModel1Eq→Q)
+    ≡⟨ cong (funcComp ftrModelFEq→1Eq) ftrModel1Eq→Q→FEq ⟩
+  funcComp ftrModelFEq→1Eq ftrModel1Eq→FEq
+    ≡⟨ ftrModel1Eq→FEq→1Eq ⟩
+  funcId catModel1Eq ∎
