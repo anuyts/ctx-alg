@@ -363,11 +363,11 @@ module _ where
 
 -- Model1 ≅ ModelF
 open PrecatIso
-isoftrModel1→F : PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModel1 catModelF
-mor isoftrModel1→F = ftrModel1→F
-inv isoftrModel1→F = ftrModelF→1
-sec isoftrModel1→F = ftrModelF→1→F
-ret isoftrModel1→F = ftrModel1→F→1
+isoftrModel1≅F : PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModel1 catModelF
+mor isoftrModel1≅F = ftrModel1→F
+inv isoftrModel1≅F = ftrModelF→1
+sec isoftrModel1≅F = ftrModelF→1→F
+ret isoftrModel1≅F = ftrModel1→F→1
 
 -- Syntax object
 module _ where

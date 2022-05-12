@@ -232,11 +232,11 @@ ftrModelFEq→1Eq→FEq =
     ≡⟨ MapFullSubcategory-id _ _ ⟩
   funcId catModelFEq ∎
 
-isoftrModel1Eq→FEq : P.PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModel1Eq catModelFEq
-P≅.mor isoftrModel1Eq→FEq = ftrModel1Eq→FEq
-P≅.inv isoftrModel1Eq→FEq = ftrModelFEq→1Eq
-P≅.sec isoftrModel1Eq→FEq = {!ftrModelFEq→1Eq→FEq!}
-P≅.ret isoftrModel1Eq→FEq = ftrModel1Eq→FEq→1Eq
+isoftrModel1Eq≅FEq : P.PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModel1Eq catModelFEq
+P≅.mor isoftrModel1Eq≅FEq = ftrModel1Eq→FEq
+P≅.inv isoftrModel1Eq≅FEq = ftrModelFEq→1Eq
+P≅.sec isoftrModel1Eq≅FEq = ftrModelFEq→1Eq→FEq
+P≅.ret isoftrModel1Eq≅FEq = ftrModel1Eq→FEq→1Eq
 
 --------------
 
