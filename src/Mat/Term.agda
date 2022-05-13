@@ -404,3 +404,14 @@ joinFQ-mapTermF-pureTerm i sort (astF t) = idfun
     ast (mapTerm1 termF→Q sort t) ∎
   )
   i
+
+-- Syntax object
+
+Syntax : MType
+Syntax = Term (mtyp msetEmpty)
+
+msetSyntax : MSet
+msetSyntax = msetTerm msetEmpty
+
+syntaxF→Q : ∀ sort → SyntaxF sort → Syntax sort
+syntaxF→Q sort = termF→Q sort

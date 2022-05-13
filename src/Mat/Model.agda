@@ -17,10 +17,12 @@ open import Cubical.Categories.Instances.EilenbergMoore
 open import Cubical.Categories.Instances.Categories
 open import Cubical.Categories.Adjoint
 open import Cubical.Categories.Constructions.FullSubcategory
+open import Cubical.Categories.Limits.Initial
 
 open import Mat.Signature
 open import Mat.Free.Presentation
 import Mat.Free.Term
+import Mat.Free.Model
 import Mat.Term
 open import Mat.Presentation
 
@@ -31,6 +33,7 @@ open Signature sign
 open Mat
 open FreeMat (getFreeMat mat)
 open Mat.Free.Term (getFreeMat mat)
+open Mat.Free.Model (getFreeMat mat)
 open EqTheory (getEqTheory mat)
 open Mat.Term mat
 
@@ -594,3 +597,24 @@ P≅.ret isoftrModel1Eq≅Q =
   funcComp ftrModelFEq→1Eq ftrModel1Eq→FEq
     ≡⟨ ftrModel1Eq→FEq→1Eq ⟩
   funcId catModel1Eq ∎
+
+-----------
+
+-- Syntax object
+module _ where
+
+  mSyntax : Model
+  mSyntax = F-ob ftrFreeModel msetEmpty
+
+  open NaturalBijection
+
+  isInitial-mSyntax : isInitial catModel mSyntax
+  isInitial-mSyntax = isLeftAdjoint→preservesInitial
+    {C = catMSet}
+    {D = catModel}
+    ftrFreeModel
+    (ftrForgetModel , emAdjunction monadTerm)
+    msetEmpty
+    isInitial-msetEmpty
+
+  
