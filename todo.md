@@ -31,6 +31,10 @@
       
       You cannot unwhisker however.
     - Note: in the open translation, the identity substitution is ill-typed, so you cannot mention variables. This is precisely the point!
+    - Note: Open translates CMATs to CMATs:
+      - its contexts are junctors
+      - its `CustomRHS`s are the original `RHS`s, so its `RHS`s are the original `RHS`s plus junctors
+      - it has no additional operators! Junctor substitutions are added by the CMAT operators.
   - Closed translation without substitution (call this crisp/cold/dead/solid)
   - Closed translation with substitution (call this hot/warm/live/liquid/fluid)
     - Note: applying a junctor to a substitution, takes a delayed substitution
