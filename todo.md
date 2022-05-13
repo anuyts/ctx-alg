@@ -35,7 +35,7 @@
   - Closed translation with substitution (call this hot/warm/live/liquid/fluid)
     - Note: applying a junctor to a substitution, takes a delayed substitution
 - Proofs about this
-  - For each context `TermF Open => TermF ClosedSubst`
+  - For each context (naturally) `TermF Open => TermF ClosedSubst`
   - `TermF ClosedNoSubst (AddSubst X) ~= TermF ClosedSubst`
   - `AddSubst Empty ~= Empty`
   - `SyntaxF ClosedNoSubst ~= SyntaxF ClosedSubst`
