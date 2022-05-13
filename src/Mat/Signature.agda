@@ -3,10 +3,12 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Path
 open import Cubical.Data.List
 open import Cubical.Data.FinData
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
 open import Cubical.Data.Empty
+open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Constructions.Product
 open import Cubical.Categories.Instances.Sets
@@ -33,6 +35,13 @@ record Signature : Type where
 
   MSet : Type
   MSet = Sort → hSet _
+
+  arity2mset : Arity → MSet
+  fst (arity2mset arity sort) = Σ[ p ∈ Fin (length arity) ] arity ! p ≡ sort
+  snd (arity2mset arity sort) (p , e) (p' , e') e1 e2 = cong ΣPathP (ΣPathP (
+    isSetFin _ _ _ _ ,
+    isProp→SquareP (λ i j → isSetSort _ _) _ _ _ _
+    ))
 
   mtyp : MSet → MType
   mtyp prec sort = typ (prec sort)

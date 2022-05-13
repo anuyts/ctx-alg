@@ -57,6 +57,8 @@ data TermF X where
   varF : ∀ {sortOut} → X sortOut → TermF X sortOut
   astF : ∀ {sortOut} → Term1 (TermF X) sortOut → TermF X sortOut
 
+pattern _$1_ o args = astF (term1 o args)
+
 -- TermF is really an IW type
 module _ where
   RepTermF : (X : MType) (sortOut : Sort) → Type
