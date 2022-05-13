@@ -45,7 +45,7 @@ open _≅_
 private
   module P≅ = P.PrecatIso
 
--- Syntax monad
+-- SyntaxQ monad
 data TermQ (X : MType) : (sort : Sort) → Type where
   var : ∀ {sortOut} → X sortOut → TermQ X sortOut
   ast : ∀ {sortOut} → Term1 (TermQ X) sortOut → TermQ X sortOut
@@ -405,13 +405,13 @@ joinFQ-mapTermF-pureTermQ i sort (astF t) = idfun
   )
   i
 
--- Syntax object
+-- SyntaxQ object
 
-Syntax : MType
-Syntax = TermQ (mtyp msetEmpty)
+SyntaxQ : MType
+SyntaxQ = TermQ (mtyp msetEmpty)
 
-msetSyntax : MSet
-msetSyntax = msetTermQ msetEmpty
+msetSyntaxQ : MSet
+msetSyntaxQ = msetTermQ msetEmpty
 
-syntaxF→Q : ∀ sort → SyntaxF sort → Syntax sort
+syntaxF→Q : ∀ sort → SyntaxF sort → SyntaxQ sort
 syntaxF→Q sort = termF→Q sort

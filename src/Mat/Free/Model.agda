@@ -250,7 +250,7 @@ inv isoftrModel1≅F = ftrModelF→1
 sec isoftrModel1≅F = ftrModelF→1→F
 ret isoftrModel1≅F = ftrModel1→F→1
 
--- Syntax object
+-- SyntaxQ object
 module _ where
 
   mFSyntaxF : ModelF

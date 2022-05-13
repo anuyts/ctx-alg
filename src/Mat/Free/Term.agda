@@ -167,7 +167,7 @@ assoc-μ ismonadTermF = makeNatTransPathP (λ i → F-assoc i) (λ i → ftrTerm
 monadTermF : Monad catMSet
 monadTermF = ftrTermF , ismonadTermF
 
--- Syntax object
+-- SyntaxQ object
 
 SyntaxF : MType
 SyntaxF = TermF (mtyp msetEmpty)

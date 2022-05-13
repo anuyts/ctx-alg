@@ -477,11 +477,11 @@ F-seq ftrModel1Eq→Q f g = AlgebraHom≡ ftrTermQ refl
 
 -- catModelQ → catModelFEq
 
-ftrModelQQ→F : Functor catModelQ catModelF
-ftrModelQQ→F = EMFunctor monadTermF→Q
+ftrModelQ→F : Functor catModelQ catModelF
+ftrModelQ→F = EMFunctor monadTermF→Q
 
 modelQ→F : ModelQ → ModelF
-modelQ→F = F-ob ftrModelQQ→F
+modelQ→F = F-ob ftrModelQ→F
 
 modelQ→F-respectsEqTheoryF : (mA : ModelQ) → respectsEqTheoryF (modelQ→F mA)
 modelQ→F-respectsEqTheoryF mA@(algebra msetA αQ , isEMA) {sort} axiom f = cong (αQ sort) (
@@ -505,11 +505,11 @@ modelQ→F-respectsEqTheoryF mA@(algebra msetA αQ , isEMA) {sort} axiom f = con
             ≡⟨ (funExt λ sort → cong (_∘ mapTermF f sort) (funExt⁻ joinFQ-mapTermF-pureTermQ sort)) ⟩
           (λ sort → termF→Q sort ∘ mapTermF f sort) ∎
 
-ftrModelQQ→FEq : Functor catModelQ catModelFEq
-ftrModelQQ→FEq = ToFullSubcategory catModelQ catModelF respectsEqTheoryF ftrModelQQ→F modelQ→F-respectsEqTheoryF
+ftrModelQ→FEq : Functor catModelQ catModelFEq
+ftrModelQ→FEq = ToFullSubcategory catModelQ catModelF respectsEqTheoryF ftrModelQ→F modelQ→F-respectsEqTheoryF
 
 modelQ→FEq : ModelQ → ModelFEq
-modelQ→FEq = F-ob ftrModelQQ→FEq
+modelQ→FEq = F-ob ftrModelQ→FEq
 
 ---------
 
@@ -530,7 +530,7 @@ model1Eq→Q→FEq = funExt λ (m1Eq@(algebra msetA α , respectsEqTheory1A)) �
     )
   )
 
-ftrModel1Eq→Q→FEq : funcComp ftrModelQQ→FEq ftrModel1Eq→Q ≡ ftrModel1Eq→FEq
+ftrModel1Eq→Q→FEq : funcComp ftrModelQ→FEq ftrModel1Eq→Q ≡ ftrModel1Eq→FEq
 ftrModel1Eq→Q→FEq = Functor≡
   (funExt⁻ model1Eq→Q→FEq)
   λ f → AlgebraHomPathP ftrTermF refl
@@ -560,8 +560,8 @@ modelQ→FEq→1Eq→Q = funExt λ mA →
     (modelQ→1Eq→Q-algStr mA)
   )
 
-ftrModelQQ→FEq→1Eq→Q : funcComp (funcComp ftrModel1Eq→Q ftrModelFEq→1Eq) ftrModelQQ→FEq ≡ funcId catModelQ
-ftrModelQQ→FEq→1Eq→Q = Functor≡
+ftrModelQ→FEq→1Eq→Q : funcComp (funcComp ftrModel1Eq→Q ftrModelFEq→1Eq) ftrModelQ→FEq ≡ funcId catModelQ
+ftrModelQ→FEq→1Eq→Q = Functor≡
   (funExt⁻ modelQ→FEq→1Eq→Q)
   λ f → AlgebraHomPathP ftrTermQ refl
 
@@ -569,12 +569,12 @@ ftrModelQQ→FEq→1Eq→Q = Functor≡
 
 isoftrModelFEq≅Q : P.PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModelFEq catModelQ
 P≅.mor isoftrModelFEq≅Q = funcComp ftrModel1Eq→Q ftrModelFEq→1Eq
-P≅.inv isoftrModelFEq≅Q = ftrModelQQ→FEq
-P≅.sec isoftrModelFEq≅Q = ftrModelQQ→FEq→1Eq→Q
+P≅.inv isoftrModelFEq≅Q = ftrModelQ→FEq
+P≅.sec isoftrModelFEq≅Q = ftrModelQ→FEq→1Eq→Q
 P≅.ret isoftrModelFEq≅Q =
-  funcComp ftrModelQQ→FEq (funcComp ftrModel1Eq→Q ftrModelFEq→1Eq)
+  funcComp ftrModelQ→FEq (funcComp ftrModel1Eq→Q ftrModelFEq→1Eq)
     ≡⟨ F-assoc ⟩
-  funcComp (funcComp ftrModelQQ→FEq ftrModel1Eq→Q) ftrModelFEq→1Eq
+  funcComp (funcComp ftrModelQ→FEq ftrModel1Eq→Q) ftrModelFEq→1Eq
     ≡⟨ cong (λ F → funcComp F ftrModelFEq→1Eq) ftrModel1Eq→Q→FEq ⟩
   funcComp ftrModel1Eq→FEq ftrModelFEq→1Eq
     ≡⟨ ftrModelFEq→1Eq→FEq ⟩
@@ -582,17 +582,17 @@ P≅.ret isoftrModelFEq≅Q =
 
 isoftrModel1Eq≅Q : P.PrecatIso (CatPrecategory ℓ-zero ℓ-zero) catModel1Eq catModelQ
 P≅.mor isoftrModel1Eq≅Q = ftrModel1Eq→Q
-P≅.inv isoftrModel1Eq≅Q = funcComp ftrModelFEq→1Eq ftrModelQQ→FEq
+P≅.inv isoftrModel1Eq≅Q = funcComp ftrModelFEq→1Eq ftrModelQ→FEq
 P≅.sec isoftrModel1Eq≅Q =
-  funcComp ftrModel1Eq→Q (funcComp ftrModelFEq→1Eq ftrModelQQ→FEq)
+  funcComp ftrModel1Eq→Q (funcComp ftrModelFEq→1Eq ftrModelQ→FEq)
     ≡⟨ F-assoc ⟩
-  funcComp (funcComp ftrModel1Eq→Q ftrModelFEq→1Eq) ftrModelQQ→FEq
-    ≡⟨ ftrModelQQ→FEq→1Eq→Q ⟩
+  funcComp (funcComp ftrModel1Eq→Q ftrModelFEq→1Eq) ftrModelQ→FEq
+    ≡⟨ ftrModelQ→FEq→1Eq→Q ⟩
   funcId catModelQ ∎
 P≅.ret isoftrModel1Eq≅Q =
-  funcComp (funcComp ftrModelFEq→1Eq ftrModelQQ→FEq) ftrModel1Eq→Q
+  funcComp (funcComp ftrModelFEq→1Eq ftrModelQ→FEq) ftrModel1Eq→Q
     ≡⟨ sym F-assoc ⟩
-  funcComp ftrModelFEq→1Eq (funcComp ftrModelQQ→FEq ftrModel1Eq→Q)
+  funcComp ftrModelFEq→1Eq (funcComp ftrModelQ→FEq ftrModel1Eq→Q)
     ≡⟨ cong (funcComp ftrModelFEq→1Eq) ftrModel1Eq→Q→FEq ⟩
   funcComp ftrModelFEq→1Eq ftrModel1Eq→FEq
     ≡⟨ ftrModel1Eq→FEq→1Eq ⟩
@@ -600,16 +600,16 @@ P≅.ret isoftrModel1Eq≅Q =
 
 -----------
 
--- Syntax object
+-- SyntaxQ object
 module _ where
 
-  mSyntax : ModelQ
-  mSyntax = F-ob ftrFreeModelQ msetEmpty
+  mSyntaxQ : ModelQ
+  mSyntaxQ = F-ob ftrFreeModelQ msetEmpty
 
   open NaturalBijection
 
-  isInitial-mSyntax : isInitial catModelQ mSyntax
-  isInitial-mSyntax = isLeftAdjoint→preservesInitial
+  isInitial-mSyntaxQ : isInitial catModelQ mSyntaxQ
+  isInitial-mSyntaxQ = isLeftAdjoint→preservesInitial
     {C = catMSet}
     {D = catModelQ}
     ftrFreeModelQ

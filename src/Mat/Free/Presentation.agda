@@ -31,7 +31,7 @@ record FreeMat (sign : Signature) : Type where
     isSetOperation : {sortOut : Sort} → isSet (Operation sortOut)
     arity : ∀ {sortOut} → Operation sortOut → Arity
 
-  -- Syntax functor
+  -- SyntaxQ functor
   record Term1 (X : MType) (sortOut : Sort) : Type where
     inductive
     eta-equality
