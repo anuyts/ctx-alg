@@ -1,7 +1,5 @@
 # MATs
 
-- split up Free.Term and Free.Model
-- rename PresentationF to FreeMat and Presentation to Mat
 - Example MAT
 - Lower priority
   - CwFs
