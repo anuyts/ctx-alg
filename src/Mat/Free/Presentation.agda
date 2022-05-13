@@ -23,7 +23,7 @@ open Category
 open Functor
 
 -- Type of free MAT presentations (MAT presentations without equations)
-record PresentationF (sign : Signature) : Type where
+record FreeMat (sign : Signature) : Type where
   open Signature sign
 
   field
