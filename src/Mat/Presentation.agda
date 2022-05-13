@@ -11,14 +11,14 @@ open import Cubical.Categories.Monad.Base
 
 open import Mat.Signature
 open import Mat.Free.Presentation
-import Mat.Free.Term
+import Mat.Free.TermQ
 
 module Mat.Presentation where
 
 record EqTheory {sign : Signature} (presF : FreeMat sign) : Type where
   open Signature sign
   open FreeMat presF
-  open Mat.Free.Term presF
+  open Mat.Free.TermQ presF
   open Category hiding (_∘_)
   open Functor
   open IsMonad
