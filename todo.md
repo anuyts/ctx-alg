@@ -1,8 +1,8 @@
 # MATs
 
 - Example MAT
-- Use Arity for axioms
 - Use dependent lists after all!
+- Use Arity for axioms (obligatorily?)
 - Lower priority
   - CwFs
   - CwF structure of EM-category
