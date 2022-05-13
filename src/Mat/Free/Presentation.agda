@@ -81,7 +81,7 @@ record FreeMat (sign : Signature) : Type where
   F-id ftrTerm1 {x = msetX} = refl
   F-seq ftrTerm1 {x = msetX} {y = msetY} {z = precZ} φ χ = refl
 
-  -- Models of the MAT presentation are algebras of ftrTerm1
+  -- ModelQs of the MAT presentation are algebras of ftrTerm1
   catModel1 : Category ℓ-zero ℓ-zero
   catModel1 = AlgebrasCategory ftrTerm1
 
