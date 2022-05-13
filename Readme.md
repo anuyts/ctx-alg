@@ -19,11 +19,11 @@ In `Mat`, we define MATs (multisorted algebraic theories).
 - `Mat.Free.Term` defines the free monad `TermF`.
 - `Mat.Free.Model` defines the isomorphic categories `catModel1` of algebras for `Term1` and `catModelF` of Eilenberg-Moore algebras for `TermF`.
 - `Mat.Presentation` defines the presentation of a MAT, which is a free MAT equipped with an equational theory.
-- `Mat.Term` defines the monad `Term`.
+- `Mat.Term` defines the monad `TermQ`.
 - `Mat.Model` defines the isomorphic categories
   - `catModel1Eq` of algebras for `Term1` that respect the equational theory,
   - `catModelFEq` of Eilenberg-Moore algebras for `TermF` that respect the equational theory,
-  - `catModel` of Eilenberg-Moore algebras for `Term`.
+  - `catModel` of Eilenberg-Moore algebras for `TermQ`.
   
 ### Contextual multisorted algebraic theories
 In `Cmat`, we define CMATs (contextual multisorted algebraic theories).

@@ -1,6 +1,5 @@
 # MATs
 
-- Suffix Q everywhere
 - Example MAT
 - Use Arity for axioms
 - Use dependent lists after all!
