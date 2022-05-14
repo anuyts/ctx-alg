@@ -1,5 +1,6 @@
 # MATs
 
+- rename Signature to Mat/CmatSignature, sign to (c)matsig
 - Example MAT
 - Use dependent lists after all!
 - Use Arity for axioms (obligatorily?)
@@ -48,8 +49,10 @@
 - Quotiented translation to equational theory on `ClosedSubst` (or `Open`)
   - Characterize models via adjoint functors
 - General applications
-  - Generic scope-checker
-    - Generic raw syntax type
+  - Generic substitution
+    - Note: generic renaming is not necessary first, because ctx extension is a junctor hence a functor.
+  - Generic scope-checker (possible)
+    - Generic raw syntax type (not possible)
   - Generic type-checker (not bidirectional, but allow type annotations)
     - Modes must be given
     - You need to give both CMATs (more-typed and lesser-typed)
@@ -57,18 +60,23 @@
     - You need to explain how to insert these
   - Define renaming (required to implement functorial action of context extension on substitution)
   - Define substitution
+  - presheaf models
 - Instances
   - SOMATs
+    - scope-check
     - subsume AACMM21 and FSz22
   - MTT with external mode theory
+    - scope-check (ticks!)
+    - type-check
     - prettyprint?
     - prove normalization?
   - dual context
     - prove normalization?
   - amazing right adjoint
     - prove normalization?
-- Applications
-  - presheaf models
+- Non-instances
+  - adjoint logic, LSR (no left adjoints)
+  - linear TT (because junctors don't live in a context, so it's not well-typed to remove something from it)
 
 # SOMATs
 
