@@ -51,6 +51,7 @@
 - General applications
   - Generic substitution
     - Note: generic renaming is not necessary first, because ctx extension is a junctor hence a functor.
+  - Note: in order to do generic scope- & type-checking, generate untyped and typed Cmat from a Cmat whose types are a Mat (containing Ctx, Junctor and CustomRHS as sorts) and whose operators explicitly have a list of type-level arguments
   - Generic scope-checker (possible)
     - Generic raw syntax type (not possible)
   - Generic type-checker (not bidirectional, but allow type annotations)
