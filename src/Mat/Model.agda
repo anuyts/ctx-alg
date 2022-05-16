@@ -32,10 +32,10 @@ module Mat.Model {sign : Signature} (mat : Mat sign) where
 open Signature sign
 open Mat
 open FreeMat (getFreeMat mat)
-open Mat.Free.TermQ (getFreeMat mat)
-open Mat.Free.ModelQ (getFreeMat mat)
+open Mat.Free.Term (getFreeMat mat)
+open Mat.Free.Model (getFreeMat mat)
 open EqTheory (getEqTheory mat)
-open Mat.TermQ mat
+open Mat.Term mat
 
 open Category hiding (_∘_)
 open Functor
