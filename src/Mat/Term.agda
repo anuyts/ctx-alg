@@ -1,4 +1,5 @@
 {-# OPTIONS --cubical --type-in-type #-}
+--{-# OPTIONS --cubical --type-in-type --experimental-lossy-unification #-}
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
@@ -87,6 +88,7 @@ mapTermQ f sort (isSetTermQ t1 t2 et et' i j) = isSetTermQ
 mapTermQ-id : ∀ {X} → mapTermQ (λ sort → idfun (X sort)) ≡ (λ sort → idfun (TermQ X sort))
 mapTermF-mapTermQ-id : ∀ {X} → mapTermF (mapTermQ (λ sort → idfun (X sort))) ≡ (λ sort → idfun (TermF (TermQ X) sort))
 mapTermQ-id i sort (var x) = var x
+{-
 mapTermQ-id i sort (ast t) = ast (mapTerm1 (mapTermQ-id i) sort t)
 mapTermQ-id i sort (joinFQ t) = joinFQ (mapTermF-mapTermQ-id i sort t)
 mapTermQ-id {X = X} i sort (joinFQ-varF t j) = --{!joinFQ-varF (mapTermQ-id i sort t) j!}
@@ -415,3 +417,4 @@ msetSyntaxQ = msetTermQ msetEmpty
 
 syntaxF→Q : ∀ sort → SyntaxF sort → SyntaxQ sort
 syntaxF→Q sort = termF→Q sort
+-}
