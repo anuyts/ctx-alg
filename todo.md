@@ -1,9 +1,10 @@
 # MATs
 
 - rename Signature to Mat/CmatSignature, sign to (c)matsig
+- allow sorts and arities to be groupoids
 - Example MAT
 - Use dependent lists after all!
-- Use Arity for axioms (obligatorily?)
+- Use Arity for axioms (obligatorily?) -> I don't think this is a good idea
 - Lower priority
   - CwFs
   - CwF structure of EM-category
@@ -13,12 +14,6 @@
 # CMATs
 
 - Signature
-  - Category of modes and junctors
-  - Covariant presheaf of contexts
-  - Mode-indexed set of Custom RHSs; you also get:
-    - Substitutions
-    - Junctor morphisms
-  - Open/closed Signature translation
 - Free CMAT
   - Try to define all translations at once via a troolean parameter.
   - Open translation which uses junctors instead of contexts, and junctor morphisms instead of substitutions; with substitution
