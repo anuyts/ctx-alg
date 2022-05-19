@@ -1,6 +1,10 @@
 {-# OPTIONS --cubical --type-in-type #-}
 
-open import Cubical.Foundations.Everything renaming (Iso to _≅_ ; funExt⁻ to _≡$_)
+open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Function
+open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Transport
+open import Cubical.Foundations.Isomorphism renaming (Iso to _≅_)
 open import Cubical.Data.List hiding ([_])
 open import Cubical.Data.List.Properties
 open import Cubical.Data.List.FinData renaming (lookup to _!_)

@@ -1,5 +1,5 @@
 # MATs
-
+- Don't use Everything
 - allow sorts and arities to be groupoids
 - Example MAT
 - Use dependent lists after all!
