@@ -4,6 +4,7 @@ open import Cubical.Foundations.Everything renaming (Iso to _≅_ ; funExt⁻ to
 open import Cubical.Data.List hiding ([_])
 open import Cubical.Data.List.Properties
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
+open import Cubical.Data.List.Dependent renaming (lookupP to _!P_)
 open import Cubical.Data.Prod
 open import Cubical.Data.W.Indexed
 open import Cubical.Data.FinData
@@ -68,27 +69,60 @@ module _ where
       (λ sort → ⊎.elim (λ v ()) (λ o p → arity o ! p))
       sortOut
 
+  {-# TERMINATING #-}
   toRepTermF : (X : MType) (sortOut : Sort) → TermF X sortOut → RepTermF X sortOut
   toRepTermF X sortOut (varF v) = node (inl v) (λ ())
-  toRepTermF X sortOut (astF (term1 o args)) =
-    node (inr o) λ p → toRepTermF X (arity o ! p) (args p)
+  toRepTermF X sortOut (astF (term1 o args)) = node (inr o) λ p → mapOverIdfun (toRepTermF X) (arity o) args !P p
 
+  {-# TERMINATING #-}
   fromRepTermF : (X : MType) (sortOut : Sort) → RepTermF X sortOut → TermF X sortOut
   fromRepTermF X sortOut (node (inl v) u) = varF v
-  fromRepTermF X sortOut (node (inr o) args) = astF (term1 o λ p → fromRepTermF X (arity o ! p) (args p))
+  fromRepTermF X sortOut (node (inr o) args) =
+    astF (term1 o (mapOverIdfun (fromRepTermF X) (arity o) (tabulateOverLookup (arity o) args)))
+    --λ p → fromRepTermF X (arity o ! p) (args p)
 
+  {-# TERMINATING #-}
   fromToRepTermF : (X : MType) (sortOut : Sort) (t : TermF X sortOut)
     → fromRepTermF X sortOut (toRepTermF X sortOut t) ≡ t
   fromToRepTermF X sortOut (varF v) = refl
-  fromToRepTermF X sortOut (astF (term1 o args)) i =
-    astF (term1 o λ p → fromToRepTermF X (arity o ! p) (args p) i)
+  fromToRepTermF X sortOut (astF (term1 o args)) =
+    cong astF (cong (term1 o) (
+      mapOverIdfun (fromRepTermF X) (arity o) (tabulateOverLookup (arity o) (_!P_ (mapOverIdfun (toRepTermF X) (arity o) args)))
+        ≡⟨ cong (mapOverIdfun _ _) (tabulateOverLookup-lookupP (mapOverIdfun (toRepTermF X) (arity o) args)) ⟩
+      mapOverIdfun (fromRepTermF X) (arity o) (mapOverIdfun (toRepTermF X) (arity o) args)
+        ≡⟨ sym (mapOverIdfun-∘ (fromRepTermF X) (toRepTermF X) (arity o)) ≡$ args ⟩
+      mapOverIdfun (λ a → fromRepTermF X a ∘ toRepTermF X a) (arity o) args
+        ≡⟨ (cong mapOverIdfun (funExt λ sort → funExt λ t → fromToRepTermF X sort t) ≡$ arity o) ≡$ args ⟩
+      mapOverIdfun (λ x x₁ → x₁) (arity o) args
+        ≡⟨ mapOverIdfun-idfun (arity o) ≡$ args ⟩
+      args ∎
+    ))
 
+  {-# TERMINATING #-}
   toFromRepTermF : (X : MType) (sortOut : Sort) (rt : RepTermF X sortOut)
     → toRepTermF X sortOut (fromRepTermF X sortOut rt) ≡ rt
   toFromRepTermF X sortOut (node (inl v) u) = cong (node (inl v)) (funExt (λ ()))
-  toFromRepTermF X sortOut (node (inr o) args) i =
-    node (inr o) (λ p → toFromRepTermF X (arity o ! p) (args p) i)
+  toFromRepTermF X sortOut (node (inr o) args) = cong {B = λ _ → RepTermF X sortOut} (node (inr o)) (
+      _!P_ (mapOverIdfun (toRepTermF X) (arity o) (mapOverIdfun (fromRepTermF X) (arity o) (tabulateOverLookup (arity o) args)))
+        ≡⟨ cong _!P_ (sym (mapOverIdfun-∘
+             (toRepTermF X)
+             (fromRepTermF X)
+             (arity o)
+             ≡$ (tabulateOverLookup (arity o) args)
+           )) ⟩
+      _!P_ (mapOverIdfun (λ sort → toRepTermF X sort ∘ fromRepTermF X sort) (arity o) (tabulateOverLookup (arity o) args))
+        ≡⟨ cong _!P_
+             ((cong mapOverIdfun (funExt λ sort → funExt λ t → toFromRepTermF X sort t)
+               ≡$ arity o)
+               ≡$ tabulateOverLookup (arity o) args) ⟩
+      _!P_ (mapOverIdfun (λ x x₁ → x₁) (arity o) (tabulateOverLookup (arity o) args))
+        ≡⟨ cong (_!P_ {B = RepTermF X}) (mapOverIdfun-idfun (arity o) ≡$ tabulateOverLookup (arity o) args) ⟩
+      _!P_ (tabulateOverLookup (arity o) args)
+        ≡⟨ lookupP-tabulateOverLookup (RepTermF X) (arity o) args ⟩
+      args ∎
+    )
 
+{-
   isoRepTermF : (X : MType) (sortOut : Sort) → TermF X sortOut ≅ RepTermF X sortOut
   fun (isoRepTermF X sortOut) = toRepTermF X sortOut
   inv (isoRepTermF X sortOut) = fromRepTermF X sortOut
@@ -174,3 +208,4 @@ SyntaxF = TermF (mtyp msetEmpty)
 
 msetSyntaxF : MSet
 msetSyntaxF = msetTermF msetEmpty
+-}
