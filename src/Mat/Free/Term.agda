@@ -122,7 +122,6 @@ module _ where
       args ∎
     )
 
-{-
   isoRepTermF : (X : MType) (sortOut : Sort) → TermF X sortOut ≅ RepTermF X sortOut
   fun (isoRepTermF X sortOut) = toRepTermF X sortOut
   inv (isoRepTermF X sortOut) = fromRepTermF X sortOut
@@ -138,18 +137,33 @@ module _ where
 isSetTermF msetX sortOut = subst⁻ isSet (pathRepTermF (mtyp msetX) sortOut) (isSetRepTermF msetX sortOut)
 
 -- components of TermF as a functor
+{-# TERMINATING #-}
 mapTermF : ∀ {X Y} → (∀ sort → X sort → Y sort) → ∀ sort → TermF X sort → TermF Y sort
 mapTermF f sort (varF x) = varF (f sort x)
-mapTermF f sort (astF (term1 o args)) = astF (term1 o λ p → mapTermF f (arity o ! p) (args p))
+mapTermF f sort (astF t) = astF (mapTerm1 (mapTermF f) sort t)
 
+{-# TERMINATING #-}
 mapTermF-id : ∀ {X} → mapTermF (λ sort → idfun (X sort)) ≡ (λ sort → idfun (TermF X sort))
-mapTermF-id i sort (varF x) = varF x
-mapTermF-id i sort (astF (term1 o args)) = astF (term1 o (λ p → mapTermF-id i (arity o ! p) (args p)))
+mapTermF-id {X} i sort (varF x) = varF x
+mapTermF-id {X} i sort (astF t) = (
+    astF (mapTerm1 (mapTermF (λ sort₁ → idfun (X sort₁))) sort t)
+      ≡⟨ cong astF ((cong mapTerm1 mapTermF-id ≡$ sort) ≡$ t) ⟩
+    astF (mapTerm1 (λ sort₁ → idfun (TermF X sort₁)) sort t)
+      ≡⟨ cong astF ((mapTerm1-id ≡$ sort) ≡$ t) ⟩
+    astF t ∎
+  ) i
 
+{-# TERMINATING #-}
 mapTermF-∘ : ∀ {X Y Z : MType} → (g : ∀ sort → Y sort → Z sort) → (f : ∀ sort → X sort → Y sort) →
   mapTermF (λ sort → g sort ∘ f sort) ≡ (λ sort → mapTermF g sort ∘ mapTermF f sort)
 mapTermF-∘ g f i sort (varF x) = varF (g sort (f sort x))
-mapTermF-∘ g f i sort (astF (term1 o args)) = astF (term1 o (λ p → mapTermF-∘ g f i (arity o ! p) (args p)))
+mapTermF-∘ g f i sort (astF t) = (
+    astF (mapTerm1 (mapTermF (λ sort' → g sort' ∘ f sort')) sort t)
+      ≡⟨ cong astF ((cong mapTerm1 (mapTermF-∘ g f) ≡$ sort) ≡$ t) ⟩
+    astF (mapTerm1 (λ sort₁ → mapTermF g sort₁ ∘ mapTermF f sort₁) sort t)
+      ≡⟨ cong astF ((mapTerm1-∘ (mapTermF g) (mapTermF f) ≡$ sort) ≡$ t) ⟩
+    astF (mapTerm1 (mapTermF g) sort (mapTerm1 (mapTermF f) sort t)) ∎
+  ) i
 
 -- TermF as a functor on catMSet
 ftrTermF : Functor catMSet catMSet
@@ -167,14 +181,24 @@ pureTermF sort = varF
 N-ob ηTermF msetX sortOut = varF
 N-hom ηTermF {msetX} {msetY} f = refl
 
+{-# TERMINATING #-}
 joinTermF : ∀ {X} sort → TermF (TermF X) sort → TermF X sort
 joinTermF sort (varF t) = t
-joinTermF sort (astF (term1 o args)) = astF (term1 o (λ p → joinTermF (arity o ! p) (args p)))
+joinTermF sort (astF t) = astF (mapTerm1 joinTermF sort t)
 
+{-# TERMINATING #-}
 joinTermF-nat : ∀ {X Y : MType} f sort → (t : TermF (TermF X) sort)
   → joinTermF {X = Y} sort (mapTermF (mapTermF f) sort t) ≡ mapTermF f sort (joinTermF sort t)
 joinTermF-nat f sort (varF t) = refl
-joinTermF-nat f sort (astF (term1 o args)) i = astF (term1 o λ p → joinTermF-nat f (arity o ! p) (args p) i)
+joinTermF-nat f sort (astF t) = cong astF (((
+    (λ sort → mapTerm1 joinTermF sort ∘ mapTerm1 (mapTermF (mapTermF f)) sort)
+      ≡⟨ sym (mapTerm1-∘ joinTermF (mapTermF (mapTermF f))) ⟩
+    mapTerm1 (λ sort₁ → joinTermF sort₁ ∘ mapTermF (mapTermF f) sort₁)
+      ≡⟨ cong mapTerm1 (funExt λ sort → funExt λ t → joinTermF-nat f sort t) ⟩
+    mapTerm1 (λ x x₁ → mapTermF f x (joinTermF x x₁))
+      ≡⟨ mapTerm1-∘ (mapTermF f) joinTermF ⟩
+    (λ sort → mapTerm1 (mapTermF f) sort ∘ mapTerm1 joinTermF sort) ∎
+  ) ≡$ sort) ≡$ t)
 
 μTermF : NatTrans (funcComp ftrTermF ftrTermF) ftrTermF
 N-ob μTermF msetX = joinTermF
@@ -183,6 +207,7 @@ N-hom μTermF {msetX} {msetY} f = funExt λ sort → funExt λ t → joinTermF-n
 open IsMonad
 
 -- TermF is a monad
+{-# TERMINATING #-}
 ismonadTermF : IsMonad ftrTermF
 η ismonadTermF = ηTermF
 μ ismonadTermF = μTermF
@@ -191,12 +216,29 @@ idr-μ ismonadTermF = makeNatTransPathP (λ i → F-lUnit i) (λ i → ftrTermF)
   where lemma : (λ msetX sort t → joinTermF sort (mapTermF (λ sortOut → varF) sort t)) ≡
                 (λ msetX sort t → t)
         lemma i msetX sort (varF x) = varF x
-        lemma i msetX sort (astF (term1 o args)) = astF (term1 o λ p → lemma i msetX (arity o ! p) (args p))
+        lemma i msetX sort (astF t) = cong astF (((
+            (λ sort' → mapTerm1 joinTermF sort' ∘ mapTerm1 (mapTermF pureTermF) sort')
+              ≡⟨ sym (mapTerm1-∘ joinTermF (mapTermF pureTermF)) ⟩
+            mapTerm1 (λ sort₁ → joinTermF sort₁ ∘ mapTermF pureTermF sort₁)
+              ≡⟨ cong mapTerm1 (lemma ≡$ msetX) ⟩
+            mapTerm1 (λ a x → x)
+              ≡⟨ mapTerm1-id ⟩
+            (λ sort' t → t) ∎
+          ) ≡$ sort) ≡$ t) i
 assoc-μ ismonadTermF = makeNatTransPathP (λ i → F-assoc i) (λ i → ftrTermF) lemma
   where lemma : (λ msetX sort t → joinTermF sort (mapTermF joinTermF sort t)) ≡
                 (λ msetX sort t → joinTermF sort (joinTermF sort t))
         lemma i msetX sort (varF ttx) = joinTermF sort ttx
-        lemma i msetX sort (astF (term1 o args)) = astF (term1 o λ p → lemma i msetX (arity o ! p) (args p))
+        lemma i msetX sort (astF t) = cong astF (((
+            (λ sort' → mapTerm1 joinTermF sort' ∘ mapTerm1 (mapTermF joinTermF) sort')
+              ≡⟨ sym (mapTerm1-∘ joinTermF (mapTermF joinTermF)) ⟩
+            mapTerm1 (λ sort₁ → joinTermF sort₁ ∘ mapTermF joinTermF sort₁)
+              ≡⟨ cong mapTerm1 (lemma ≡$ msetX) ⟩
+            mapTerm1 (λ a x → joinTermF a (joinTermF a x))
+              ≡⟨ mapTerm1-∘ joinTermF joinTermF ⟩
+            (λ sort' → mapTerm1 joinTermF sort' ∘ mapTerm1 joinTermF sort') ∎
+          ) ≡$ sort) ≡$ t) i
+        --astF (term1 o λ p → lemma i msetX (arity o ! p) (args p))
 
 monadTermF : Monad catMSet
 monadTermF = ftrTermF , ismonadTermF
@@ -208,4 +250,3 @@ SyntaxF = TermF (mtyp msetEmpty)
 
 msetSyntaxF : MSet
 msetSyntaxF = msetTermF msetEmpty
--}
