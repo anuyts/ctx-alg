@@ -98,11 +98,11 @@ module _ where
       args ∎
     ))
 
-  {-# TERMINATING #-}
-  toFromRepTermF : (X : MType) (sortOut : Sort) (rt : RepTermF X sortOut)
+{-# TERMINATING #-} -- this pragma is ignored if I put this definition also in the module :-O
+toFromRepTermF : (X : MType) (sortOut : Sort) (rt : RepTermF X sortOut)
     → toRepTermF X sortOut (fromRepTermF X sortOut rt) ≡ rt
-  toFromRepTermF X sortOut (node (inl v) u) = cong (node (inl v)) (funExt (λ ()))
-  toFromRepTermF X sortOut (node (inr o) args) = cong {B = λ _ → RepTermF X sortOut} (node (inr o)) (
+toFromRepTermF X sortOut (node (inl v) u) = cong (node (inl v)) (funExt (λ ()))
+toFromRepTermF X sortOut (node (inr o) args) = cong {B = λ _ → RepTermF X sortOut} (node (inr o)) (
       _!P_ (mapOverIdfun (toRepTermF X) (arity o) (mapOverIdfun (fromRepTermF X) (arity o) (tabulateOverLookup (arity o) args)))
         ≡⟨ cong _!P_ (sym (mapOverIdfun-∘
              (toRepTermF X)
@@ -122,6 +122,7 @@ module _ where
       args ∎
     )
 
+module _ where
   isoRepTermF : (X : MType) (sortOut : Sort) → TermF X sortOut ≅ RepTermF X sortOut
   fun (isoRepTermF X sortOut) = toRepTermF X sortOut
   inv (isoRepTermF X sortOut) = fromRepTermF X sortOut
