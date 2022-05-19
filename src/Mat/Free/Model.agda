@@ -257,7 +257,7 @@ module _ where
       {algebra msetA α} {algebra msetB β} (algebraHom f isalgF) → AlgebraHomPathP ftrTerm1 refl
     )
 
-{-
+  {-# TERMINATING #-}
   ftrModelF→1→F : funcComp ftrModel1→F ftrModelF→1 ≡ ftrId catModelF
   ftrModelF→1→F = Functor≡
     (λ where
@@ -273,24 +273,32 @@ module _ where
       open IsEMAlgebra
       lemma : ∀ ((algebra msetA α) : Algebra ftrTermF) (isEMA : IsEMAlgebra monadTermF (algebra msetA α))
         (sort : Sort) (ta : TermF (λ sort₁ → fst (msetA sort₁)) sort) →
-        model1→F-algStr (algebra msetA (λ sort' (term1 o args) → α sort' (astF (term1 o λ p → varF (args p))))) sort ta
+        model1→F-algStr (algebra msetA (λ sort' → α sort' ∘ astF ∘ mapTerm1 pureTermF sort')) sort ta
         ≡ α sort ta
       lemma (algebra msetA α) isEMA sort (varF a) = sym ((str-η isEMA ≡$ sort) ≡$ a)
-      lemma (algebra msetA α) isEMA sort (astF (term1 o args)) =
-        α sort (astF (term1 o λ p → varF (model1→F-algStr (algebra msetA (λ sort' (term1 o' args') →
-                    α sort' (astF (term1 o' λ p₁ → varF (args' p₁))))) (arity o ! p) (args p))))
-          ≡⟨ cong (α sort) (cong astF (cong (term1 o) (funExt λ p
-              → cong varF (lemma (algebra msetA α) isEMA (arity o ! p) (args p))))) ⟩
-        -- (α ∘ Σ var ∘ Σ α) (astF (term1 o args))
-        α sort (astF (term1 o λ p → varF (α (arity o ! p) (args p))))
-          ≡⟨⟩
-        -- (α ∘ Σ Σ* α ∘ Σ var) (astF (term1 o args))
-        α sort (astF (term1 o λ p → mapTermF α (arity o ! p) (varF (args p))))
-          ≡⟨ sym ((str-μ isEMA ≡$ sort) ≡$ astF (term1 o λ p → varF (args p))) ⟩
-        -- (α ∘ Σ µ ∘ Σ var) (astF (term1 o args))
-        α sort (joinTermF sort (astF (term1 o λ p → varF (args p))))
-          ≡⟨⟩
-        α sort (astF (term1 o args)) ∎
+      lemma (algebra msetA α) isEMA sort (astF t) = ((
+          (λ sort' → α sort' ∘ astF ∘ mapTerm1 pureTermF sort' ∘
+            mapTerm1 (model1→F-algStr (algebra msetA (λ sort' → α sort' ∘ astF ∘ mapTerm1 pureTermF sort'))) sort')
+            ≡⟨ congS (λ h sort' → α sort' ∘ astF ∘ mapTerm1 pureTermF sort' ∘ h sort')
+                 (cong mapTerm1 (funExt λ sort' → funExt λ ta → lemma (algebra msetA α) isEMA sort' ta)) ⟩
+          (λ sort' → α sort' ∘ astF ∘ mapTerm1 pureTermF sort' ∘ mapTerm1 α sort')
+            ≡⟨ congS (λ h sort' → α sort' ∘ astF ∘ h sort') (sym (mapTerm1-∘ pureTermF α)) ⟩
+          (λ sort' → α sort' ∘ astF ∘ mapTerm1 (λ sort₁ → pureTermF sort₁ ∘ α sort₁) sort')
+            ≡⟨⟩
+          (λ sort' → α sort' ∘ astF ∘ mapTerm1 (λ sort₁ → mapTermF α sort₁ ∘ pureTermF sort₁) sort')
+            ≡⟨ congS (λ h sort' → α sort' ∘ astF ∘ h sort') (mapTerm1-∘ (mapTermF α) pureTermF) ⟩
+          (λ sort' → α sort' ∘ astF ∘ mapTerm1 (mapTermF α) sort' ∘ mapTerm1 pureTermF sort')
+            ≡⟨⟩
+          (λ sort' → α sort' ∘ mapTermF α sort' ∘ astF ∘ mapTerm1 pureTermF sort')
+            ≡⟨ congS (λ h sort' → h sort' ∘ astF ∘ mapTerm1 pureTermF sort') (sym (str-μ isEMA)) ⟩
+          (λ sort' → α sort' ∘ joinTermF sort' ∘ astF ∘ mapTerm1 pureTermF sort')
+            ≡⟨⟩
+          (λ sort' → α sort' ∘ astF ∘ mapTerm1 joinTermF sort' ∘ mapTerm1 pureTermF sort')
+            ≡⟨ congS (λ h sort' → α sort' ∘ astF ∘ h sort') (sym (mapTerm1-∘ joinTermF pureTermF)) ⟩
+          (λ sort' → α sort' ∘ astF ∘ mapTerm1 (λ sort'' → idfun _) sort')
+            ≡⟨ congS (λ h sort' → α sort' ∘ astF ∘ h sort') mapTerm1-id ⟩
+          (λ sort' → α sort' ∘ astF) ∎
+        ) ≡$ sort) ≡$S t
 
 -- Model1 ≅ ModelF
 open PrecatIso
@@ -325,5 +333,3 @@ module _ where
      - prove that isomorphic precategories are equal
      - prove that mutually inverse functors are adjoint
   -}
-
--}
