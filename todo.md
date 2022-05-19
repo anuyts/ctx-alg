@@ -1,6 +1,5 @@
 # MATs
 
-- rename Signature to Mat/CmatSignature, sign to (c)matsig
 - allow sorts and arities to be groupoids
 - Example MAT
 - Use dependent lists after all!
@@ -15,7 +14,7 @@
 
 - Signature
 - Free CMAT
-  - Try to define all translations at once via a troolean parameter.
+  - Try to define warm/cold translations at once via a boolean parameter.
   - Open translation which uses junctors instead of contexts, and junctor morphisms instead of substitutions; with substitution
     - Note: you can pop a junctor from the context and whisker it with a junctor morphism:
       

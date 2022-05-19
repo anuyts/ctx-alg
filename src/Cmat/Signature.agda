@@ -98,11 +98,11 @@ module _ (cmatsig : CmatSignature) where
   CustomRHS (cmatsigOpen m) = RHS cmatsig
   isSetCustomRHS (cmatsigOpen m) = isSetRHS cmatsig
 
-  open Signature
+  open MatSignature
 
   {- The signature of the MAT translation.
   -}
-  matsig : Signature
+  matsig : MatSignature
   Sort matsig = Jud cmatsig
   isSetSort matsig = isSetJud cmatsig
 

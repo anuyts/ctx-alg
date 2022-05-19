@@ -19,7 +19,7 @@ module Mat.Signature where
 open Category
 
 -- A MAT Signature is like a type for MATs: it specifies the set of Sorts.
-record Signature : Type where
+record MatSignature : Type where
   no-eta-equality
   field
     Sort : Type

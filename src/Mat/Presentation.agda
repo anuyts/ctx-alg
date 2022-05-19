@@ -15,8 +15,8 @@ import Mat.Free.Term
 
 module Mat.Presentation where
 
-record EqTheory {sign : Signature} (presF : FreeMat sign) : Type where
-  open Signature sign
+record EqTheory {matsig : MatSignature} (presF : FreeMat matsig) : Type where
+  open MatSignature matsig
   open FreeMat presF
   open Mat.Free.Term presF
   open Category hiding (_∘_)
@@ -30,8 +30,8 @@ record EqTheory {sign : Signature} (presF : FreeMat sign) : Type where
     msetArity : ∀ {sortOut} → Axiom sortOut → MSet
     lhs rhs : ∀ {sortOut : Sort} → (axiom : Axiom sortOut) → TermF (mtyp (msetArity axiom)) sortOut
 
-record Mat (sign : Signature) : Type where
+record Mat (matsig : MatSignature) : Type where
   constructor mat
   field
-    getFreeMat : FreeMat sign
+    getFreeMat : FreeMat matsig
     getEqTheory : EqTheory getFreeMat

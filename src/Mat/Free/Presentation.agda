@@ -23,8 +23,8 @@ open Category
 open Functor
 
 -- Type of free MAT presentations (MAT presentations without equations)
-record FreeMat (sign : Signature) : Type where
-  open Signature sign
+record FreeMat (matsig : MatSignature) : Type where
+  open MatSignature matsig
 
   field
     Operation : Sort → Type
