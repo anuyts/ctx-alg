@@ -445,16 +445,31 @@ termF→Q-nat : ∀ {X Y : MType} → (f : ∀ sort → X sort → Y sort)
   → (λ (sort : Sort) → termF→Q sort ∘ mapTermF f sort)
    ≡ (λ (sort : Sort) → mapTermQ f sort ∘ termF→Q sort)
 termF→Q-nat f i sort (varF x) = var (f sort x)
-termF→Q-nat f i sort (astF t) = ?
-  --ast (mapTerm1 (termF→Q-nat f i) sort t)
-{-
+termF→Q-nat f i sort (astF t) = (
+  ast (mapTerm1 termF→Q sort (mapTerm1 (mapTermF f) sort t))
+    ≡⟨ cong ast (sym (mapTerm1-∘ _ _) ≡$ sort ≡$S t) ⟩
+  ast (mapTerm1 (λ sort₁ → termF→Q sort₁ ∘ mapTermF f sort₁) sort t)
+    ≡⟨ cong ast (congS mapTerm1 (termF→Q-nat f) ≡$ sort ≡$S t) ⟩
+  ast (mapTerm1 (λ sort₁ → mapTermQ f sort₁ ∘ termF→Q sort₁) sort t)
+    ≡⟨ cong ast (mapTerm1-∘ _ _ ≡$ sort ≡$S t) ⟩
+  ast (mapTerm1 (mapTermQ f) sort (mapTerm1 termF→Q sort t)) ∎) i
 
 {-# TERMINATING #-}
 termF→Q-joinTermF : ∀ {X : MType}
  → (λ (sort : Sort) → termF→Q {X} sort ∘ joinTermF sort)
   ≡ (λ (sort : Sort) → joinTermQ sort ∘ termF→Q sort ∘ mapTermF termF→Q sort)
 termF→Q-joinTermF i sort (varF t) = termF→Q sort t
-termF→Q-joinTermF i sort (astF t) = ast (mapTerm1 (termF→Q-joinTermF i) sort t)
+termF→Q-joinTermF i sort (astF t) = ast (((
+    (λ sort' → mapTerm1 termF→Q sort' ∘ mapTerm1 joinTermF sort')
+      ≡⟨ sym (mapTerm1-∘ _ _) ⟩
+    mapTerm1 (λ sort₁ → termF→Q sort₁ ∘ joinTermF sort₁)
+      ≡⟨ congS mapTerm1 termF→Q-joinTermF ⟩
+    mapTerm1 (λ sort₁ → joinTermQ sort₁ ∘ termF→Q sort₁ ∘ mapTermF termF→Q sort₁)
+      ≡⟨ mapTerm1-∘ joinTermQ (λ sort₁ → termF→Q sort₁ ∘ mapTermF termF→Q sort₁) ⟩
+    (λ sort₁ → mapTerm1 joinTermQ sort₁ ∘ mapTerm1 (λ sort₂ x → termF→Q sort₂ (mapTermF termF→Q sort₂ x)) sort₁)
+      ≡⟨ congS (λ h sort' → mapTerm1 joinTermQ sort' ∘ h sort') (mapTerm1-∘ termF→Q (mapTermF termF→Q)) ⟩
+    (λ sort' → mapTerm1 joinTermQ sort' ∘ mapTerm1 termF→Q sort' ∘ mapTerm1 (mapTermF termF→Q) sort') ∎
+  ) i) sort t)
 
 ntTermF→Q : NatTrans ftrTermF ftrTermQ
 N-ob ntTermF→Q msetX = termF→Q
@@ -479,7 +494,7 @@ joinFQ-mapTermF-pureTermQ i sort (astF t) = idfun
     joinFQ (astF (mapTerm1 (mapTermF pureTermQ) sort t))
       ≡⟨ joinFQ-astF (mapTerm1 (mapTermF pureTermQ) sort t) ⟩
     ast (mapTerm1 (λ sort₁ → joinFQ) sort (mapTerm1 (mapTermF pureTermQ) sort t))
-      ≡⟨⟩
+      ≡⟨ cong ast (sym (mapTerm1-∘ _ _) ≡$ sort ≡$S t) ⟩
     ast (mapTerm1 (λ sort' → joinFQ ∘ mapTermF pureTermQ sort') sort t)
       ≡⟨ cong ast (cong (λ f → mapTerm1 f sort t) joinFQ-mapTermF-pureTermQ) ⟩
     ast (mapTerm1 termF→Q sort t) ∎
@@ -496,4 +511,3 @@ msetSyntaxQ = msetTermQ msetEmpty
 
 syntaxF→Q : ∀ sort → SyntaxF sort → SyntaxQ sort
 syntaxF→Q sort = termF→Q sort
--}

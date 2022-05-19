@@ -35,7 +35,6 @@ record FreeMat (matsig : MatSignature) : Type where
   -- SyntaxQ functor
   record Term1 (X : MType) (sortOut : Sort) : Type where
     inductive
-    eta-equality
     constructor term1
     field
       operation : Operation sortOut
@@ -43,16 +42,19 @@ record FreeMat (matsig : MatSignature) : Type where
   open Term1
 
   mapTerm1 : ∀ {X Y : MType} (f : (sort : Sort) → X sort → Y sort) → (sort : Sort) → Term1 X sort → Term1 Y sort
-  mapTerm1 f sort (term1 o args) = term1 o (mapOverIdfun f (arity o) args)
+  operation (mapTerm1 f sort t) = operation t
+  arguments (mapTerm1 f sort t) = mapOverIdfun f (arity (operation t)) (arguments t)
 
   mapTerm1-id : ∀ {X : MType} → (mapTerm1 (λ sort → idfun (X sort))) ≡ (λ sort → idfun (Term1 X sort))
-  mapTerm1-id i sort (term1 o args) = term1 o (mapOverIdfun-idfun (arity o) i args)
+  operation (mapTerm1-id i sort t) = operation t
+  arguments (mapTerm1-id i sort t) = mapOverIdfun-idfun (arity (operation t)) i (arguments t)
 
   mapTerm1-∘ : ∀ {X Y Z : MType}
     (g : (sort : Sort) → Y sort → Z sort)
     (f : (sort : Sort) → X sort → Y sort)
     → mapTerm1 (λ sort → g sort ∘ f sort) ≡ (λ sort → mapTerm1 g sort ∘ mapTerm1 f sort)
-  mapTerm1-∘ g f i sort (term1 o args) = term1 o (mapOverIdfun-∘ g f (arity o) i args)
+  operation (mapTerm1-∘ g f i sort t) = operation t
+  arguments (mapTerm1-∘ g f i sort t) = mapOverIdfun-∘ g f (arity (operation t)) i (arguments t)
 
   -- Term1 is really a Σ-type
   module _ where
@@ -61,10 +63,11 @@ record FreeMat (matsig : MatSignature) : Type where
 
     isoRepTerm1 : (X : MType) (sortOut : Sort)
       → Term1 X sortOut ≅ RepTerm1 X sortOut
-    fun (isoRepTerm1 X sortOut) (term1 o args) = o , args
+    fun (isoRepTerm1 X sortOut) t = operation t , arguments t
     inv (isoRepTerm1 X sortOut) (o , args) = term1 o args
     rightInv (isoRepTerm1 X sortOut) (o , args) = refl
-    leftInv (isoRepTerm1 X sortOut) (term1 o args) = refl
+    operation (leftInv (isoRepTerm1 X sortOut) t i) = operation t
+    arguments (leftInv (isoRepTerm1 X sortOut) t i) = arguments t
 
     pathRepTerm1 : (X : MType) (sortOut : Sort)
       → Term1 X sortOut ≡ RepTerm1 X sortOut
