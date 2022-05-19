@@ -4,6 +4,7 @@ open import Cubical.Foundations.Everything renaming (Iso to _≅_)
 open import Cubical.Data.List
 open import Cubical.Data.List.Properties
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
+open import Cubical.Data.List.Dependent
 open import Cubical.Data.Prod
 open import Cubical.Data.FinData
 open import Cubical.Data.Nat
@@ -19,7 +20,7 @@ open import Mat.Signature
 module Mat.Free.Presentation where
 
 open _≅_
-open Category
+open Category renaming (_∘_ to _⊚_)
 open Functor
 
 -- Type of free MAT presentations (MAT presentations without equations)
@@ -42,7 +43,16 @@ record FreeMat (matsig : MatSignature) : Type where
   open Term1
 
   mapTerm1 : ∀ {X Y : MType} (f : (sort : Sort) → X sort → Y sort) → (sort : Sort) → Term1 X sort → Term1 Y sort
-  mapTerm1 f sort (term1 o args) = term1 o λ p → f (arity o ! p) (args p)
+  mapTerm1 f sort (term1 o args) = term1 o (mapOverIdfun f (arity o) args)
+
+  mapTerm1-id : ∀ {X : MType} → (mapTerm1 (λ sort → idfun (X sort))) ≡ (λ sort → idfun (Term1 X sort))
+  mapTerm1-id i sort (term1 o args) = term1 o (mapOverIdfun-idfun (arity o) i args)
+
+  mapTerm1-∘ : ∀ {X Y Z : MType}
+    (g : (sort : Sort) → Y sort → Z sort)
+    (f : (sort : Sort) → X sort → Y sort)
+    → mapTerm1 (λ sort → g sort ∘ f sort) ≡ (λ sort → mapTerm1 g sort ∘ mapTerm1 f sort)
+  mapTerm1-∘ g f i sort (term1 o args) = term1 o (mapOverIdfun-∘ g f (arity o) i args)
 
   -- Term1 is really a Σ-type
   module _ where
@@ -76,10 +86,9 @@ record FreeMat (matsig : MatSignature) : Type where
   -- Term1 as a functor on catMSet
   ftrTerm1 : Functor catMSet catMSet
   F-ob ftrTerm1 = msetTerm1
-  F-hom ftrTerm1 {x = msetX} {y = msetY} φ sortOut (term1 o args) =
-    term1 o λ p → φ (arity o ! p) (args p)
-  F-id ftrTerm1 {x = msetX} = refl
-  F-seq ftrTerm1 {x = msetX} {y = msetY} {z = precZ} φ χ = refl
+  F-hom ftrTerm1 {x = msetX} {y = msetY} = mapTerm1
+  F-id ftrTerm1 {x = msetX} = mapTerm1-id
+  F-seq ftrTerm1 {x = msetX} {y = msetY} {z = precZ} f g = mapTerm1-∘ g f
 
   -- ModelQs of the MAT presentation are algebras of ftrTerm1
   catModel1 : Category ℓ-zero ℓ-zero

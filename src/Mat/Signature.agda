@@ -7,6 +7,7 @@ open import Cubical.Foundations.Path
 open import Cubical.Data.List
 open import Cubical.Data.FinData
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
+open import Cubical.Data.List.Dependent
 open import Cubical.Data.Empty
 open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
@@ -51,10 +52,12 @@ record MatSignature : Type where
 
   -- I'd prefer a dependent list
   Arguments : MType → Arity → Type
-  Arguments X arity = (p : Fin (length arity)) → X (arity ! p)
+  Arguments X arity = ListP X arity
+    --(p : Fin (length arity)) → X (arity ! p)
 
   isSetArguments : ∀ precarrier arity → isSet (Arguments (mtyp precarrier) arity)
-  isSetArguments precarrier arity = isOfHLevelΠ 2 λ p → str (precarrier (arity ! p))
+  isSetArguments precarrier arity = isOfHLevelSucSuc-ListP 0 (λ sort → snd (precarrier sort))
+    --isOfHLevelΠ 2 λ p → str (precarrier (arity ! p))
 
   msetEmpty : MSet
   msetEmpty sort = ⊥ , (λ ())
