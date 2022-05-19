@@ -262,8 +262,23 @@ model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ t) =
         αF = model1→F (algebra msetA α1) .fst .str
 model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ-varF t i) =
   model1Eq→Q-algStr m1EqA sort t
-model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ-astF t i) =
-  α1 sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort (mapTerm1 (λ sort₁ → joinFQ) sort t))
+model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ-astF t i) = (
+    α1 sort
+      (mapTerm1 (model1→F-algStr (algebra msetA α1)) sort
+        (mapTerm1 (mapTermF (model1Eq→Q-algStr (algebra msetA α1 , respectsEqA))) sort t))
+      ≡⟨ cong (α1 sort) (sym (mapTerm1-∘ _ _) ≡$ sort ≡$S t) ⟩
+    α1 sort (mapTerm1 (λ sort₁ →
+       model1→F-algStr (algebra msetA α1) sort₁ ∘ mapTermF (model1Eq→Q-algStr m1EqA) sort₁
+       ) sort t)
+      ≡⟨⟩
+    α1 sort (mapTerm1 (λ sort₁ →
+       model1Eq→Q-algStr (algebra msetA α1 , respectsEqA) sort₁ ∘ joinFQ
+       ) sort t)
+      ≡⟨ cong (α1 sort) (mapTerm1-∘ _ _ ≡$ sort ≡$S t) ⟩
+    α1 sort
+      (mapTerm1 (model1Eq→Q-algStr (algebra msetA α1 , respectsEqA)) sort
+        (mapTerm1 (λ sort₁ → joinFQ) sort t)) ∎
+  ) i
 model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (byAxiom axiom f i) =
   lemma2 i
   where αF : IsAlgebra ftrTermF msetA
@@ -286,6 +301,7 @@ model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (isSetTermQ t1 
   (model1Eq→Q-algStr m1EqA sort t2)
   (λ i → model1Eq→Q-algStr m1EqA sort (et i))
   (λ i → model1Eq→Q-algStr m1EqA sort (et' i)) i j
+  {-
 
 {-# TERMINATING #-}
 model1Eq→Q-algStr-joinTermQ : (m1EqA : Model1Eq)
@@ -617,4 +633,5 @@ module _ where
     msetEmpty
     isInitial-msetEmpty
 
-  
+
+  -}
