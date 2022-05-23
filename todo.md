@@ -3,8 +3,6 @@
 - Don't use Everything
 - allow sorts and arities to be groupoids
 - Example MAT
-- Use dependent lists after all!
-- Use Arity for axioms (obligatorily?) -> I don't think this is a good idea
 - Lower priority
   - CwFs
   - CwF structure of EM-category

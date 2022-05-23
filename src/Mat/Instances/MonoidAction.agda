@@ -60,20 +60,16 @@ arityAxiomMonoidAction mact-Assoc = theMonoid ∷ theMonoid ∷ theSpace ∷ []
 
 lhsMonoidAction rhsMonoidAction : ∀ {sort} → (axiom : AxiomMonoidAction sort) →
   TermF (mtyp (arity2mset (arityAxiomMonoidAction axiom))) sort
-lhsMonoidAction mappend-lUnit = mappend $1 ((mempty $1 []) ∷ varF (zero , refl) ∷ [])
-lhsMonoidAction mappend-rUnit = mappend $1 (varF (zero , refl) ∷ (mempty $1 []) ∷ [])
-lhsMonoidAction mappend-Assoc =
-  mappend $1 ((mappend $1 (varF (zero , refl) ∷ varF (one , refl) ∷ [])) ∷ varF (two , refl) ∷ [])
-lhsMonoidAction mact-lUnit = mact $1 ((mempty $1 []) ∷ varF (zero , refl) ∷ [])
-lhsMonoidAction mact-Assoc =
-  mact $1 ((mappend $1 (varF (zero , refl) ∷ varF (one , refl) ∷ [])) ∷ varF (two , refl) ∷ [])
-rhsMonoidAction mappend-lUnit = varF (zero , refl)
-rhsMonoidAction mappend-rUnit = varF (zero , refl)
-rhsMonoidAction mappend-Assoc =
-  mappend $1 (varF (zero , refl) ∷ (mappend $1 (varF (one , refl) ∷ varF (two , refl) ∷ [])) ∷ [])
-rhsMonoidAction mact-lUnit = varF (zero , refl)
-rhsMonoidAction mact-Assoc =
-  mact $1 (varF (zero , refl) ∷ (mact $1 (varF (one , refl) ∷ varF (two , refl) ∷ [])) ∷ [])
+lhsMonoidAction mappend-lUnit = mappend $1 ((mempty $1 []) ∷ arvarF zero ∷ [])
+lhsMonoidAction mappend-rUnit = mappend $1 (arvarF zero ∷ (mempty $1 []) ∷ [])
+lhsMonoidAction mappend-Assoc = mappend $1 ((mappend $1 (arvarF zero ∷ arvarF one ∷ [])) ∷ arvarF two ∷ [])
+lhsMonoidAction mact-lUnit = mact $1 ((mempty $1 []) ∷ arvarF zero ∷ [])
+lhsMonoidAction mact-Assoc = mact $1 ((mappend $1 (arvarF zero ∷ arvarF one ∷ [])) ∷ arvarF two ∷ [])
+rhsMonoidAction mappend-lUnit = arvarF zero
+rhsMonoidAction mappend-rUnit = arvarF zero
+rhsMonoidAction mappend-Assoc = mappend $1 (arvarF zero ∷ (mappend $1 (arvarF one ∷ arvarF two ∷ [])) ∷ [])
+rhsMonoidAction mact-lUnit = arvarF zero
+rhsMonoidAction mact-Assoc = mact $1 (arvarF zero ∷ (mact $1 (arvarF one ∷ arvarF two ∷ [])) ∷ [])
 
 module _ where
 

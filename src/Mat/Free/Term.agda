@@ -62,6 +62,8 @@ data TermF X where
   varF : ∀ {sortOut} → X sortOut → TermF X sortOut
   astF : ∀ {sortOut} → Term1 (TermF X) sortOut → TermF X sortOut
 
+arvarF : ∀ {arity : Arity} → (m : Fin (length arity)) → TermF (mtyp (arity2mset arity)) (arity ! m)
+arvarF m = varF (m , refl)
 pattern _$1_ o args = astF (term1 o args)
 
 -- TermF is really an IW type
