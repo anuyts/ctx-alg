@@ -3,6 +3,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Data.List
+open import Cubical.Data.List.Dependent
 open import Cubical.Data.FinData
 
 open import Mat.Signature
@@ -18,13 +19,13 @@ data SortMonoidAction : Type where
 
 module _ where
 
-  open Signature
+  open MatSignature
 
-  signMonoidAction : Signature
-  Sort signMonoidAction = SortMonoidAction
-  isSetSort signMonoidAction = {!!}
+  matsigMonoidAction : MatSignature
+  Sort matsigMonoidAction = SortMonoidAction
+  isSetSort matsigMonoidAction = {!!}
 
-open Signature signMonoidAction
+open MatSignature matsigMonoidAction
 
 data OperatorMonoidAction : SortMonoidAction → Type where
   mempty : OperatorMonoidAction theMonoid
@@ -36,7 +37,7 @@ arityMonoidAction mempty = []
 arityMonoidAction mappend = theMonoid ∷ theMonoid ∷ []
 arityMonoidAction mact = theMonoid ∷ theSpace ∷ []
 
-fmatMonoidAction : FreeMat signMonoidAction
+fmatMonoidAction : FreeMat matsigMonoidAction
 Operation fmatMonoidAction = OperatorMonoidAction
 isSetOperation fmatMonoidAction = {!!}
 arity fmatMonoidAction = arityMonoidAction
@@ -59,32 +60,20 @@ arityAxiomMonoidAction mact-Assoc = theMonoid ∷ theMonoid ∷ theSpace ∷ []
 
 lhsMonoidAction rhsMonoidAction : ∀ {sort} → (axiom : AxiomMonoidAction sort) →
   TermF (mtyp (arity2mset (arityAxiomMonoidAction axiom))) sort
-lhsMonoidAction mappend-lUnit = mappend $1 λ { zero → mempty $1 λ () ; one → varF (zero , refl)}
-lhsMonoidAction mappend-rUnit = mappend $1 λ { zero → varF (zero , refl) ; one → mempty $1 λ ()}
-lhsMonoidAction mappend-Assoc = mappend $1 λ where
-  zero → mappend $1 λ where
-    zero → varF (zero , refl)
-    one → varF (one , refl)
-  one → varF (two , refl)
-lhsMonoidAction mact-lUnit = mact $1 λ { zero → mempty $1 λ () ; one → varF (zero , refl)}
-lhsMonoidAction mact-Assoc = mact $1 λ where
-  zero → mappend $1 λ where
-    zero → varF (zero , refl)
-    one → varF (one , refl)
-  one → varF (two , refl)
+lhsMonoidAction mappend-lUnit = mappend $1 ((mempty $1 []) ∷ varF (zero , refl) ∷ [])
+lhsMonoidAction mappend-rUnit = mappend $1 (varF (zero , refl) ∷ (mempty $1 []) ∷ [])
+lhsMonoidAction mappend-Assoc =
+  mappend $1 ((mappend $1 (varF (zero , refl) ∷ varF (one , refl) ∷ [])) ∷ varF (two , refl) ∷ [])
+lhsMonoidAction mact-lUnit = mact $1 ((mempty $1 []) ∷ varF (zero , refl) ∷ [])
+lhsMonoidAction mact-Assoc =
+  mact $1 ((mappend $1 (varF (zero , refl) ∷ varF (one , refl) ∷ [])) ∷ varF (two , refl) ∷ [])
 rhsMonoidAction mappend-lUnit = varF (zero , refl)
 rhsMonoidAction mappend-rUnit = varF (zero , refl)
-rhsMonoidAction mappend-Assoc = mappend $1 λ where
-  zero → varF (zero , refl)
-  one → mappend $1 λ where
-    zero → varF (one , refl)
-    one → varF (two , refl)
+rhsMonoidAction mappend-Assoc =
+  mappend $1 (varF (zero , refl) ∷ (mappend $1 (varF (one , refl) ∷ varF (two , refl) ∷ [])) ∷ [])
 rhsMonoidAction mact-lUnit = varF (zero , refl)
-rhsMonoidAction mact-Assoc = mact $1 λ where
-  zero → varF (zero , refl)
-  one → mact $1 λ where
-    zero → varF (one , refl)
-    one → varF (two , refl)
+rhsMonoidAction mact-Assoc =
+  mact $1 (varF (zero , refl) ∷ (mact $1 (varF (one , refl) ∷ varF (two , refl) ∷ [])) ∷ [])
 
 module _ where
 
@@ -101,7 +90,7 @@ module _ where
 
   open Mat
 
-  matMonoidAction : Mat signMonoidAction
+  matMonoidAction : Mat matsigMonoidAction
   getFreeMat matMonoidAction = fmatMonoidAction
   getEqTheory matMonoidAction = eqTheoryMonoidAction
 
