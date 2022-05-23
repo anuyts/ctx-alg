@@ -22,9 +22,9 @@
   - For each context (naturally) `TermF Open => TermF Warm`
   - `AddSubst Empty ~= Empty`
   - `SyntaxF ClosedNoSubst ~= SyntaxF ClosedSubst`
-  - Characterize models via adjoint functors (so you don't need to worry about contexts, types and junctors/junctor morphisms having or not having an intermediate representation)
-- Quotiented presentation: equational theory w.r.t. `TermF` Open
-- Quotiented translation to equational theory on `ClosedSubst` (or `Open`)
+  - Characterize warm models via adjoint functors (so you don't need to worry about contexts, types and junctors/junctor morphisms having or not having an intermediate representation)
+- Quotiented presentation: equational theory w.r.t. warm open translation
+- Quotiented translation to equational theory on warm translation
   - Characterize models via adjoint functors
 - General applications
   - Generic substitution
