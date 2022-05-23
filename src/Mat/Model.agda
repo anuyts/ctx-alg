@@ -519,7 +519,6 @@ mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom'
     β1 sort (mapTerm1 (λ sort' → (model1Eq→Q-algStr m1EqB) sort' ∘ mapTermQ f sort') sort t)
       ≡⟨ cong (β1 sort) (mapTerm1-∘ (model1Eq→Q-algStr m1EqB) (mapTermQ f) ≡$ sort ≡$S t) ⟩
     β1 sort (mapTerm1 (model1Eq→Q-algStr m1EqB) sort (mapTerm1 (mapTermQ f) sort t)) ∎
-  {-
 
 {-
 
@@ -592,8 +591,13 @@ model1Eq→F→Q-algStr : (m1Eq : Model1Eq)
   → (λ (sort : Sort) → model1Eq→Q-algStr m1Eq sort ∘ termF→Q sort)
    ≡ (λ (sort : Sort) → model1→F-algStr (fst m1Eq) sort)
 model1Eq→F→Q-algStr m1Eq@(algebra msetA α , respectsEqTheory1A) i sort (varF x) = x
-model1Eq→F→Q-algStr m1Eq@(algebra msetA α , respectsEqTheory1A) i sort (astF t) =
-  α sort (mapTerm1 (model1Eq→F→Q-algStr m1Eq i) sort t)
+model1Eq→F→Q-algStr m1Eq@(algebra msetA α , respectsEqTheory1A) i sort (astF t) = (
+    α sort (mapTerm1 (model1Eq→Q-algStr m1Eq) sort (mapTerm1 termF→Q sort t))
+      ≡⟨ congS (α sort) (sym (mapTerm1-∘ _ _) ≡$ sort ≡$S t) ⟩
+    α sort (mapTerm1 (λ sort' → model1Eq→Q-algStr m1Eq sort' ∘ termF→Q sort') sort t)
+      ≡⟨ (λ i → α sort (mapTerm1 (model1Eq→F→Q-algStr m1Eq i) sort t)) ⟩
+    α sort (mapTerm1 (model1→F-algStr (fst m1Eq)) sort t) ∎
+  ) i
 
 model1Eq→Q→FEq : modelQ→FEq ∘ model1Eq→Q ≡ model1Eq→FEq
 model1Eq→Q→FEq = funExt λ (m1Eq@(algebra msetA α , respectsEqTheory1A)) →
@@ -690,6 +694,3 @@ module _ where
     (ftrForgetModelQ , emAdjunction monadTermQ)
     msetEmpty
     isInitial-msetEmpty
-
-
-  -}
