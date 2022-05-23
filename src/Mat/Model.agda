@@ -254,7 +254,7 @@ P≅.ret isoftrModel1Eq≅FEq = ftrModel1Eq→FEq→1Eq
 {-# TERMINATING #-}
 model1Eq→Q-algStr : (m1EqA : Model1Eq) → IsAlgebra ftrTermQ (m1EqA .fst .carrier)
 model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (var x) = x
-model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (ast t) =
+model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (join1Q t) =
   α1 sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t)
 model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ t) =
   αF sort (mapTermF (model1Eq→Q-algStr m1EqA) sort t)
@@ -314,7 +314,7 @@ mapTerm1-model1Eq→Q-algStr-joinTermQ : (m1EqA : Model1Eq)
   ≡ (λ (sort : Sort) → mapTerm1 (model1Eq→Q-algStr m1EqA) sort ∘ mapTerm1 (mapTermQ (model1Eq→Q-algStr m1EqA)) sort)
 model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (var t) =
   model1Eq→Q-algStr m1EqA sort t
-model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (ast t) =
+model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (join1Q t) =
   α1 sort (mapTerm1-model1Eq→Q-algStr-joinTermQ m1EqA i sort t)
 model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (joinFQ t) =
   αF sort (mapTermF-model1Eq→Q-algStr-joinTermQ m1EqA i sort t)
@@ -397,10 +397,10 @@ mapTermF-ModelQHom1Eq→IsTermQAlgebraHom' : ∀ m1EqA m1EqB → (m1EqF : Model1
         (mapTermF (model1Eq→Q-algStr m1EqB) sort (mapTermF (mapTermQ (carrierHom m1EqF)) sort t))
 mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom' : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
       (sort : Sort) (t : Term1 (TermQ (mtyp (m1EqA .fst .carrier))) sort) →
-      carrierHom m1EqF sort (model1Eq→Q-algStr m1EqA sort (ast t))
-      ≡ model1Eq→Q-algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (ast t))
+      carrierHom m1EqF sort (model1Eq→Q-algStr m1EqA sort (join1Q t))
+      ≡ model1Eq→Q-algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (join1Q t))
 ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (var x) = refl
-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (ast t) =
+ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (join1Q t) =
   mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t
   {-f sort (str (fst m1EqA) sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t))
     ≡⟨ funExt⁻ (funExt⁻ f-isalg1 sort) (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t) ⟩
