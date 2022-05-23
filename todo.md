@@ -1,5 +1,4 @@
 # MATs
-- allow sorts and arities to be groupoids
 - Lower priority
   - CwFs
   - CwF structure of EM-category

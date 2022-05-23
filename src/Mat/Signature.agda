@@ -24,12 +24,12 @@ record MatSignature : Type where
   no-eta-equality
   field
     Sort : Type
-    isSetSort : isSet Sort
+    isGroupoidSort : isGroupoid Sort
 
   Arity : Type
   Arity = List Sort
-  isSetArity : isSet Arity
-  isSetArity = isOfHLevelList 0 isSetSort
+  isGroupoidArity : isGroupoid Arity
+  isGroupoidArity = isOfHLevelList 1 isGroupoidSort
 
   MType : Type
   MType = Sort → Type
@@ -41,11 +41,11 @@ record MatSignature : Type where
   fst (arity2mset arity sort) = Σ[ p ∈ Fin (length arity) ] arity ! p ≡ sort
   snd (arity2mset arity sort) (p , e) (p' , e') e1 e2 = cong ΣPathP (ΣPathP (
     isSetFin _ _ _ _ ,
-    isProp→SquareP (λ i j → isSetSort _ _) _ _ _ _
+    isSet→SquareP (λ i j → isGroupoidSort _ _) _ _ _ _
     ))
 
   mtyp : MSet → MType
-  mtyp prec sort = typ (prec sort)
+  mtyp mset sort = typ (mset sort)
 
   catMSet : Category _ _
   catMSet = ΠC Sort λ _ → SET _

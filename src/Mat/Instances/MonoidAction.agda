@@ -23,7 +23,7 @@ module _ where
 
   matsigMonoidAction : MatSignature
   Sort matsigMonoidAction = SortMonoidAction
-  isSetSort matsigMonoidAction = {!!}
+  isGroupoidSort matsigMonoidAction = {!!}
 
 open MatSignature matsigMonoidAction
 
