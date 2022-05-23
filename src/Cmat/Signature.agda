@@ -29,8 +29,9 @@ record CmatSignature : Type where
   Mode = ob catModeJunctor
 
   field
+    isGroupoidMode : isGroupoid Mode
     CustomRHS : Mode → Type
-    isSetCustomRHS : ∀ {m} → isSet (CustomRHS m)
+    isGroupoidCustomRHS : ∀ {m} → isGroupoid (CustomRHS m)
 
   private
     variable
@@ -56,8 +57,8 @@ record CmatSignature : Type where
     ctx : Ctx m → RHS m
     jhom : ∀ {n} → (Ψ Φ : Junctor m n) → RHS m
 
-  isSetRHS : isSet (RHS m)
-  isSetRHS = {!!}
+  isGroupoidRHS : isGroupoid (RHS m)
+  isGroupoidRHS = {!!}
 
   record Jud : Type where
     constructor _⊩_
@@ -80,14 +81,19 @@ record CmatSignature : Type where
     isoRepJud : Jud ≅ RepJud
     isoRepJud = isoRepJud'
 
-    isSetRepJud : isSet RepJud
-    isSetRepJud = isOfHLevelΣ 2 {!isSetMode!} {!!}
+    isGroupoidRepJud : isGroupoid RepJud
+    isGroupoidRepJud = isOfHLevelΣ 3 isGroupoidMode λ m → isOfHLevelΣ 3 (isSet→isGroupoid isSetCtx) (λ _ → isGroupoidRHS)
 
-  isSetJud : isSet Jud
-  isSetJud = isOfHLevelRetractFromIso 2 isoRepJud isSetRepJud
+  isGroupoidJud : isGroupoid Jud
+  isGroupoidJud = isOfHLevelRetractFromIso 3 isoRepJud isGroupoidRepJud
 
 module _ (cmatsig : CmatSignature) where
+
   open CmatSignature
+
+  data OpenCustomRHS (m : Mode cmatsig) : Type where
+    custom : CustomRHS cmatsig m → OpenCustomRHS m
+    ctx : Ctx cmatsig m → OpenCustomRHS m
 
   {- The signature of the open translation.
   -}
@@ -95,8 +101,9 @@ module _ (cmatsig : CmatSignature) where
   catModeJunctor (cmatsigOpen m) = catModeJunctor cmatsig
   pshCtx (cmatsigOpen m) =
     funcComp (HomFunctor (catModeJunctor cmatsig)) (rinj (catModeJunctor cmatsig ^op) (catModeJunctor cmatsig) m)
+  isGroupoidMode (cmatsigOpen m) = isGroupoidMode cmatsig
   CustomRHS (cmatsigOpen m) = RHS cmatsig
-  isSetCustomRHS (cmatsigOpen m) = isSetRHS cmatsig
+  isGroupoidCustomRHS (cmatsigOpen m) = isGroupoidRHS cmatsig
 
   open MatSignature
 
@@ -104,6 +111,6 @@ module _ (cmatsig : CmatSignature) where
   -}
   matsig : MatSignature
   Sort matsig = Jud cmatsig
-  isSetSort matsig = isSetJud cmatsig
+  isGroupoidSort matsig = isGroupoidJud cmatsig
 
 open CmatSignature {{...}} public
