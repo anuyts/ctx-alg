@@ -7,8 +7,8 @@
 
 # CMATs
 - Free CMAT
-  - Try to define warm/cold translations at once via a boolean parameter.
-  - Open translation which uses junctors instead of contexts, and junctor morphisms instead of substitutions; with substitution
+  - Warm translation (this is a coproduct!):
+    - Note: applying a junctor to a substitution, takes a delayed substitution
     - Note: you can pop a junctor from the context and whisker it with a junctor morphism:
       
       ```
@@ -18,17 +18,8 @@
       ```
       
       You cannot unwhisker however.
-    - Note: in the open translation, the identity substitution is ill-typed, so you cannot mention variables. This is precisely the point!
-    - Note: Open translates CMATs to CMATs:
-      - its contexts are junctors
-      - its `CustomRHS`s are the original `RHS`s, so its `RHS`s are the original `RHS`s plus junctors
-      - it has no additional operators! Junctor substitutions are added by the CMAT operators.
-  - Closed translation without substitution (call this crisp/cold/dead/solid)
-  - Closed translation with substitution (call this hot/warm/live/liquid/fluid)
-    - Note: applying a junctor to a substitution, takes a delayed substitution
 - Proofs about this
-  - For each context (naturally) `TermF Open => TermF ClosedSubst`
-  - `TermF ClosedNoSubst (AddSubst X) ~= TermF ClosedSubst`
+  - For each context (naturally) `TermF Open => TermF Warm`
   - `AddSubst Empty ~= Empty`
   - `SyntaxF ClosedNoSubst ~= SyntaxF ClosedSubst`
   - Characterize models via adjoint functors (so you don't need to worry about contexts, types and junctors/junctor morphisms having or not having an intermediate representation)
