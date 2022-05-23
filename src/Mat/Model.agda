@@ -385,7 +385,6 @@ carrier (fst (model1Eq→Q m1EqA@(algebra msetA α1 , respectsEqA))) = msetA
 str (fst (model1Eq→Q m1EqA@(algebra msetA α1 , respectsEqA))) = model1Eq→Q-algStr m1EqA
 snd (model1Eq→Q m1EqA@(algebra msetA α1 , respectsEqA)) = model1Eq→Q-isEMAlgebra m1EqA
 
-  {-
 {-# TERMINATING #-}
 ModelQHom1Eq→IsTermQAlgebraHom' : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
       (sort : Sort) (t : TermQ (mtyp (m1EqA .fst .carrier)) sort) →
@@ -396,25 +395,37 @@ mapTermF-ModelQHom1Eq→IsTermQAlgebraHom' : ∀ m1EqA m1EqB → (m1EqF : Model1
       carrierHom m1EqF sort (model1→F-algStr (m1EqA .fst) sort (mapTermF (model1Eq→Q-algStr m1EqA) sort t))
       ≡ model1→F-algStr (m1EqB .fst) sort
         (mapTermF (model1Eq→Q-algStr m1EqB) sort (mapTermF (mapTermQ (carrierHom m1EqF)) sort t))
+mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom' : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
+      (sort : Sort) (t : Term1 (TermQ (mtyp (m1EqA .fst .carrier))) sort) →
+      carrierHom m1EqF sort (model1Eq→Q-algStr m1EqA sort (ast t))
+      ≡ model1Eq→Q-algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (ast t))
 ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (var x) = refl
 ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (ast t) =
-  f sort (str (fst m1EqA) sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t))
+  mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t
+  {-f sort (str (fst m1EqA) sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t))
     ≡⟨ funExt⁻ (funExt⁻ f-isalg1 sort) (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t) ⟩
   str (fst m1EqB) sort (mapTerm1 f sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t))
+    ≡⟨ cong (str (fst m1EqB) sort) (sym (mapTerm1-∘ _ _) ≡$ sort ≡$S t) ⟩
+  str (fst m1EqB) sort
+    (mapTerm1 (λ x x₁ → f x (model1Eq→Q-algStr m1EqA x x₁)) sort t)
     ≡⟨ cong (str (fst m1EqB) sort) (funExt⁻ (funExt⁻ (cong mapTerm1 (
       (λ sort' → f sort' ∘ model1Eq→Q-algStr m1EqA sort')
         ≡⟨ (funExt λ sort' → funExt λ t' → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort' t') ⟩
       (λ sort' → model1Eq→Q-algStr m1EqB sort' ∘ mapTermQ f sort') ∎
     )) sort) t) ⟩
-  str (fst m1EqB) sort (mapTerm1 (model1Eq→Q-algStr m1EqB) sort (mapTerm1 (mapTermQ f) sort t)) ∎
-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort (joinFQ t) i =
-  mapTermF-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t i
+  str (fst m1EqB) sort
+    (mapTerm1 (λ x x₁ → model1Eq→Q-algStr m1EqB x (mapTermQ f x x₁))
+     sort t)
+    ≡⟨ cong (str (fst m1EqB) sort) (mapTerm1-∘ _ _ ≡$ sort ≡$S t) ⟩
+  str (fst m1EqB) sort (mapTerm1 (model1Eq→Q-algStr m1EqB) sort (mapTerm1 (mapTermQ f) sort t)) ∎-}
+ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort (joinFQ t) =
+  mapTermF-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t
 -- The following all follows from Sethood but there seems to be a de Bruijn error in agda-cubical?
 ModelQHom1Eq→IsTermQAlgebraHom'
   m1EqA@(algebra msetA α1 , respectsEqA)
   m1EqB@(algebra msetB β1 , respectsEqB)
   m1EqF@(algebraHom f f-isalg1) sort (joinFQ-varF t j) i =
-  {!idfun
+  idfun
     (Square
       (λ j → f sort
          (model1Eq→Q-algStr (algebra msetA α1 , respectsEqA) sort t))
@@ -422,33 +433,54 @@ ModelQHom1Eq→IsTermQAlgebraHom'
          sort (mapTermQ f sort t))
       (λ i → mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
          (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
-         (algebraHom f f-isalg1) sort (varF t) {!i!})
+         (algebraHom f f-isalg1) sort (varF t) i)
       (λ i → ModelQHom1Eq→IsTermQAlgebraHom'
          (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
          (algebraHom f f-isalg1) sort t i)
-    ) (toPathP (snd (msetB sort) _ _ _ _)) i j!}
-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB@(algebra msetB β1 , respectsEqB) m1EqF sort (joinFQ-astF t j) i =
-  {!idfun
+    ) (toPathP (snd (msetB sort) _ _ _ _)) i j
+ModelQHom1Eq→IsTermQAlgebraHom'
+  m1EqA@(algebra msetA α1 , respectsEqA)
+  m1EqB@(algebra msetB β1 , respectsEqB)
+  m1EqF@(algebraHom f f-isalg1) sort (joinFQ-astF t j) i =
+  idfun
     (Square
-      (λ j → {!!})
-      (λ j → {!!})
-      (λ i → {!!})
-      (λ i → {!!})
-    ) (toPathP (snd (msetB sort) _ _ _ _)) i j!}
-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB@(algebra msetB β1 , respectsEqB) m1EqF sort (byAxiom axiom g j) i =
-  {!idfun
+      (λ j → carrierHom m1EqF sort (model1Eq→Q-algStr m1EqA sort (joinFQ-astF t j)))
+      (λ j → model1Eq→Q-algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (joinFQ-astF t j)))
+      (λ i → mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
+         (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
+         (algebraHom f f-isalg1) sort (astF t) i)
+      (λ i → mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom'
+         (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
+         (algebraHom f f-isalg1) sort (mapTerm1 (λ sort₁ → joinFQ) sort t) i)
+    ) (toPathP (snd (msetB sort) _ _ _ _)) i j
+ModelQHom1Eq→IsTermQAlgebraHom'
+  m1EqA@(algebra msetA α1 , respectsEqA)
+  m1EqB@(algebra msetB β1 , respectsEqB)
+  m1EqF@(algebraHom f f-isalg1) sort (byAxiom axiom g j) i =
+  idfun
     (Square
-      (λ j → {!!})
-      (λ j → {!!})
-      (λ i → {!!})
-      (λ i → {!!})
-    ) (toPathP (snd (msetB sort) _ _ _ _)) i j!}
-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB@(algebra msetB β1 , respectsEqB) m1EqF sort (isSetTermQ t1 t2 et et' j k) i =
-  {!snd (msetB sort)
-    ?
-    ?
-    ?
-    ? j k!}
+      (λ j → carrierHom m1EqF sort (model1Eq→Q-algStr m1EqA sort (byAxiom axiom g j)))
+      (λ j → model1Eq→Q-algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (byAxiom axiom g j)))
+      (λ i → mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
+         (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
+         (algebraHom f f-isalg1) sort (mapTermF g sort (lhs axiom)) i)
+      (λ i → mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
+         (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
+         (algebraHom f f-isalg1) sort (mapTermF g sort (rhs axiom)) i)
+    ) (toPathP (snd (msetB sort) _ _ _ _)) i j
+ModelQHom1Eq→IsTermQAlgebraHom'
+  m1EqA@(algebra msetA α1 , respectsEqA)
+  m1EqB@(algebra msetB β1 , respectsEqB)
+  m1EqF@(algebraHom f f-isalg1) sort (isSetTermQ t1 t2 et et' j k) i =
+  idfun
+    (Cube
+      (λ j k → f sort (model1Eq→Q-algStr m1EqA sort (isSetTermQ t1 t2 et et' j k)))
+      (λ j k → model1Eq→Q-algStr m1EqB sort (mapTermQ f sort (isSetTermQ t1 t2 et et' j k)))
+      (λ i k → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort (et  k) i)
+      (λ i k → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort (et' k) i)
+      (λ i j → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t1 i)
+      (λ i j → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t2 i)
+    ) (toPathP (isSet→isGroupoid (snd (msetB sort)) _ _ _ _ _ _)) i j k
 mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
   m1EqA@(algebra msetA α1 , respectsEqA)
   m1EqB@(algebra msetB β1 , respectsEqB)
@@ -472,6 +504,11 @@ mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
         βF = model1→F (algebra msetB β1) .fst .str
         f-isalgF : IsAlgebraHom ftrTermF (algebra msetA αF) (algebra msetB βF) f
         f-isalgF = strHom (model1→F-hom m1EqF)
+mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom'
+  m1EqA@(algebra msetA α1 , respectsEqA)
+  m1EqB@(algebra msetB β1 , respectsEqB)
+  m1EqF@(algebraHom f f-isalg1) sort t = {!!}
+  {-
 
 {-
 
