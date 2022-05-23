@@ -26,6 +26,22 @@ In `Mat`, we define MATs (multisorted algebraic theories).
   - `catModel` of Eilenberg-Moore algebras for `TermQ`.
   
 ### Contextual multisorted algebraic theories
-In `Cmat`, we define CMATs (contextual multisorted algebraic theories).
+In `Cmat`, we define CMATs (contextual multisorted algebraic theories), as well as a few translations:
+- The *open* translation at any mode `m`, which yields another CMAT. The axioms of the equational theory of a CMAT will be expressed in terms of its open translation, to ensure that axioms are also preserved by substitution.
+- Translations to MATs:
+  - The cold translation, which yields a free MAT with no substitution operations,
+  - The warm translation, which yields a free MAT with substitution operations, that can be extended with
+    - an equational theory about substitution
+    - the axioms of the source CMAT
+
+The setup is as follows:
+- `Cmat.Signature` defines the signature of a CMAT presentation, consisting of:
+  - a category of modes and junctors
+  - a covariant presheaf of contexts (i.e. contexts at every mode, extensible with junctors)
+  - custom right-hand-sides (to which we add the native RHSs for substitutions and junctor morphisms)
+  
+  as well as 2 translations:
+  - the CMAT signature of the *open* translation at mode `m`, where junctors from mode `m` take the role of contexts,
+  - the MAT signature of the resulting MAT.
 
 TBD

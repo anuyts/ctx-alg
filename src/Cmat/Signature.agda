@@ -3,11 +3,13 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism renaming (Iso to _≅_)
 open import Cubical.Foundations.HLevels
+open import Cubical.Data.Sum
+open import Cubical.Data.Sigma
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.Functors.HomFunctor
 open import Cubical.Categories.Instances.Sets
-open import Cubical.Categories.Constructions.BinProduct
+open import Cubical.Categories.Constructions.BinProduct renaming (_×_ to _×C_)
 open import Cubical.Reflection.RecordEquiv
 
 open import Mat.Signature
@@ -53,12 +55,51 @@ record CmatSignature : Type where
   Γ ⦊ Ψ = F-hom pshCtx Ψ Γ
 
   data RHS (m : Mode) : Type where
-    custom : CustomRHS m → RHS m
-    ctx : Ctx m → RHS m
+    custom : (crhs : CustomRHS m) → RHS m
+    sub : (Γ : Ctx m) → RHS m
     jhom : ∀ {n} → (Ψ Φ : Junctor m n) → RHS m
 
+  module _ where
+    open _≅_
+
+    RepRHS : Mode → Type
+    RepRHS m = CustomRHS m ⊎ (Ctx m ⊎ (Σ[ n ∈ Mode ] Junctor m n × Junctor m n))
+
+    toRepRHS : ∀ {m} → RHS m → RepRHS m
+    toRepRHS (custom crhs) = inl crhs
+    toRepRHS (sub Γ) = inr (inl Γ)
+    toRepRHS (jhom Ψ Φ) = inr (inr (_ , Ψ , Φ))
+
+    fromRepRHS : ∀ {m} → RepRHS m → RHS m
+    fromRepRHS (inl crhs) = custom crhs
+    fromRepRHS (inr (inl Γ)) = sub Γ
+    fromRepRHS (inr (inr (n , Ψ , Φ))) = jhom Ψ Φ
+
+    fromToRepRHS : ∀ {m} (rhs : RHS m) → fromRepRHS (toRepRHS rhs) ≡ rhs
+    fromToRepRHS (custom x) = refl
+    fromToRepRHS (sub x) = refl
+    fromToRepRHS (jhom Ψ Φ) = refl
+
+    toFromRepRHS : ∀ {m} (rrhs : RepRHS m) → toRepRHS (fromRepRHS rrhs) ≡ rrhs
+    toFromRepRHS (inl x) = refl
+    toFromRepRHS (inr (inl x)) = refl
+    toFromRepRHS (inr (inr x)) = refl
+
+    isoRepRHS : ∀ {m} → RHS m ≅ RepRHS m
+    fun isoRepRHS = toRepRHS
+    inv isoRepRHS = fromRepRHS
+    rightInv isoRepRHS = toFromRepRHS
+    leftInv isoRepRHS = fromToRepRHS
+
+    isGroupoidRepRHS : ∀ {m} → isGroupoid (RepRHS m)
+    isGroupoidRepRHS =
+        isOfHLevel⊎ 1 isGroupoidCustomRHS (
+        isOfHLevel⊎ 1 (isSet→isGroupoid isSetCtx) (
+        isOfHLevelΣ 3 isGroupoidMode λ n → isOfHLevel× 3 (isSet→isGroupoid isSetJunctor) (isSet→isGroupoid isSetJunctor)
+      ))
+
   isGroupoidRHS : isGroupoid (RHS m)
-  isGroupoidRHS = {!!}
+  isGroupoidRHS = isOfHLevelRetractFromIso 3 isoRepRHS isGroupoidRepRHS
 
   record Jud : Type where
     constructor _⊩_
@@ -87,13 +128,56 @@ record CmatSignature : Type where
   isGroupoidJud : isGroupoid Jud
   isGroupoidJud = isOfHLevelRetractFromIso 3 isoRepJud isGroupoidRepJud
 
+  module _ where
+    open MatSignature
+
+    {- The signature of the MAT translation.
+    -}
+    matsig : MatSignature
+    Sort matsig = Jud
+    isGroupoidSort matsig = isGroupoidJud
+
 module _ (cmatsig : CmatSignature) where
 
   open CmatSignature
 
   data OpenCustomRHS (m : Mode cmatsig) : Type where
-    custom : CustomRHS cmatsig m → OpenCustomRHS m
-    ctx : Ctx cmatsig m → OpenCustomRHS m
+    custom : (crhs : CustomRHS cmatsig m) → OpenCustomRHS m
+    sub : (Γ : Ctx cmatsig m) → OpenCustomRHS m
+
+  module _ where
+    open _≅_
+
+    RepOpenCustomRHS : Mode cmatsig → Type
+    RepOpenCustomRHS m = CustomRHS cmatsig m ⊎ Ctx cmatsig m
+
+    toRepOpenCustomRHS : ∀ {m} → OpenCustomRHS m → RepOpenCustomRHS m
+    toRepOpenCustomRHS (custom crhs) = inl crhs
+    toRepOpenCustomRHS (sub Γ) = inr Γ
+
+    fromRepOpenCustomRHS : ∀ {m} → RepOpenCustomRHS m → OpenCustomRHS m
+    fromRepOpenCustomRHS (inl x) = custom x
+    fromRepOpenCustomRHS (inr x) = sub x
+
+    fromToRepOpenCustomRHS : ∀ {m} (ocrhs : OpenCustomRHS m) → fromRepOpenCustomRHS (toRepOpenCustomRHS ocrhs) ≡ ocrhs
+    fromToRepOpenCustomRHS (custom x) = refl
+    fromToRepOpenCustomRHS (sub x) = refl
+
+    toFromRepOpenCustomRHS : ∀ {m} (rocrhs : RepOpenCustomRHS m) → toRepOpenCustomRHS (fromRepOpenCustomRHS rocrhs) ≡ rocrhs
+    toFromRepOpenCustomRHS (inl x) = refl
+    toFromRepOpenCustomRHS (inr x) = refl
+
+    isoRepOpenCustomRHS : ∀ {m} → OpenCustomRHS m ≅ RepOpenCustomRHS m
+    fun isoRepOpenCustomRHS = toRepOpenCustomRHS
+    inv isoRepOpenCustomRHS = fromRepOpenCustomRHS
+    rightInv isoRepOpenCustomRHS = toFromRepOpenCustomRHS
+    leftInv isoRepOpenCustomRHS = fromToRepOpenCustomRHS
+
+    isGroupoidRepOpenCustomRHS : ∀ {m} → isGroupoid (RepOpenCustomRHS m)
+    isGroupoidRepOpenCustomRHS = isOfHLevel⊎ 1 (isGroupoidCustomRHS cmatsig) (isSet→isGroupoid (isSetCtx cmatsig))
+
+  isGroupoidOpenCustomRHS : ∀ {m} → isGroupoid (OpenCustomRHS m)
+  isGroupoidOpenCustomRHS = isOfHLevelRetractFromIso 3 isoRepOpenCustomRHS isGroupoidRepOpenCustomRHS
 
   {- The signature of the open translation.
   -}
@@ -102,15 +186,7 @@ module _ (cmatsig : CmatSignature) where
   pshCtx (cmatsigOpen m) =
     funcComp (HomFunctor (catModeJunctor cmatsig)) (rinj (catModeJunctor cmatsig ^op) (catModeJunctor cmatsig) m)
   isGroupoidMode (cmatsigOpen m) = isGroupoidMode cmatsig
-  CustomRHS (cmatsigOpen m) = RHS cmatsig
-  isGroupoidCustomRHS (cmatsigOpen m) = isGroupoidRHS cmatsig
-
-  open MatSignature
-
-  {- The signature of the MAT translation.
-  -}
-  matsig : MatSignature
-  Sort matsig = Jud cmatsig
-  isGroupoidSort matsig = isGroupoidJud cmatsig
+  CustomRHS (cmatsigOpen m) = OpenCustomRHS
+  isGroupoidCustomRHS (cmatsigOpen m) = isGroupoidOpenCustomRHS
 
 open CmatSignature {{...}} public
