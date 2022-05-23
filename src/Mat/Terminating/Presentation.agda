@@ -32,7 +32,7 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
     open EqTheory eqTheory public
 
     data TermQ (X : MType) : (sort : Sort) → Type where
-      var : ∀ {sortOut} → X sortOut → TermQ X sortOut
+      varQ : ∀ {sortOut} → X sortOut → TermQ X sortOut
       join1Q : ∀ {sortOut} → Term1 (TermQ X) sortOut → TermQ X sortOut
       join1Q : ∀ {sortOut} → TermF (TermQ X) sortOut → TermQ X sortOut
       join1Q-varF : ∀ {sortOut} → (t : TermQ X sortOut) → join1Q (varF t) ≡ t
@@ -53,7 +53,7 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       → (sort : Sort) → (t : TermF Y sort)
       → mapTermF (λ sort' → joinTermQ sort' ∘ f sort') sort t ≡ mapTermF-joinTermQ sort (mapTermF f sort t)
 
-    joinTermQ sort (var t) = t
+    joinTermQ sort (varQ t) = t
     joinTermQ sort (join1Q (term1 o args)) = join1Q (term1 o λ p → joinTermQ (arity o ! p) (args p))
     joinTermQ sort (join1Q t) = join1Q (mapTermF-joinTermQ sort t)
     joinTermQ sort (join1Q-varF t i) = join1Q-varF (joinTermQ sort t) i
@@ -88,7 +88,7 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       → (sort : Sort) → (t : TermF Z sort)
       → mapTermF (λ sort' → mapTermQ f sort' ∘ g sort') sort t ≡ mapTermF-mapTermQ f sort (mapTermF g sort t)
 
-    mapTermQ f sort (var x) = var (f sort x)
+    mapTermQ f sort (varQ x) = varQ (f sort x)
     mapTermQ f sort (join1Q (term1 o args)) = join1Q (term1 o λ p → mapTermQ f (arity o ! p) (args p))
     mapTermQ f sort (join1Q t) = join1Q (mapTermF-mapTermQ f sort t)
     mapTermQ f sort (join1Q-varF t i) = join1Q-varF (mapTermQ f sort t) i
@@ -139,7 +139,7 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
            )
            (λ i → mapTermF (λ sort' → mapTermQ-id i sort' ∘ g sort') sort t)
            λ i → mapTermF-mapTermQ-id i sort (mapTermF g sort t)
-    mapTermQ-id i sort (var x) = var x
+    mapTermQ-id i sort (varQ x) = varQ x
     mapTermQ-id i sort (join1Q (term1 o args)) = join1Q (term1 o λ p → mapTermQ-id i (arity o ! p) (args p))
     mapTermQ-id i sort (join1Q t) = join1Q (mapTermF-mapTermQ-id i sort t)
     mapTermQ-id {X = X} i sort (join1Q-varF t j) = join1Q-varF (mapTermQ-id i sort t) j
@@ -203,7 +203,7 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
            )
            (λ i → {!mapTermF (λ sort' → mapTermQ-id i sort' ∘ g sort') sort t!})
            (λ i → {!mapTermF-mapTermQ-id i sort (mapTermF g sort t)!})-}
-    mapTermQ-∘ g f i sort (var x) = var (g sort (f sort x))
+    mapTermQ-∘ g f i sort (varQ x) = varQ (g sort (f sort x))
     mapTermQ-∘ g f i sort (join1Q (term1 o args)) = join1Q (term1 o λ p → mapTermQ-∘ g f i (arity o ! p) (args p))
     mapTermQ-∘ g f i sort (join1Q t) = join1Q (mapTermF-mapTermQ-∘ g f i sort t)
     mapTermQ-∘ g f i sort (join1Q-varF t j) =
