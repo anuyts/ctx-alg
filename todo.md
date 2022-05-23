@@ -6,8 +6,6 @@
   - elim (in cubical library?)
 
 # CMATs
-
-- Signature
 - Free CMAT
   - Try to define warm/cold translations at once via a boolean parameter.
   - Open translation which uses junctors instead of contexts, and junctor morphisms instead of substitutions; with substitution

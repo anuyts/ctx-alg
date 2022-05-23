@@ -27,10 +27,10 @@ In `Mat`, we define MATs (multisorted algebraic theories).
   
 ### Contextual multisorted algebraic theories
 In `Cmat`, we define CMATs (contextual multisorted algebraic theories), as well as a few translations:
-- The *open* translation at any mode `m`, which yields another CMAT. The axioms of the equational theory of a CMAT will be expressed in terms of its open translation, to ensure that axioms are also preserved by substitution.
+- The **open** translation at any mode `m`, which yields another CMAT. The axioms of the equational theory of a CMAT will be expressed in terms of its open translation, to ensure that axioms are also preserved by substitution.
 - Translations to MATs:
-  - The cold translation, which yields a free MAT with no substitution operations,
-  - The warm translation, which yields a free MAT with substitution operations, that can be extended with
+  - The **cold** translation, which yields a free MAT with no substitution operations,
+  - The **warm** translation, which yields a free MAT with substitution operations, that can be extended with
     - an equational theory about substitution
     - the axioms of the source CMAT
 
@@ -41,7 +41,10 @@ The setup is as follows:
   - custom right-hand-sides (to which we add the native RHSs for substitutions and junctor morphisms)
   
   as well as 2 translations:
-  - the CMAT signature of the *open* translation at mode `m`, where junctors from mode `m` take the role of contexts,
+  - the CMAT signature of the **open** translation at mode `m0`, where junctors from mode `m0` take the role of contexts,
   - the MAT signature of the resulting MAT.
+- `Cmat.Free.Presentation` defines the presentation of a free CMAT, which is almost a RHS-indexed container, only we get to specify a junctor for every argument of every operator. It also defines two translations:
+  - The free CMAT presentation of the **open** translation at mode `m0`,
+  - The free MAT presentation of the **cold** translation.
 
 TBD

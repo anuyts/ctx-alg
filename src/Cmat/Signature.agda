@@ -5,6 +5,7 @@ open import Cubical.Foundations.Isomorphism renaming (Iso to _≅_)
 open import Cubical.Foundations.HLevels
 open import Cubical.Data.Sum
 open import Cubical.Data.Sigma
+open import Cubical.Data.List
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.Functors.HomFunctor
@@ -54,10 +55,20 @@ record CmatSignature : Type where
   _⦊_ : Ctx m → Junctor m n → Ctx n
   Γ ⦊ Ψ = F-hom pshCtx Ψ Γ
 
-  data RHS (m : Mode) : Type where
-    custom : (crhs : CustomRHS m) → RHS m
-    sub : (Γ : Ctx m) → RHS m
-    jhom : ∀ {n} → (Ψ Φ : Junctor m n) → RHS m
+  infixl 6 _⦊_
+
+  data RHS' (X : Mode → Type) (m : Mode) : Type where
+    custom : (crhs : X m) → RHS' X m
+    sub : (Γ : Ctx m) → RHS' X m
+    jhom : ∀ {n} → (Ψ Φ : Junctor m n) → RHS' X m
+
+  mapRHS' : ∀ {X Y : Mode → Type} → (f : ∀ m → X m → Y m) → RHS' X m → RHS' Y m
+  mapRHS' f (custom crhs) = custom (f _ crhs)
+  mapRHS' f (sub Γ) = sub Γ
+  mapRHS' f (jhom Ψ Φ) = jhom Ψ Φ
+
+  RHS : Mode → Type
+  RHS m = RHS' CustomRHS m
 
   module _ where
     open _≅_
@@ -109,6 +120,8 @@ record CmatSignature : Type where
       jud'rhs : RHS jud'mode
 
   pattern _⊢_ Γ crhsT = Γ ⊩ custom crhsT
+  
+  infix 5 _⊩_ _⊢_
 
   module _ where
     open _≅_
@@ -128,6 +141,23 @@ record CmatSignature : Type where
   isGroupoidJud : isGroupoid Jud
   isGroupoidJud = isOfHLevelRetractFromIso 3 isoRepJud isGroupoidRepJud
 
+  -- contextual arity
+  CArity' : (Mode → Type) → Mode → Type
+  CArity' X m = List (Σ[ n ∈ Mode ] Junctor m n × RHS' X n)
+
+  mapCArity' : ∀ {X Y : Mode → Type} → (f : ∀ m → X m → Y m) → CArity' X m → CArity' Y m
+  mapCArity' f [] = []
+  mapCArity' f ((n , Φ , rhs) ∷ arity) = (n , Φ , mapRHS' f rhs) ∷ mapCArity' f arity
+
+  CArity : Mode → Type
+  CArity m = List (Σ[ n ∈ Mode ] Junctor m n × RHS n)
+
+  isGroupoidCArity : ∀ {m} → isGroupoid (CArity m)
+  isGroupoidCArity =
+    isOfHLevelList 1 (
+    isOfHLevelΣ 3 isGroupoidMode (λ n →
+    isOfHLevel× 3 (isSet→isGroupoid isSetJunctor) isGroupoidRHS))
+
   module _ where
     open MatSignature
 
@@ -137,6 +167,12 @@ record CmatSignature : Type where
     Sort matsig = Jud
     isGroupoidSort matsig = isGroupoidJud
 
+    plantArity : ∀ {m} (Γ : Ctx m) → CArity m → Arity matsig
+    plantArity Γ [] = []
+    plantArity Γ ((n , Φ , rhs) ∷ arity) = (Γ ⦊ Φ ⊩ rhs) ∷ plantArity Γ arity
+
+{- The signature of the open translation.
+-}
 module _ (cmatsig : CmatSignature) where
 
   open CmatSignature
@@ -189,4 +225,11 @@ module _ (cmatsig : CmatSignature) where
   CustomRHS (cmatsigOpen m) = OpenCustomRHS
   isGroupoidCustomRHS (cmatsigOpen m) = isGroupoidOpenCustomRHS
 
-open CmatSignature {{...}} public
+  rhsOrig→Open : ∀ {m0 m : Mode cmatsig} → RHS cmatsig m → RHS (cmatsigOpen m0) m
+  rhsOrig→Open (custom crhs) = custom (custom crhs)
+  rhsOrig→Open (sub Γ) = custom (sub Γ)
+  rhsOrig→Open (jhom Ψ Φ) = jhom Ψ Φ
+
+  arityOrig→Open : ∀ {m0 m : Mode cmatsig} → CArity cmatsig m → CArity (cmatsigOpen m0) m
+  arityOrig→Open [] = []
+  arityOrig→Open ((n , Φ , rhs) ∷ arity) = (n , Φ , rhsOrig→Open rhs) ∷ arityOrig→Open arity
