@@ -34,13 +34,13 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
     data TermQ (X : MType) : (sort : Sort) → Type where
       var : ∀ {sortOut} → X sortOut → TermQ X sortOut
       ast : ∀ {sortOut} → Term1 (TermQ X) sortOut → TermQ X sortOut
-      astQ : ∀ {sortOut} → TermF (TermQ X) sortOut → TermQ X sortOut
-      astQ-varF : ∀ {sortOut} → (t : TermQ X sortOut) → astQ (varF t) ≡ t
-      astQ-astF : ∀ {sortOut} → (t : Term1 (TermF (TermQ X)) sortOut)
-        → astQ (astF t) ≡ ast (mapTerm1 (λ sort → astQ) sortOut t)
+      join1Q : ∀ {sortOut} → TermF (TermQ X) sortOut → TermQ X sortOut
+      join1Q-varF : ∀ {sortOut} → (t : TermQ X sortOut) → join1Q (varF t) ≡ t
+      join1Q-join1F : ∀ {sortOut} → (t : Term1 (TermF (TermQ X)) sortOut)
+        → join1Q (join1F t) ≡ ast (mapTerm1 (λ sort → join1Q) sortOut t)
       byAxiom : ∀ {sortOut : Sort} → (axiom : Axiom sortOut) → (f : ∀ sort → mtyp (msetArity axiom) sort → TermQ X sort)
-        → astQ (mapTermF f sortOut (lhs axiom))
-        ≡ astQ (mapTermF f sortOut (rhs axiom))
+        → join1Q (mapTermF f sortOut (lhs axiom))
+        ≡ join1Q (mapTermF f sortOut (rhs axiom))
       isSetTermQ : ∀ {sortOut} → isSet (TermQ X sortOut)
 
     joinTermQ : {X : MType} → (sort : Sort) → TermQ (TermQ X) sort → TermQ X sort
@@ -55,13 +55,13 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
 
     joinTermQ sort (var t) = t
     joinTermQ sort (ast (term1 o args)) = ast (term1 o λ p → joinTermQ (arity o ! p) (args p))
-    joinTermQ sort (astQ t) = astQ (mapTermF-joinTermQ sort t)
-    joinTermQ sort (astQ-varF t i) = astQ-varF (joinTermQ sort t) i
-    joinTermQ sort (astQ-astF t i) = astQ-astF (mapTerm1-mapTermF-joinTermQ sort t) i
+    joinTermQ sort (join1Q t) = join1Q (mapTermF-joinTermQ sort t)
+    joinTermQ sort (join1Q-varF t i) = join1Q-varF (joinTermQ sort t) i
+    joinTermQ sort (join1Q-join1F t i) = join1Q-join1F (mapTerm1-mapTermF-joinTermQ sort t) i
     joinTermQ sort (byAxiom axiom f i) = hcomp
       (λ where
-         j (i = i0) → astQ (mapTermF-joinTermQ-∘' f sort (lhs axiom) j)
-         j (i = i1) → astQ (mapTermF-joinTermQ-∘' f sort (rhs axiom) j)
+         j (i = i0) → join1Q (mapTermF-joinTermQ-∘' f sort (lhs axiom) j)
+         j (i = i1) → join1Q (mapTermF-joinTermQ-∘' f sort (rhs axiom) j)
       )
       (byAxiom axiom (λ sort' y → joinTermQ sort' (f sort' y)) i)
     joinTermQ sort (isSetTermQ t1 t2 et et' i j) = isSetTermQ
@@ -70,11 +70,11 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       (λ k → joinTermQ sort (et k))
       (λ k → joinTermQ sort (et' k)) i j
     mapTermF-joinTermQ sort (varF t) = varF (joinTermQ sort t)
-    mapTermF-joinTermQ sort (astF t) = astF (mapTerm1-mapTermF-joinTermQ sort t)
+    mapTermF-joinTermQ sort (join1F t) = join1F (mapTerm1-mapTermF-joinTermQ sort t)
     mapTerm1-mapTermF-joinTermQ sort (term1 o args) = term1 o λ p → mapTermF-joinTermQ (arity o ! p) (args p)
     mapTermF-joinTermQ-∘' f sort (varF y) i = varF (joinTermQ sort (f sort y))
-    mapTermF-joinTermQ-∘' f sort (astF (term1 o args)) i =
-      astF (term1 o λ p → mapTermF-joinTermQ-∘' f (arity o ! p) (args p) i)
+    mapTermF-joinTermQ-∘' f sort (join1F (term1 o args)) i =
+      join1F (term1 o λ p → mapTermF-joinTermQ-∘' f (arity o ! p) (args p) i)
 
     msetTermQ : MSet → MSet
     fst (msetTermQ msetX sortOut) = TermQ (mtyp msetX) sortOut
@@ -90,13 +90,13 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
 
     mapTermQ f sort (var x) = var (f sort x)
     mapTermQ f sort (ast (term1 o args)) = ast (term1 o λ p → mapTermQ f (arity o ! p) (args p))
-    mapTermQ f sort (astQ t) = astQ (mapTermF-mapTermQ f sort t)
-    mapTermQ f sort (astQ-varF t i) = astQ-varF (mapTermQ f sort t) i
-    mapTermQ f sort (astQ-astF (term1 o args) i) = astQ-astF (term1 o λ p → mapTermF-mapTermQ f (arity o ! p) (args p)) i
+    mapTermQ f sort (join1Q t) = join1Q (mapTermF-mapTermQ f sort t)
+    mapTermQ f sort (join1Q-varF t i) = join1Q-varF (mapTermQ f sort t) i
+    mapTermQ f sort (join1Q-join1F (term1 o args) i) = join1Q-join1F (term1 o λ p → mapTermF-mapTermQ f (arity o ! p) (args p)) i
     mapTermQ f sort (byAxiom axiom g i) = hcomp
       (λ where
-        j (i = i0) → astQ (mapTermF-mapTermQ-∘' f g sort (lhs axiom) j)
-        j (i = i1) → astQ (mapTermF-mapTermQ-∘' f g sort (rhs axiom) j)
+        j (i = i0) → join1Q (mapTermF-mapTermQ-∘' f g sort (lhs axiom) j)
+        j (i = i1) → join1Q (mapTermF-mapTermQ-∘' f g sort (rhs axiom) j)
       )
       (byAxiom axiom (λ sort' y → mapTermQ f sort' (g sort' y)) i)
     mapTermQ f sort (isSetTermQ t1 t2 et et' i j) = isSetTermQ
@@ -105,15 +105,15 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       (λ k → mapTermQ f sort (et k))
       (λ k → mapTermQ f sort (et' k)) i j
     mapTermF-mapTermQ f sort (varF t) = varF (mapTermQ f sort t)
-    mapTermF-mapTermQ f sort (astF (term1 o args)) = astF (term1 o λ p → mapTermF-mapTermQ f (arity o ! p) (args p))
+    mapTermF-mapTermQ f sort (join1F (term1 o args)) = join1F (term1 o λ p → mapTermF-mapTermQ f (arity o ! p) (args p))
     mapTermF-mapTermQ-∘' f g sort (varF x) i = varF (mapTermQ f sort (g sort x))
-    mapTermF-mapTermQ-∘' f g sort (astF (term1 o args)) i = astF (term1 o λ p → mapTermF-mapTermQ-∘' f g (arity o ! p) (args p) i)
+    mapTermF-mapTermQ-∘' f g sort (join1F (term1 o args)) i = join1F (term1 o λ p → mapTermF-mapTermQ-∘' f g (arity o ! p) (args p) i)
 
     mapTermQ-byAxiom : ∀ {X Y : MType} → (f : ∀ sort → X sort → Y sort) → ∀ sortOut
       → (axiom : Axiom sortOut) → (g : ∀ sort → mtyp (msetArity axiom) sort → TermQ X sort)
       → PathP
-           (λ j → astQ (mapTermF-mapTermQ-∘' f g sortOut (lhs axiom) j)
-                 ≡ astQ (mapTermF-mapTermQ-∘' f g sortOut (rhs axiom) j)
+           (λ j → join1Q (mapTermF-mapTermQ-∘' f g sortOut (lhs axiom) j)
+                 ≡ join1Q (mapTermF-mapTermQ-∘' f g sortOut (rhs axiom) j)
            )
            (λ i → byAxiom axiom (λ sort y → mapTermQ f sort (g sort y)) i)
            (λ i → mapTermQ f sortOut (byAxiom axiom g i))
@@ -141,14 +141,14 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
            λ i → mapTermF-mapTermQ-id i sort (mapTermF g sort t)
     mapTermQ-id i sort (var x) = var x
     mapTermQ-id i sort (ast (term1 o args)) = ast (term1 o λ p → mapTermQ-id i (arity o ! p) (args p))
-    mapTermQ-id i sort (astQ t) = astQ (mapTermF-mapTermQ-id i sort t)
-    mapTermQ-id {X = X} i sort (astQ-varF t j) = astQ-varF (mapTermQ-id i sort t) j
-    mapTermQ-id i sort (astQ-astF (term1 o args) j) =
-      astQ-astF (term1 o λ p → mapTermF-mapTermQ-id i (arity o ! p) (args p)) j
+    mapTermQ-id i sort (join1Q t) = join1Q (mapTermF-mapTermQ-id i sort t)
+    mapTermQ-id {X = X} i sort (join1Q-varF t j) = join1Q-varF (mapTermQ-id i sort t) j
+    mapTermQ-id i sort (join1Q-join1F (term1 o args) j) =
+      join1Q-join1F (term1 o λ p → mapTermF-mapTermQ-id i (arity o ! p) (args p)) j
     mapTermQ-id {X = X} k sort (byAxiom axiom f i) = hcomp
       (λ where
-        j (i = i0) → astQ (mapTermF-mapTermQ-id-∘' f sort (lhs axiom) j k)
-        j (i = i1) → astQ (mapTermF-mapTermQ-id-∘' f sort (rhs axiom) j k)
+        j (i = i0) → join1Q (mapTermF-mapTermQ-id-∘' f sort (lhs axiom) j k)
+        j (i = i1) → join1Q (mapTermF-mapTermQ-id-∘' f sort (rhs axiom) j k)
         j (k = i0) → {-idfun
           ( byAxiom axiom (λ sort' y → mapTermQ (λ sort₁ x → x) sort' (f sort' y)) i
           ≡ mapTermQ (λ sort → idfun (X sort)) sort (byAxiom axiom f i)
@@ -168,10 +168,10 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       (λ k → mapTermQ-id i sort (et k))
       (λ k → mapTermQ-id i sort (et' k)) j k
     mapTermF-mapTermQ-id i sort (varF t) = varF (mapTermQ-id i sort t)
-    mapTermF-mapTermQ-id i sort (astF (term1 o args)) = astF (term1 o λ p → mapTermF-mapTermQ-id i (arity o ! p) (args p))
+    mapTermF-mapTermQ-id i sort (join1F (term1 o args)) = join1F (term1 o λ p → mapTermF-mapTermQ-id i (arity o ! p) (args p))
     mapTermF-mapTermQ-id-∘' g sort (varF z) j i = varF (mapTermQ-id i sort (g sort z))
-    mapTermF-mapTermQ-id-∘' g sort (astF (term1 o args)) j i =
-      astF (term1 o λ p → mapTermF-mapTermQ-id-∘' g (arity o ! p) (args p) j i)
+    mapTermF-mapTermQ-id-∘' g sort (join1F (term1 o args)) j i =
+      join1F (term1 o λ p → mapTermF-mapTermQ-id-∘' g (arity o ! p) (args p) j i)
 
     --{-# TERMINATING #-}
     mapTermQ-∘ : ∀ {X Y Z : MType}
@@ -205,18 +205,18 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
            (λ i → {!mapTermF-mapTermQ-id i sort (mapTermF g sort t)!})-}
     mapTermQ-∘ g f i sort (var x) = var (g sort (f sort x))
     mapTermQ-∘ g f i sort (ast (term1 o args)) = ast (term1 o λ p → mapTermQ-∘ g f i (arity o ! p) (args p))
-    mapTermQ-∘ g f i sort (astQ t) = astQ (mapTermF-mapTermQ-∘ g f i sort t)
-    mapTermQ-∘ g f i sort (astQ-varF t j) =
-      astQ-varF (mapTermQ-∘ g f i sort t) j
-    mapTermQ-∘ g f i sort (astQ-astF (term1 o args) j) =
-      astQ-astF (term1 o λ p → mapTermF-mapTermQ-∘ g f i (arity o ! p) (args p)) j
+    mapTermQ-∘ g f i sort (join1Q t) = join1Q (mapTermF-mapTermQ-∘ g f i sort t)
+    mapTermQ-∘ g f i sort (join1Q-varF t j) =
+      join1Q-varF (mapTermQ-∘ g f i sort t) j
+    mapTermQ-∘ g f i sort (join1Q-join1F (term1 o args) j) =
+      join1Q-join1F (term1 o λ p → mapTermF-mapTermQ-∘ g f i (arity o ! p) (args p)) j
     mapTermQ-∘ g f k sort (byAxiom axiom h i) = {!!}
       {-idfun
         (Square
           (λ i → mapTermQ (λ sort₁ → g sort₁ ∘ f sort₁) sort (byAxiom axiom h i))
           (λ i → (mapTermQ g sort ∘ mapTermQ f sort) (byAxiom axiom h i))
-          (λ k → astQ (mapTermF-mapTermQ-∘ g f k sort (mapTermF h sort (lhs axiom))))
-          (λ k → astQ (mapTermF-mapTermQ-∘ g f k sort (mapTermF h sort (rhs axiom))))
+          (λ k → join1Q (mapTermF-mapTermQ-∘ g f k sort (mapTermF h sort (lhs axiom))))
+          (λ k → join1Q (mapTermF-mapTermQ-∘ g f k sort (mapTermF h sort (rhs axiom))))
         ) (toPathP (isSetTermQ _ _ _ _)) k i-}
     mapTermQ-∘ g f i sort (isSetTermQ t1 t2 et et' j k) = isSetTermQ
       (mapTermQ-∘ g f i sort t1)
@@ -224,7 +224,7 @@ module EqTheory {sign : Signature} (presF : PresentationF sign) where
       (λ k → mapTermQ-∘ g f i sort (et k))
       (λ k → mapTermQ-∘ g f i sort (et' k)) j k
     mapTermF-mapTermQ-∘ g f i sort (varF t) = varF (mapTermQ-∘ g f i sort t)
-    mapTermF-mapTermQ-∘ g f i sort (astF (term1 o args)) = astF (term1 o λ p → mapTermF-mapTermQ-∘ g f i (arity o ! p) (args p))
+    mapTermF-mapTermQ-∘ g f i sort (join1F (term1 o args)) = join1F (term1 o λ p → mapTermF-mapTermQ-∘ g f i (arity o ! p) (args p))
 
 EqTheory = EqTheory.EqTheory
 

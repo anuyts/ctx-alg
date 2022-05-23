@@ -2,7 +2,6 @@
 - rename ast to join1Q, astF to join1F
 - Don't use Everything
 - allow sorts and arities to be groupoids
-- Example MAT
 - Lower priority
   - CwFs
   - CwF structure of EM-category
