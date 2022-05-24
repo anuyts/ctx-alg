@@ -21,7 +21,7 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
   -- The cold translation
   module _ where
 
-    fmatCold : FreeMat matsig
+    fmatCold : FreeMat matsigPlant
     FreeMat.Operation fmatCold (Γ ⊩ rhs) = Operation rhs
     FreeMat.isSetOperation fmatCold = isSetOperation
     FreeMat.arity fmatCold {Γ ⊩ rhs} o = plantArity Γ (arity o)

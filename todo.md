@@ -6,6 +6,12 @@
   - elim (in cubical library?)
 
 # CMATs
+- MAT signature
+  - there should be a terminal (global) mode
+  - contexts are junctors from the global mode
+    - generalized contexts are junctors that factor over the global mode
+  - substitutions are jhoms from the identity junctor to a generalized context
+  - open translation is void; instead parametrize planting translation by source mode
 - Free CMAT
   - Warm translation (this is a coproduct!):
     - Note: applying a junctor to a substitution, takes a delayed substitution
