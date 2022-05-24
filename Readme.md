@@ -42,7 +42,7 @@ The setup is as follows:
   
   as well as 2 translations:
   - the CMAT signature of the **open** translation at mode `m0`, where junctors from mode `m0` take the role of contexts,
-  - the MAT signature of the resulting MAT.
+  - the MAT signature of the **cold**/**warm** translation.
 - `Cmat.Free.Presentation` defines the presentation of a free CMAT, which is almost a RHS-indexed container, only we get to specify a junctor for every argument of every operator. It also defines two translations:
   - The free CMAT presentation of the **open** translation at mode `m0`,
   - The free MAT presentation of the **cold** translation.
