@@ -59,6 +59,7 @@
     - prove normalization?
   - amazing right adjoint
     - prove normalization?
+  - poplmark challenge 1
 - Non-instances
   - adjoint logic, LSR (no left adjoints)
   - linear TT (because junctors don't live in a context, so it's not well-typed to remove something from it)
