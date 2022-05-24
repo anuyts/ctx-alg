@@ -38,7 +38,7 @@ record CmatSignature : Type where
 
   private
     variable
-      m n : Mode
+      m n p : Mode
 
   Junctor : Mode → Mode → Type
   Junctor = Hom[_,_] catModeJunctor
@@ -54,6 +54,12 @@ record CmatSignature : Type where
 
   _⦊_ : Ctx m → Junctor m n → Ctx n
   Γ ⦊ Ψ = F-hom pshCtx Ψ Γ
+
+  ◆ : Junctor m m
+  ◆ = id catModeJunctor
+
+  _⦊'_ : Junctor m n → Junctor n p → Junctor m p
+  Φ ⦊' Ψ = Φ ⋆⟨ catModeJunctor ⟩ Ψ
 
   infixl 6 _⦊_
 
@@ -163,11 +169,11 @@ record CmatSignature : Type where
 
     {- The signature of the MAT translation.
     -}
-    matsig : MatSignature
-    Sort matsig = Jud
-    isGroupoidSort matsig = isGroupoidJud
+    matsigPlant : MatSignature
+    Sort matsigPlant = Jud
+    isGroupoidSort matsigPlant = isGroupoidJud
 
-    plantArity : ∀ {m} (Γ : Ctx m) → CArity m → Arity matsig
+    plantArity : ∀ {m} (Γ : Ctx m) → CArity m → Arity matsigPlant
     plantArity Γ [] = []
     plantArity Γ ((n , Φ , rhs) ∷ arity) = (Γ ⦊ Φ ⊩ rhs) ∷ plantArity Γ arity
 

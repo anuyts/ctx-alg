@@ -15,7 +15,7 @@ import Mat.Free.Term
 
 module Mat.Presentation where
 
-record EqTheory {matsig : MatSignature} (presF : FreeMat matsig) : Type where
+record MatEqTheory {matsig : MatSignature} (presF : FreeMat matsig) : Type where
   open MatSignature matsig
   open FreeMat presF
   open Mat.Free.Term presF
@@ -34,4 +34,4 @@ record Mat (matsig : MatSignature) : Type where
   constructor mat
   field
     getFreeMat : FreeMat matsig
-    getEqTheory : EqTheory getFreeMat
+    getMatEqTheory : MatEqTheory getFreeMat

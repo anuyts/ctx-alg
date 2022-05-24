@@ -73,9 +73,9 @@ rhsMonoidAction mact-Assoc = mact $1 (arvarF zero ∷ (mact $1 (arvarF one ∷ a
 
 module _ where
 
-  open EqTheory
+  open MatEqTheory
 
-  eqTheoryMonoidAction : EqTheory fmatMonoidAction
+  eqTheoryMonoidAction : MatEqTheory fmatMonoidAction
   Axiom eqTheoryMonoidAction = AxiomMonoidAction
   isSetAxiom eqTheoryMonoidAction = {!!}
   msetArity eqTheoryMonoidAction = arity2mset ∘ arityAxiomMonoidAction
@@ -88,6 +88,6 @@ module _ where
 
   matMonoidAction : Mat matsigMonoidAction
   getFreeMat matMonoidAction = fmatMonoidAction
-  getEqTheory matMonoidAction = eqTheoryMonoidAction
+  getMatEqTheory matMonoidAction = eqTheoryMonoidAction
 
 open Mat matMonoidAction

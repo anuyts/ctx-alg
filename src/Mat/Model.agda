@@ -34,7 +34,7 @@ open Mat
 open FreeMat (getFreeMat mat)
 open Mat.Free.Term (getFreeMat mat)
 open Mat.Free.Model (getFreeMat mat)
-open EqTheory (getEqTheory mat)
+open MatEqTheory (getMatEqTheory mat)
 open Mat.Term mat
 
 open Category hiding (_∘_)

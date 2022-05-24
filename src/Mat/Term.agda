@@ -29,7 +29,7 @@ open MatSignature matsig
 open Mat
 open FreeMat (getFreeMat mat)
 open Mat.Free.Term (getFreeMat mat)
-open EqTheory (getEqTheory mat)
+open MatEqTheory (getMatEqTheory mat)
 
 open Category hiding (_∘_)
 open Functor
