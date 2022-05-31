@@ -6,6 +6,7 @@ open import Cubical.Data.Empty
 open import Cubical.Data.List hiding ([_])
 open import Cubical.Data.List.Dependent
 open import Cubical.Data.FinData
+open import Cubical.Categories.Limits.Terminal
 
 open import Mat.Signature
 open import Mat.Free.Presentation
@@ -13,21 +14,19 @@ open import Cmat.Signature
 import Mat.Free.Term
 open import Mat.Presentation
 
-module Cmat.Free.Substitutor (cmatsig : CmatSignature) where
+module Cmat.Free.Substitutor
+  (cmatsig : CmatSignature)
+  {{terminalModeJunctor : Terminal (CmatSignature.catModeJunctor cmatsig)}} where
 
 open CmatSignature cmatsig
-open MatSignature matsigPlant
+open MatSignature (matsigPlant m⊤)
 
 private
   variable m n p q : Mode
 
-data OperationSubstitutor : Jud → Type where
+data OperationSubstitutor : Jud m⊤ → Type where
   idsub : ∀ {Γ : Ctx m} → OperationSubstitutor (Γ ⊩ sub Γ)
   tmsub : ∀ {Γ Δ : Ctx m} {rhs : RHS m} → OperationSubstitutor (Γ ⊩ rhs)
-  idjhom : ∀ {Γ : Ctx m} {Φ : Junctor m n} → OperationSubstitutor (Γ ⊩ jhom Φ Φ)
-  compjhom : ∀ {Γ : Ctx m} {Φ Ψ Ξ : Junctor m n} → OperationSubstitutor (Γ ⊩ jhom Φ Ξ)
-  whiskerL : ∀ {Γ : Ctx m} (Ξ : Junctor m n) {Φ Ψ : Junctor n p} → OperationSubstitutor (Γ ⊩ jhom (Ξ ⦊' Φ) (Ξ ⦊' Ψ))
-  whiskerR : ∀ {Γ : Ctx m} {Φ Ψ : Junctor m n} (Ξ : Junctor n p) → OperationSubstitutor (Γ ⊩ jhom (Φ ⦊' Ξ) (Ψ ⦊' Ξ))
   -- the following take a delayed substitution:
   applyJHom : ∀ {m n} {Γ : Ctx n} {Δ : Ctx m} {Φ Ψ : Junctor m n} → OperationSubstitutor (Γ ⊩ sub (Δ ⦊ Ψ))
   applyJunctor : ∀ {m n} {Γ : Ctx n} {Δ Θ : Ctx m} {Φ : Junctor m n} → OperationSubstitutor (Γ ⊩ sub (Θ ⦊ Φ))
@@ -38,21 +37,17 @@ isSetOperationSubstitutor = {!!}
 aritySubstitutor : ∀ {J} → OperationSubstitutor J → Arity
 aritySubstitutor idsub = []
 aritySubstitutor (tmsub {m} {Γ} {Δ} {rhs}) = (Δ ⊩ rhs) ∷ (Γ ⊩ sub Δ) ∷ []
-aritySubstitutor idjhom = []
-aritySubstitutor (compjhom {m} {n} {Γ} {Φ} {Ψ} {Ξ}) = (Γ ⊩ jhom Ψ Ξ) ∷ (Γ ⊩ jhom Φ Ψ) ∷ []
-aritySubstitutor (whiskerL {m} {n} {p} {Γ} Ξ {Φ} {Ψ}) = (Γ ⦊ Ξ ⊩ jhom Φ Ψ) ∷ []
-aritySubstitutor (whiskerR {m} {n} {p} {Γ} {Φ} {Ψ} Ξ) = (Γ ⊩ jhom Φ Ψ) ∷ []
 aritySubstitutor (applyJHom {m} {n} {Γ} {Δ} {Φ} {Ψ}) = (Δ ⊩ jhom Φ Ψ) ∷ (Γ ⊩ sub (Δ ⦊ Φ)) ∷ []
 aritySubstitutor (applyJunctor {m} {n} {Γ} {Δ} {Θ} {Φ}) = (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub (Δ ⦊ Φ)) ∷ []
---aritySubstitutor o = {!!}
 
-fmatSubstitutor : FreeMat matsigPlant
+fmatSubstitutor : FreeMat (matsigPlant m⊤)
 FreeMat.Operation fmatSubstitutor = OperationSubstitutor
 FreeMat.isSetOperation fmatSubstitutor = isSetOperationSubstitutor
 FreeMat.arity fmatSubstitutor = aritySubstitutor
 
 open Mat.Free.Term fmatSubstitutor
 
+{-
 open MatEqTheory
 
 pattern _[_]1 t σ = tmsub $1 (t ∷ σ ∷ [])
@@ -132,3 +127,4 @@ open Mat
 matSubstitutor : Mat matsigPlant
 getFreeMat matSubstitutor = fmatSubstitutor
 getMatEqTheory matSubstitutor = eqTheorySubstitutor
+-}
