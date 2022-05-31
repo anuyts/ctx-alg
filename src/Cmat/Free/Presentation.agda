@@ -14,9 +14,29 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
   open CmatSignature cmatsig
 
   field
-    Operation : ∀ {m} → RHS m → Type
-    isSetOperation : ∀ {m} {rhs : RHS m} → isSet (Operation rhs)
-    arity : ∀ {m} {rhs : RHS m} → Operation rhs → CArity m
+    CustomOperation : ∀ {m} → RHS m → Type
+    isSetCustomOperation : ∀ {m} {rhs : RHS m} → isSet (CustomOperation rhs)
+    arityCustom : ∀ {m} {rhs : RHS m} → CustomOperation rhs → CArity m
+
+  private
+    variable m n p q : Mode
+
+  data Operation : RHS m → Type where
+    custom : ∀ {m} {rhs : RHS m} → CustomOperation rhs → Operation rhs
+    id-jhom : ∀ {m n} {Φ : Junctor m n} → Operation (jhom Φ Φ)
+    comp-jhom : ∀ {m n} {Φ Ψ Ξ : Junctor m n} → Operation (jhom Φ Ξ)
+    whiskerL : ∀ {m n p} (Ξ : Junctor m n) {Φ Ψ : Junctor n p} → Operation (jhom (Ξ ⦊ Φ) (Ξ ⦊ Ψ))
+    whiskerR : ∀ {m n p} {Φ Ψ : Junctor m n} (Ξ : Junctor n p) → Operation (jhom (Φ ⦊ Ξ) (Ψ ⦊ Ξ))
+
+  isSetOperation : ∀ {m} {rhs : RHS m} → isSet (Operation rhs)
+  isSetOperation = {!!} -- via reflection
+
+  arity : ∀ {m} {rhs : RHS m} → Operation rhs → CArity m
+  arity (custom o) = arityCustom o
+  arity id-jhom = []
+  arity (comp-jhom {m} {n} {Φ} {Ψ} {Ξ}) = (◇ ⊩ jhom Φ Ψ) ∷ (◇ ⊩ jhom Ψ Ξ) ∷ []
+  arity (whiskerL {m} {n} {p} Ξ {Φ} {Ψ}) = (Ξ ⊩ jhom Φ Ψ) ∷ []
+  arity (whiskerR {m} {n} {p} {Φ} {Ψ} Ξ) = (◇ ⊩ jhom Φ Ψ) ∷ []
 
   -- The cold translation
   module _ where

@@ -134,6 +134,7 @@ record CmatSignature : Type where
     sub Γ = jhom ◇ (◆ ⦊ Γ)
 
   record Jud (m0 : Mode) : Type where
+    eta-equality
     constructor _⊩_
     field
       {jud'mode} : Mode
@@ -171,13 +172,11 @@ record CmatSignature : Type where
   mapCArity' f ((n , Φ , rhs) ∷ arity) = (n , Φ , mapRHS' f rhs) ∷ mapCArity' f arity
 
   CArity : Mode → Type
-  CArity m = List (Σ[ n ∈ Mode ] Junctor m n × RHS n)
+  CArity m0 = List (Jud m0)
 
   isGroupoidCArity : ∀ {m} → isGroupoid (CArity m)
   isGroupoidCArity =
-    isOfHLevelList 1 (
-    isOfHLevelΣ 3 isGroupoidMode (λ n →
-    isOfHLevel× 3 (isSet→isGroupoid isSetJunctor) isGroupoidRHS))
+    isOfHLevelList 1 (isGroupoidJud)
 
   module _ where
     open MatSignature
@@ -190,4 +189,4 @@ record CmatSignature : Type where
 
     plantArity : ∀ {m0 m} (Γ : Junctor m0 m) → CArity m → Arity (matsigPlant m0)
     plantArity Γ [] = []
-    plantArity Γ ((n , Φ , rhs) ∷ arity) = (Γ ⦊ Φ ⊩ rhs) ∷ plantArity Γ arity
+    plantArity Γ ((Φ ⊩ rhs) ∷ arity) = (Γ ⦊ Φ ⊩ rhs) ∷ plantArity Γ arity
