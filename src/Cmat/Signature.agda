@@ -133,8 +133,8 @@ record CmatSignature : Type where
 
     -- A substitution `Δ ⊢ sub Γ` is a junctor morphism `Δ ⊢ jhom ◇ (◆ ⦊ Γ)`
     -- from the identity junctor `◇` to the constant junctor on `Γ`.
-    sub : ∀ {m} → Ctx m → RHS m
-    sub Γ = jhom ◇ (◆ ⦊ Γ)
+    --sub : ∀ {m} → Ctx m → RHS m
+    --sub Γ = jhom ◇ (◆ ⦊ Γ)
 
   record Jud (m0 : Mode) : Type where
     eta-equality

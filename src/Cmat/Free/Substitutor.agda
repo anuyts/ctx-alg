@@ -52,24 +52,22 @@ open MatEqTheory
 pattern _[_]1 t σ = tmsub $1 (t ∷ σ ∷ [])
 infixl 7 _[_]1
 
-{-
-data AxiomSubstitutor : Jud → Type where
+data AxiomSubstitutor : Jud m⊤ → Type where
   tmsub-lUnit : ∀ {Γ Δ : Ctx m} → AxiomSubstitutor (Γ ⊩ sub Δ)
   tmsub-rUnit : ∀ {Γ : Ctx m} {rhs : RHS m} → AxiomSubstitutor (Γ ⊩ rhs)
   tmsub-assoc : ∀ {Γ Δ Θ : Ctx m} {rhs : RHS m} → AxiomSubstitutor (Γ ⊩ rhs)
-  idjhom[] : ∀ {Γ' Γ : Ctx m} {Φ : Junctor m n} → AxiomSubstitutor (Γ' ⊩ jhom Φ Φ)
-  compjhom[] : ∀ {Γ' Γ : Ctx m} {Φ Ψ Ξ : Junctor m n} → AxiomSubstitutor (Γ' ⊩ jhom Φ Ξ)
-  whiskerL[] : ∀ {Γ' Γ : Ctx m} (Ξ : Junctor m n) {Φ Ψ : Junctor n p} → AxiomSubstitutor (Γ' ⊩ jhom (Ξ ⦊' Φ) (Ξ ⦊' Ψ))
-  whiskerR[] : ∀ {Γ' Γ : Ctx m} {Φ Ψ : Junctor m n} (Ξ : Junctor n p) → AxiomSubstitutor (Γ' ⊩ jhom (Φ ⦊' Ξ) (Ψ ⦊' Ξ))
+  --idjhom[] : ∀ {Γ' Γ : Ctx m} {Φ : Junctor m n} → AxiomSubstitutor (Γ' ⊩ jhom Φ Φ)
+  --compjhom[] : ∀ {Γ' Γ : Ctx m} {Φ Ψ Ξ : Junctor m n} → AxiomSubstitutor (Γ' ⊩ jhom Φ Ξ)
+  --whiskerL[] : ∀ {Γ' Γ : Ctx m} (Ξ : Junctor m n) {Φ Ψ : Junctor n p} → AxiomSubstitutor (Γ' ⊩ jhom (Ξ ⦊' Φ) (Ξ ⦊' Ψ))
+  --whiskerR[] : ∀ {Γ' Γ : Ctx m} {Φ Ψ : Junctor m n} (Ξ : Junctor n p) → AxiomSubstitutor (Γ' ⊩ jhom (Φ ⦊' Ξ) (Ψ ⦊' Ξ))
   -- the following take a delayed substitution:
   applyJHom[] : ∀ {m n} {Γ' Γ : Ctx n} {Δ : Ctx m} {Φ Ψ : Junctor m n} → AxiomSubstitutor (Γ' ⊩ sub (Δ ⦊ Ψ))
   applyJunctor[] : ∀ {m n} {Γ' Γ : Ctx n} {Δ Θ : Ctx m} {Φ : Junctor m n} → AxiomSubstitutor (Γ' ⊩ sub (Θ ⦊ Φ))
   {-
-  - The latter 4 respect identity and composition
-  - whiskerL and whiskerR commute
   - applyJHom and applyJunctor commute
   -}
 
+{-
 isSetAxiomSubstitutor : ∀ {J} → isSet (AxiomSubstitutor J)
 isSetAxiomSubstitutor = {!!}
 
