@@ -11,6 +11,7 @@ open import Cubical.Categories.Functor
 open import Cubical.Categories.Functors.HomFunctor
 open import Cubical.Categories.Instances.Sets
 open import Cubical.Categories.Constructions.BinProduct renaming (_×_ to _×C_)
+open import Cubical.Categories.Limits.Terminal
 open import Cubical.Reflection.RecordEquiv
 
 open import Mat.Signature
@@ -21,12 +22,11 @@ open Category
 open Functor
 
 {- Instantiators should see to it that the mode can be inferred
-   from the type of contexts/customRHSs. -}
+   from the type of junctors/customRHS. -}
 record CmatSignature : Type where
   no-eta-equality
   field
     catModeJunctor : Category _ _
-    pshCtx : Functor catModeJunctor (SET _)
 
   Mode : Type
   Mode = ob catModeJunctor
@@ -46,31 +46,20 @@ record CmatSignature : Type where
   isSetJunctor : isSet (Junctor m n)
   isSetJunctor = isSetHom catModeJunctor
 
-  Ctx : Mode → Type
-  Ctx m = fst (F-ob pshCtx m)
-
-  isSetCtx : isSet (Ctx m)
-  isSetCtx {m} = snd (F-ob pshCtx m)
-
-  _⦊_ : Ctx m → Junctor m n → Ctx n
-  Γ ⦊ Ψ = F-hom pshCtx Ψ Γ
-
-  ◆ : Junctor m m
-  ◆ = id catModeJunctor
-
-  _⦊'_ : Junctor m n → Junctor n p → Junctor m p
-  Φ ⦊' Ψ = Φ ⋆⟨ catModeJunctor ⟩ Ψ
+  _⦊_ : Junctor m n → Junctor n p → Junctor m p
+  Φ ⦊ Ψ = Φ ⋆⟨ catModeJunctor ⟩ Ψ
 
   infixl 6 _⦊_
 
+  ◇ : Junctor m m
+  ◇ = id catModeJunctor
+
   data RHS' (X : Mode → Type) (m : Mode) : Type where
     custom : (crhs : X m) → RHS' X m
-    sub : (Γ : Ctx m) → RHS' X m
     jhom : ∀ {n} → (Ψ Φ : Junctor m n) → RHS' X m
 
   mapRHS' : ∀ {X Y : Mode → Type} → (f : ∀ m → X m → Y m) → RHS' X m → RHS' Y m
   mapRHS' f (custom crhs) = custom (f _ crhs)
-  mapRHS' f (sub Γ) = sub Γ
   mapRHS' f (jhom Ψ Φ) = jhom Ψ Φ
 
   RHS : Mode → Type
@@ -80,27 +69,23 @@ record CmatSignature : Type where
     open _≅_
 
     RepRHS : Mode → Type
-    RepRHS m = CustomRHS m ⊎ (Ctx m ⊎ (Σ[ n ∈ Mode ] Junctor m n × Junctor m n))
+    RepRHS m = CustomRHS m ⊎ (Σ[ n ∈ Mode ] Junctor m n × Junctor m n)
 
     toRepRHS : ∀ {m} → RHS m → RepRHS m
     toRepRHS (custom crhs) = inl crhs
-    toRepRHS (sub Γ) = inr (inl Γ)
-    toRepRHS (jhom Ψ Φ) = inr (inr (_ , Ψ , Φ))
+    toRepRHS (jhom Ψ Φ) = inr (_ , Ψ , Φ)
 
     fromRepRHS : ∀ {m} → RepRHS m → RHS m
     fromRepRHS (inl crhs) = custom crhs
-    fromRepRHS (inr (inl Γ)) = sub Γ
-    fromRepRHS (inr (inr (n , Ψ , Φ))) = jhom Ψ Φ
+    fromRepRHS (inr (n , Ψ , Φ)) = jhom Ψ Φ
 
     fromToRepRHS : ∀ {m} (rhs : RHS m) → fromRepRHS (toRepRHS rhs) ≡ rhs
     fromToRepRHS (custom x) = refl
-    fromToRepRHS (sub x) = refl
     fromToRepRHS (jhom Ψ Φ) = refl
 
     toFromRepRHS : ∀ {m} (rrhs : RepRHS m) → toRepRHS (fromRepRHS rrhs) ≡ rrhs
     toFromRepRHS (inl x) = refl
-    toFromRepRHS (inr (inl x)) = refl
-    toFromRepRHS (inr (inr x)) = refl
+    toFromRepRHS (inr x) = refl
 
     isoRepRHS : ∀ {m} → RHS m ≅ RepRHS m
     fun isoRepRHS = toRepRHS
@@ -111,41 +96,71 @@ record CmatSignature : Type where
     isGroupoidRepRHS : ∀ {m} → isGroupoid (RepRHS m)
     isGroupoidRepRHS =
         isOfHLevel⊎ 1 isGroupoidCustomRHS (
-        isOfHLevel⊎ 1 (isSet→isGroupoid isSetCtx) (
         isOfHLevelΣ 3 isGroupoidMode λ n → isOfHLevel× 3 (isSet→isGroupoid isSetJunctor) (isSet→isGroupoid isSetJunctor)
-      ))
+      )
 
   isGroupoidRHS : isGroupoid (RHS m)
   isGroupoidRHS = isOfHLevelRetractFromIso 3 isoRepRHS isGroupoidRepRHS
 
-  record Jud : Type where
+  module _ {{terminalModeJunctor : Terminal catModeJunctor}} where
+    m⊤ : Mode
+    m⊤ = fst terminalModeJunctor
+    isTerminal-m⊤ : isTerminal catModeJunctor m⊤
+    isTerminal-m⊤ = snd terminalModeJunctor
+
+    pshCtx : Functor catModeJunctor (SET _)
+    pshCtx = funcComp (HomFunctor catModeJunctor) (rinj (catModeJunctor ^op) catModeJunctor m⊤)
+
+    ◆ : ∀ {m} → Junctor m m⊤
+    ◆ = fst (isTerminal-m⊤ _)
+
+    ◆η : ∀ {m} → (Φ : Junctor m m⊤) → Φ ≡ ◆
+    ◆η Φ = sym (snd (isTerminal-m⊤ _) Φ)
+
+    Ctx : Mode → Type
+    Ctx m = fst (F-ob pshCtx m)
+
+    isSetCtx : isSet (Ctx m)
+    isSetCtx {m} = snd (F-ob pshCtx m)
+
+    _⦊'_ : Ctx m → Junctor m n → Ctx n
+    Γ ⦊' Ψ = Γ ⦊ Ψ
+
+    infixl 6 _⦊'_
+
+    -- A substitution `Δ ⊢ sub Γ` is a junctor morphism `Δ ⊢ jhom ◇ (◆ ⦊ Γ)`
+    -- from the identity junctor `◇` to the constant junctor on `Γ`.
+    sub : ∀ {m} → Ctx m → RHS m
+    sub Γ = jhom ◇ (◆ ⦊ Γ)
+
+  record Jud (m0 : Mode) : Type where
     constructor _⊩_
     field
       {jud'mode} : Mode
-      jud'ctx : Ctx jud'mode
+      jud'ctx : Junctor m0 jud'mode
       jud'rhs : RHS jud'mode
 
   pattern _⊢_ Γ crhsT = Γ ⊩ custom crhsT
-  
+
   infix 5 _⊩_ _⊢_
 
-  module _ where
+  module _ (m0 : Mode) where
     open _≅_
 
     RepJud : Type
-    RepJud = Σ[ m ∈ Mode ] Σ[ Γ ∈ Ctx m ] RHS m
+    RepJud = Σ[ m ∈ Mode ] Σ[ Γ ∈ Junctor m0 m ] RHS m
 
     private
       unquoteDecl isoRepJud' = declareRecordIsoΣ isoRepJud' (quote Jud)
 
-    isoRepJud : Jud ≅ RepJud
+    isoRepJud : Jud m0 ≅ RepJud
     isoRepJud = isoRepJud'
 
     isGroupoidRepJud : isGroupoid RepJud
-    isGroupoidRepJud = isOfHLevelΣ 3 isGroupoidMode λ m → isOfHLevelΣ 3 (isSet→isGroupoid isSetCtx) (λ _ → isGroupoidRHS)
+    isGroupoidRepJud = isOfHLevelΣ 3 isGroupoidMode λ m → isOfHLevelΣ 3 (isSet→isGroupoid isSetJunctor) (λ _ → isGroupoidRHS)
 
-  isGroupoidJud : isGroupoid Jud
-  isGroupoidJud = isOfHLevelRetractFromIso 3 isoRepJud isGroupoidRepJud
+  isGroupoidJud : ∀ {m0} → isGroupoid (Jud m0)
+  isGroupoidJud {m0} = isOfHLevelRetractFromIso 3 (isoRepJud m0) (isGroupoidRepJud m0)
 
   -- contextual arity
   CArity' : (Mode → Type) → Mode → Type
@@ -169,73 +184,10 @@ record CmatSignature : Type where
 
     {- The signature of the MAT translation.
     -}
-    matsigPlant : MatSignature
-    Sort matsigPlant = Jud
-    isGroupoidSort matsigPlant = isGroupoidJud
+    matsigPlant : Mode → MatSignature
+    Sort (matsigPlant m0) = Jud m0
+    isGroupoidSort (matsigPlant m0) = isGroupoidJud
 
-    plantArity : ∀ {m} (Γ : Ctx m) → CArity m → Arity matsigPlant
+    plantArity : ∀ {m0 m} (Γ : Junctor m0 m) → CArity m → Arity (matsigPlant m0)
     plantArity Γ [] = []
     plantArity Γ ((n , Φ , rhs) ∷ arity) = (Γ ⦊ Φ ⊩ rhs) ∷ plantArity Γ arity
-
-{- The signature of the open translation.
--}
-module _ (cmatsig : CmatSignature) where
-
-  open CmatSignature
-
-  data OpenCustomRHS (m : Mode cmatsig) : Type where
-    custom : (crhs : CustomRHS cmatsig m) → OpenCustomRHS m
-    sub : (Γ : Ctx cmatsig m) → OpenCustomRHS m
-
-  module _ where
-    open _≅_
-
-    RepOpenCustomRHS : Mode cmatsig → Type
-    RepOpenCustomRHS m = CustomRHS cmatsig m ⊎ Ctx cmatsig m
-
-    toRepOpenCustomRHS : ∀ {m} → OpenCustomRHS m → RepOpenCustomRHS m
-    toRepOpenCustomRHS (custom crhs) = inl crhs
-    toRepOpenCustomRHS (sub Γ) = inr Γ
-
-    fromRepOpenCustomRHS : ∀ {m} → RepOpenCustomRHS m → OpenCustomRHS m
-    fromRepOpenCustomRHS (inl x) = custom x
-    fromRepOpenCustomRHS (inr x) = sub x
-
-    fromToRepOpenCustomRHS : ∀ {m} (ocrhs : OpenCustomRHS m) → fromRepOpenCustomRHS (toRepOpenCustomRHS ocrhs) ≡ ocrhs
-    fromToRepOpenCustomRHS (custom x) = refl
-    fromToRepOpenCustomRHS (sub x) = refl
-
-    toFromRepOpenCustomRHS : ∀ {m} (rocrhs : RepOpenCustomRHS m) → toRepOpenCustomRHS (fromRepOpenCustomRHS rocrhs) ≡ rocrhs
-    toFromRepOpenCustomRHS (inl x) = refl
-    toFromRepOpenCustomRHS (inr x) = refl
-
-    isoRepOpenCustomRHS : ∀ {m} → OpenCustomRHS m ≅ RepOpenCustomRHS m
-    fun isoRepOpenCustomRHS = toRepOpenCustomRHS
-    inv isoRepOpenCustomRHS = fromRepOpenCustomRHS
-    rightInv isoRepOpenCustomRHS = toFromRepOpenCustomRHS
-    leftInv isoRepOpenCustomRHS = fromToRepOpenCustomRHS
-
-    isGroupoidRepOpenCustomRHS : ∀ {m} → isGroupoid (RepOpenCustomRHS m)
-    isGroupoidRepOpenCustomRHS = isOfHLevel⊎ 1 (isGroupoidCustomRHS cmatsig) (isSet→isGroupoid (isSetCtx cmatsig))
-
-  isGroupoidOpenCustomRHS : ∀ {m} → isGroupoid (OpenCustomRHS m)
-  isGroupoidOpenCustomRHS = isOfHLevelRetractFromIso 3 isoRepOpenCustomRHS isGroupoidRepOpenCustomRHS
-
-  {- The signature of the open translation.
-  -}
-  cmatsigOpen : Mode cmatsig → CmatSignature
-  catModeJunctor (cmatsigOpen m) = catModeJunctor cmatsig
-  pshCtx (cmatsigOpen m) =
-    funcComp (HomFunctor (catModeJunctor cmatsig)) (rinj (catModeJunctor cmatsig ^op) (catModeJunctor cmatsig) m)
-  isGroupoidMode (cmatsigOpen m) = isGroupoidMode cmatsig
-  CustomRHS (cmatsigOpen m) = OpenCustomRHS
-  isGroupoidCustomRHS (cmatsigOpen m) = isGroupoidOpenCustomRHS
-
-  rhsOrig→Open : ∀ {m0 m : Mode cmatsig} → RHS cmatsig m → RHS (cmatsigOpen m0) m
-  rhsOrig→Open (custom crhs) = custom (custom crhs)
-  rhsOrig→Open (sub Γ) = custom (sub Γ)
-  rhsOrig→Open (jhom Ψ Φ) = jhom Ψ Φ
-
-  arityOrig→Open : ∀ {m0 m : Mode cmatsig} → CArity cmatsig m → CArity (cmatsigOpen m0) m
-  arityOrig→Open [] = []
-  arityOrig→Open ((n , Φ , rhs) ∷ arity) = (n , Φ , rhsOrig→Open rhs) ∷ arityOrig→Open arity
