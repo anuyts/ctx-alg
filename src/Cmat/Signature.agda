@@ -102,7 +102,10 @@ record CmatSignature : Type where
   isGroupoidRHS : isGroupoid (RHS m)
   isGroupoidRHS = isOfHLevelRetractFromIso 3 isoRepRHS isGroupoidRepRHS
 
-  module _ {{terminalModeJunctor : Terminal catModeJunctor}} where
+  CanBeClosed : Type
+  CanBeClosed = Terminal catModeJunctor
+
+  module _ {{terminalModeJunctor : CanBeClosed}} where
     m⊤ : Mode
     m⊤ = fst terminalModeJunctor
     isTerminal-m⊤ : isTerminal catModeJunctor m⊤
@@ -183,10 +186,16 @@ record CmatSignature : Type where
 
     {- The signature of the MAT translation.
     -}
-    matsigPlant : Mode → MatSignature
-    Sort (matsigPlant m0) = Jud m0
-    isGroupoidSort (matsigPlant m0) = isGroupoidJud
+    matsigOpen : Mode → MatSignature
+    Sort (matsigOpen m0) = Jud m0
+    isGroupoidSort (matsigOpen m0) = isGroupoidJud
 
-    plantArity : ∀ {m0 m} (Γ : Junctor m0 m) → CArity m → Arity (matsigPlant m0)
-    plantArity Γ [] = []
-    plantArity Γ ((Φ ⊩ rhs) ∷ arity) = (Γ ⦊ Φ ⊩ rhs) ∷ plantArity Γ arity
+    matsigClosed : {{_ : CanBeClosed}} → MatSignature
+    matsigClosed = matsigOpen m⊤
+
+    arityOpen : ∀ {m0 m} (Γ : Junctor m0 m) → CArity m → Arity (matsigOpen m0)
+    arityOpen Γ [] = []
+    arityOpen Γ ((Φ ⊩ rhs) ∷ arity) = (Γ ⦊ Φ ⊩ rhs) ∷ arityOpen Γ arity
+
+    arityClosed : {{_ : CanBeClosed}} → ∀ {m} (Γ : Ctx m) → CArity m → Arity matsigClosed
+    arityClosed = arityOpen

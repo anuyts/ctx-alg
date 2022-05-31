@@ -16,10 +16,10 @@ open import Mat.Presentation
 
 module Cmat.Free.Substitutor
   (cmatsig : CmatSignature)
-  {{terminalModeJunctor : Terminal (CmatSignature.catModeJunctor cmatsig)}} where
+  {{_ : CmatSignature.CanBeClosed cmatsig}} where
 
 open CmatSignature cmatsig
-open MatSignature (matsigPlant m⊤)
+open MatSignature matsigClosed
 
 private
   variable m n p q : Mode
@@ -40,19 +40,19 @@ aritySubstitutor (tmsub {m} {Γ} {Δ} {rhs}) = (Δ ⊩ rhs) ∷ (Γ ⊩ sub Δ) 
 aritySubstitutor (applyJHom {m} {n} {Γ} {Δ} {Φ} {Ψ}) = (Δ ⊩ jhom Φ Ψ) ∷ (Γ ⊩ sub (Δ ⦊ Φ)) ∷ []
 aritySubstitutor (applyJunctor {m} {n} {Γ} {Δ} {Θ} {Φ}) = (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub (Δ ⦊ Φ)) ∷ []
 
-fmatSubstitutor : FreeMat (matsigPlant m⊤)
+fmatSubstitutor : FreeMat matsigClosed
 FreeMat.Operation fmatSubstitutor = OperationSubstitutor
 FreeMat.isSetOperation fmatSubstitutor = isSetOperationSubstitutor
 FreeMat.arity fmatSubstitutor = aritySubstitutor
 
 open Mat.Free.Term fmatSubstitutor
 
-{-
 open MatEqTheory
 
 pattern _[_]1 t σ = tmsub $1 (t ∷ σ ∷ [])
 infixl 7 _[_]1
 
+{-
 data AxiomSubstitutor : Jud → Type where
   tmsub-lUnit : ∀ {Γ Δ : Ctx m} → AxiomSubstitutor (Γ ⊩ sub Δ)
   tmsub-rUnit : ∀ {Γ : Ctx m} {rhs : RHS m} → AxiomSubstitutor (Γ ⊩ rhs)

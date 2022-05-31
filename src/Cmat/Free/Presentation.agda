@@ -27,6 +27,12 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     comp-jhom : ∀ {m n} {Φ Ψ Ξ : Junctor m n} → Operation (jhom Φ Ξ)
     whiskerL : ∀ {m n p} (Ξ : Junctor m n) {Φ Ψ : Junctor n p} → Operation (jhom (Ξ ⦊ Φ) (Ξ ⦊ Ψ))
     whiskerR : ∀ {m n p} {Φ Ψ : Junctor m n} (Ξ : Junctor n p) → Operation (jhom (Φ ⦊ Ξ) (Ψ ⦊ Ξ))
+    -- whiskerL t ∘ whiskerR s = whiskerR s ∘ whiskerL (t [ Γ.s ])
+    -- whiskerL (whiskerR t) = whiskerR (whiskerL t)
+    -- whiskerL respects id-jhom and comp-jhom
+    -- whiskerR respects id-jhom and comp-jhom
+    -- whiskerL respects ◇ and ⦊
+    -- whiskerR respects ◇ and ⦊
 
   isSetOperation : ∀ {m} {rhs : RHS m} → isSet (Operation rhs)
   isSetOperation = {!!} -- via reflection
@@ -39,9 +45,13 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
   arity (whiskerR {m} {n} {p} {Φ} {Ψ} Ξ) = (◇ ⊩ jhom Φ Ψ) ∷ []
 
   -- The cold translation
-  module _ where
+  module _ (m0 : Mode) where
 
-    fmatCold : (m0 : Mode) → FreeMat (matsigPlant m0)
-    FreeMat.Operation (fmatCold m0) (Γ ⊩ rhs) = Operation rhs
-    FreeMat.isSetOperation (fmatCold m0) = isSetOperation
-    FreeMat.arity (fmatCold m0) {Γ ⊩ rhs} o = plantArity Γ (arity o)
+    fmatCold : FreeMat (matsigOpen m0)
+    FreeMat.Operation fmatCold (Γ ⊩ rhs) = Operation rhs
+    FreeMat.isSetOperation fmatCold = isSetOperation
+    FreeMat.arity fmatCold {Γ ⊩ rhs} o = arityOpen Γ (arity o)
+
+    --open MatEqTheory
+
+    --data AxiomCold : Jud m0 → Type where
