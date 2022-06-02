@@ -77,7 +77,7 @@ module _ where
 
   eqTheoryMonoidAction : MatEqTheory fmatMonoidAction
   Axiom eqTheoryMonoidAction = AxiomMonoidAction
-  isSetAxiom eqTheoryMonoidAction = {!!}
+  --isSetAxiom eqTheoryMonoidAction = {!!}
   msetArity eqTheoryMonoidAction = arity2mset ∘ arityAxiomMonoidAction
   lhs eqTheoryMonoidAction = lhsMonoidAction
   rhs eqTheoryMonoidAction = rhsMonoidAction

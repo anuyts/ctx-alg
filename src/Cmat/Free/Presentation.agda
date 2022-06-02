@@ -93,8 +93,8 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
       tmsub-assoc : ∀ {Γ Δ Θ : Junctor m0 m} {rhs : RHS m} → AxiomHot (Γ ⊩ rhs)
       tmsub-commut : ∀ {m} {Γ Δ : Junctor m0 m} {rhs : RHS m} (o : Operation rhs) → AxiomHot (Γ ⊩ rhs)
 
-    isSetAxiomHot : ∀ {J} → isSet (AxiomHot J)
-    isSetAxiomHot = {!!}
+    --isSetAxiomHot : ∀ {J} → isSet (AxiomHot J)
+    --isSetAxiomHot = {!!}
 
     arityAxiomHot : ∀ {J} → AxiomHot J → Arity
     arityAxiomHot (tmsub-rUnit {m} {Γ} {rhs}) = (Γ ⊩ rhs) ∷ []
@@ -171,7 +171,7 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
 
     eqTheoryHot : MatEqTheory fmatHot
     Axiom eqTheoryHot = AxiomHot
-    isSetAxiom eqTheoryHot = isSetAxiomHot
+    --isSetAxiom eqTheoryHot = isSetAxiomHot
     msetArity eqTheoryHot = arity2mset ∘ arityAxiomHot
-    lhs eqTheoryHot = {!!}
-    rhs eqTheoryHot = {!!}
+    lhs eqTheoryHot = lhsHot
+    rhs eqTheoryHot = rhsHot

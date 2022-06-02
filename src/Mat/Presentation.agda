@@ -26,7 +26,7 @@ record MatEqTheory {matsig : MatSignature} (presF : FreeMat matsig) : Type where
 
   field
     Axiom : Sort → Type
-    isSetAxiom : {sortOut : Sort} → isSet (Axiom sortOut)
+    --isSetAxiom : {sortOut : Sort} → isSet (Axiom sortOut)
     msetArity : ∀ {sortOut} → Axiom sortOut → MSet
     lhs rhs : ∀ {sortOut : Sort} → (axiom : Axiom sortOut) → TermF (mtyp (msetArity axiom)) sortOut
 
