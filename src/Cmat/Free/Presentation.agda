@@ -2,8 +2,10 @@
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.Transport
 open import Cubical.Data.Empty
 open import Cubical.Data.List
+open import Cubical.Data.List.FinData
 open import Cubical.Data.List.Dependent
 open import Cubical.Data.FinData
 open import Cubical.Categories.Category
@@ -18,6 +20,7 @@ module Cmat.Free.Presentation where
 
 record FreeCmat (cmatsig : CmatSignature) : Type where
   open CmatSignature cmatsig
+  open Jud
 
   field
     CustomOperation : ∀ {m} → RHS m → Type
@@ -109,8 +112,61 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
       subst (TermF _) (cong (_⊩ _) (sym (⋆IdR ◇))) (arvarF two) ∷
       subst (TermF _) (cong (_⊩ _) (sym (⋆IdR ◇))) (arvarF one)
       ∷ [] ]1
-    rhsHot (tmsub-commut o) = inctx o $1 tabulateOverLookup (arityHot (inctx o)) (λ p → (
-        {!arvarF (suc p)!} [ {!zero!} ]1
+    rhsHot (tmsub-commut {m} {Γ} {Δ} {rhs} o) = inctx o $1 tabulateOverLookup (arityHot (inctx o)) (λ pΓ → (
+        let {- Because the action of map is not definitional,
+               everything comes in 3 flavours: the original one, the one in ctx Γ, and the one in ctx Δ.
+            -}
+            p : Fin (length (arity o))
+            p = subst Fin (length-arityOpen Γ (arity o)) pΓ
+            pΔ : Fin (length (arityOpen Δ (arity o)))
+            pΔ = subst⁻ Fin (length-arityOpen Δ (arity o)) p
+            pΓ-eq : PathP (λ i → Fin (length-arityOpen Γ (arity o) i)) pΓ p
+            pΓ-eq = subst-filler Fin (length-arityOpen Γ (arity o)) pΓ
+            pΔ-eq : PathP (λ i → Fin (length-arityOpen Δ (arity o) i)) pΔ p
+            pΔ-eq = symP (subst⁻-filler Fin (length-arityOpen Δ (arity o)) p)
+            Jₚ = lookup (arity o) p
+            mₚ = jud'mode Jₚ
+            Φₚ = jud'ctx Jₚ
+            rhsₚ = jud'rhs Jₚ
+            JₚΓ = lookup (arityOpen Γ (arity o)) pΓ
+            mₚΓ = jud'mode JₚΓ
+            Γ⦊Φₚ = jud'ctx JₚΓ
+            rhsₚΓ = jud'rhs JₚΓ
+            JₚΔ = lookup (arityOpen Δ (arity o)) pΔ
+            mₚΔ = jud'mode JₚΔ
+            Δ⦊Φₚ = jud'ctx JₚΔ
+            rhsₚΔ = jud'rhs JₚΔ
+            JₚΓ-eq : JₚΓ ≡ _
+            JₚΓ-eq = lookup-arityOpen Γ (arity o) pΓ p pΓ-eq
+            mₚΓ-eq : mₚΓ ≡ mₚ
+            mₚΓ-eq = cong jud'mode JₚΓ-eq
+            Γ⦊Φₚ-eq : PathP (λ i → Junctor m0 (mₚΓ-eq i)) (Γ⦊Φₚ) (Γ ⦊ Φₚ)
+            Γ⦊Φₚ-eq = cong jud'ctx JₚΓ-eq
+            rhsₚΓ-eq : PathP (λ i → RHS (mₚΓ-eq i)) rhsₚΓ rhsₚ
+            rhsₚΓ-eq = cong jud'rhs JₚΓ-eq
+            JₚΔ-eq : JₚΔ ≡ _
+            JₚΔ-eq = lookup-arityOpen Δ (arity o) pΔ p pΔ-eq
+            mₚΔ-eq : mₚΔ ≡ mₚ
+            mₚΔ-eq = cong jud'mode JₚΔ-eq
+            Δ⦊Φₚ-eq : PathP (λ i → Junctor m0 (mₚΔ-eq i)) (Δ⦊Φₚ) (Δ ⦊ Φₚ)
+            Δ⦊Φₚ-eq = cong jud'ctx JₚΔ-eq
+            rhsₚΔ-eq : PathP (λ i → RHS (mₚΔ-eq i)) rhsₚΔ rhsₚ
+            rhsₚΔ-eq = cong jud'rhs JₚΔ-eq
+        in -- Need a term of type Γ⦊Φₚ ⊩ rhsₚΓ @ mₚΓ
+           subst (TermF _) (sym JₚΓ-eq) (
+             -- Need a term of type Γ ⦊ Φₚ ⊩ rhsₚ @ mₚ
+             ( -- Need a term of type Δ ⦊ Φₚ ⊩ rhsₚ @ mₚ
+               subst (TermF _) JₚΔ-eq (
+                 -- Need a term of type Δ⦊Φₚ ⊩ rhsₚΔ @ mₚΔ
+                 arvarF (suc pΔ)
+               )
+             )
+             [
+               inctx (whiskerR Φₚ) $1 (
+                 subst (TermF _) (cong (_⊩ jhom Γ Δ) (sym (⋆IdR ◇))) (arvarF zero)
+               ) ∷ []
+             ]1
+           )
       ))
 
     eqTheoryHot : MatEqTheory fmatHot

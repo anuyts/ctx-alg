@@ -3,9 +3,13 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism renaming (Iso to _≅_)
 open import Cubical.Foundations.HLevels
-open import Cubical.Data.Sum
+open import Cubical.Foundations.Transport
+open import Cubical.Data.Nat
+open import Cubical.Data.Sum hiding (map)
 open import Cubical.Data.Sigma
 open import Cubical.Data.List
+open import Cubical.Data.List.FinData
+open import Cubical.Data.FinData
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
 open import Cubical.Categories.Functors.HomFunctor
@@ -144,6 +148,8 @@ record CmatSignature : Type where
       jud'ctx : Junctor m0 jud'mode
       jud'rhs : RHS jud'mode
 
+  open Jud
+
   pattern _⊢_ Γ crhsT = Γ ⊩ custom crhsT
 
   infix 5 _⊩_ _⊢_
@@ -171,8 +177,7 @@ record CmatSignature : Type where
   CArity' X m = List (Σ[ n ∈ Mode ] Junctor m n × RHS' X n)
 
   mapCArity' : ∀ {X Y : Mode → Type} → (f : ∀ m → X m → Y m) → CArity' X m → CArity' Y m
-  mapCArity' f [] = []
-  mapCArity' f ((n , Φ , rhs) ∷ arity) = (n , Φ , mapRHS' f rhs) ∷ mapCArity' f arity
+  mapCArity' f = map (λ (n , Φ , rhs) → n , Φ , mapRHS' f rhs)
 
   CArity : Mode → Type
   CArity m0 = List (Jud m0)
@@ -194,8 +199,19 @@ record CmatSignature : Type where
     matsigClosed = matsigOpen m⊤
 
     arityOpen : ∀ {m0 m} (Γ : Junctor m0 m) → CArity m → Arity (matsigOpen m0)
-    arityOpen Γ [] = []
-    arityOpen Γ ((Φ ⊩ rhs) ∷ arity) = (Γ ⦊ Φ ⊩ rhs) ∷ arityOpen Γ arity
+    arityOpen Γ = map (λ (Φ ⊩ rhs) → (Γ ⦊ Φ ⊩ rhs))
+
+    length-arityOpen : ∀ {m0 m} (Γ : Junctor m0 m) → (arity : CArity m)
+      → length (arityOpen Γ arity) ≡ length arity
+    length-arityOpen Γ = length-map _
+
+    lookup-arityOpen : ∀ {m0 m} (Γ : Junctor m0 m) → (arity : CArity m)
+      → (p0 : Fin (length (arityOpen Γ arity)))
+      → (p1 : Fin (length arity))
+      → (p : PathP (λ i → Fin (length-arityOpen Γ arity i)) p0 p1)
+      → lookup (arityOpen Γ arity) p0
+       ≡ ((Γ ⦊ jud'ctx (lookup arity p1)) ⊩ jud'rhs (lookup arity p1))
+    lookup-arityOpen Γ = lookup-map _
 
     arityClosed : {{_ : CanBeClosed}} → ∀ {m} (Γ : Ctx m) → CArity m → Arity matsigClosed
     arityClosed = arityOpen
