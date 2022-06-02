@@ -175,3 +175,7 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     msetArity eqTheoryHot = arity2mset ∘ arityAxiomHot
     lhs eqTheoryHot = lhsHot
     rhs eqTheoryHot = rhsHot
+
+    matHot : Mat (matsigOpen m0)
+    Mat.getFreeMat matHot = fmatHot
+    Mat.getMatEqTheory matHot = eqTheoryHot
