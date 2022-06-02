@@ -1,3 +1,7 @@
+# Cubical
+- reflection for data types
+- h-level of a homotopy co-end?
+
 # MATs
 - Lower priority
   - CwFs
@@ -6,32 +10,20 @@
   - elim (in cubical library?)
 
 # CMATs
-- MAT signature
-  - there should be a terminal (global) mode
-  - contexts are junctors from the global mode
-    - generalized contexts are junctors that factor over the global mode
-  - substitutions are jhoms from the identity junctor to a generalized context
-  - open translation is void; instead parametrize planting translation by source mode
-- Free CMAT
-  - Warm translation (this is a coproduct!):
-    - Note: applying a junctor to a substitution, takes a delayed substitution
-    - Note: you can pop a junctor from the context and whisker it with a junctor morphism:
-      
-      ```
-      F |- |- θ : G => H
-      -------------------------- whisker
-      |- F * θ : F * G => F * H
-      ```
-      
-      You cannot unwhisker however.
+- MAT signature: OK
+- Free CMAT: OK
 - Proofs about this
-  - For each context (naturally) `TermF Open => TermF Warm`
-  - `AddSubst Empty ~= Empty`
-  - `SyntaxF ClosedNoSubst ~= SyntaxF ClosedSubst`
-  - Characterize warm models via adjoint functors (so you don't need to worry about contexts, types and junctors/junctor morphisms having or not having an intermediate representation)
-- Quotiented presentation: equational theory w.r.t. warm open translation
-- Quotiented translation to equational theory on warm translation
-  - Characterize models via adjoint functors
+  - For each context (naturally) `TermF Cold => TermF Hot`
+  - `TermF Cold (FreePsh X) ~= TermF Hot X`
+- Quotiented presentation: equational theory w.r.t. hot translation
+- Quotiented translation to equational theory on hot translation
+  - Characterize warm models with equations. They consist of:
+    - a model functor from `catModeJunctor` to `CategoriesInSetCategory`
+    - a presheaf for every custom RHS
+    - a functor from `(Coslice m0)^op \times catModeJunctor` to `CategoriesInSetCategory` for the `jhom` RHS
+    - the above, partially applied to the initial coslice `(m0, id_m0)`, yields the model functor (so you can omit that one)
+    - a presheaf morphism for every operator
+    - a commutative diagram of presheaf morphisms for every axiom
 - General applications
   - Generic substitution
     - Note: generic renaming is not necessary first, because ctx extension is a junctor hence a functor.
