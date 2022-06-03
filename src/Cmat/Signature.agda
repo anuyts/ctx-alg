@@ -58,57 +58,6 @@ record CmatSignature : Type where
   ◇ : Junctor m m
   ◇ = id catModeJunctor
 
-  data RHS' (X : Mode → Type) (m : Mode) : Type where
-    custom : (crhs : X m) → RHS' X m
-    jhom : ∀ {n} → (Ψ Φ : Junctor m n) → RHS' X m
-
-  mapRHS' : ∀ {X Y : Mode → Type} → (f : ∀ m → X m → Y m) → RHS' X m → RHS' Y m
-  mapRHS' f (custom crhs) = custom (f _ crhs)
-  mapRHS' f (jhom Ψ Φ) = jhom Ψ Φ
-
-  RHS : Mode → Type
-  RHS m = RHS' CustomRHS m
-
-  module _ where
-    open _≅_
-
-    RepRHS : Mode → Type
-    RepRHS m = CustomRHS m ⊎ (Σ[ n ∈ Mode ] Junctor m n × Junctor m n)
-
-    toRepRHS : ∀ {m} → RHS m → RepRHS m
-    toRepRHS (custom crhs) = inl crhs
-    toRepRHS (jhom Ψ Φ) = inr (_ , Ψ , Φ)
-
-    fromRepRHS : ∀ {m} → RepRHS m → RHS m
-    fromRepRHS (inl crhs) = custom crhs
-    fromRepRHS (inr (n , Ψ , Φ)) = jhom Ψ Φ
-
-    fromToRepRHS : ∀ {m} (rhs : RHS m) → fromRepRHS (toRepRHS rhs) ≡ rhs
-    fromToRepRHS (custom x) = refl
-    fromToRepRHS (jhom Ψ Φ) = refl
-
-    toFromRepRHS : ∀ {m} (rrhs : RepRHS m) → toRepRHS (fromRepRHS rrhs) ≡ rrhs
-    toFromRepRHS (inl x) = refl
-    toFromRepRHS (inr x) = refl
-
-    isoRepRHS : ∀ {m} → RHS m ≅ RepRHS m
-    fun isoRepRHS = toRepRHS
-    inv isoRepRHS = fromRepRHS
-    rightInv isoRepRHS = toFromRepRHS
-    leftInv isoRepRHS = fromToRepRHS
-
-    isGroupoidRepRHS : ∀ {m} → isGroupoid (RepRHS m)
-    isGroupoidRepRHS =
-        isOfHLevel⊎ 1 isGroupoidCustomRHS (
-        isOfHLevelΣ 3 isGroupoidMode λ n → isOfHLevel× 3 (isSet→isGroupoid isSetJunctor) (isSet→isGroupoid isSetJunctor)
-      )
-
-  isGroupoidRHS : isGroupoid (RHS m)
-  isGroupoidRHS = isOfHLevelRetractFromIso 3 isoRepRHS isGroupoidRepRHS
-
-  CanBeClosed : Type
-  CanBeClosed = Terminal catModeJunctor
-
   PshCtx : Type
   PshCtx = Functor catModeJunctor (SET _)
 
@@ -126,19 +75,75 @@ record CmatSignature : Type where
     _:⦊_ : Ctx m → Junctor m n → Ctx n
     Γ :⦊ Ψ = F-hom pshCtx Ψ Γ
 
-    record Jud : Type where
-      eta-equality
-      constructor _⊩_
-      field
-        {jud'mode} : Mode
-        jud'ctx : Ctx jud'mode
-        jud'rhs : RHS jud'mode
+    data RHS' (X : Mode → Type) (m : Mode) : Type where
+      custom : (crhs : X m) → RHS' X m
+      jhom : ∀ {n} → (Ψ Φ : Junctor m n) → RHS' X m
+      sub : Ctx m → RHS' X m
 
-    pattern _⊢_ Γ crhsT = Γ ⊩ custom crhsT
+    mapRHS' : ∀ {X Y : Mode → Type} → (f : ∀ m → X m → Y m) → RHS' X m → RHS' Y m
+    mapRHS' f (custom crhs) = custom (f _ crhs)
+    mapRHS' f (jhom Ψ Φ) = jhom Ψ Φ
+    mapRHS' f (sub Γ) = sub Γ
 
-    infix 5 _⊩_ _⊢_
+    RHS : Mode → Type
+    RHS m = RHS' CustomRHS m
 
     module _ where
+      open _≅_
+
+      {- use reflection
+      RepRHS : Mode → Type
+      RepRHS m = CustomRHS m ⊎ (Σ[ n ∈ Mode ] Junctor m n × Junctor m n)
+
+      toRepRHS : ∀ {m} → RHS m → RepRHS m
+      toRepRHS (custom crhs) = inl crhs
+      toRepRHS (jhom Ψ Φ) = inr (_ , Ψ , Φ)
+
+      fromRepRHS : ∀ {m} → RepRHS m → RHS m
+      fromRepRHS (inl crhs) = custom crhs
+      fromRepRHS (inr (n , Ψ , Φ)) = jhom Ψ Φ
+
+      fromToRepRHS : ∀ {m} (rhs : RHS m) → fromRepRHS (toRepRHS rhs) ≡ rhs
+      fromToRepRHS (custom x) = refl
+      fromToRepRHS (jhom Ψ Φ) = refl
+
+      toFromRepRHS : ∀ {m} (rrhs : RepRHS m) → toRepRHS (fromRepRHS rrhs) ≡ rrhs
+      toFromRepRHS (inl x) = refl
+      toFromRepRHS (inr x) = refl
+
+      isoRepRHS : ∀ {m} → RHS m ≅ RepRHS m
+      fun isoRepRHS = toRepRHS
+      inv isoRepRHS = fromRepRHS
+      rightInv isoRepRHS = toFromRepRHS
+      leftInv isoRepRHS = fromToRepRHS
+
+      isGroupoidRepRHS : ∀ {m} → isGroupoid (RepRHS m)
+      isGroupoidRepRHS =
+          isOfHLevel⊎ 1 isGroupoidCustomRHS (
+          isOfHLevelΣ 3 isGroupoidMode λ n → isOfHLevel× 3 (isSet→isGroupoid isSetJunctor) (isSet→isGroupoid isSetJunctor)
+        )
+      -}
+
+    isGroupoidRHS : isGroupoid (RHS m)
+    isGroupoidRHS = {!!} --isOfHLevelRetractFromIso 3 isoRepRHS isGroupoidRepRHS
+
+  record Jud (cmatfnd : CmatFoundation) : Type where
+    eta-equality
+    constructor _⊩_
+    open CmatFoundation cmatfnd
+    field
+      {jud'mode} : Mode
+      jud'ctx : Ctx jud'mode
+      jud'rhs : RHS jud'mode
+
+  open Jud
+
+  pattern _⊢_ Γ crhsT = Γ ⊩ CmatFoundation.custom crhsT
+
+  infix 5 _⊩_ _⊢_
+
+  module _ (cmatfnd : CmatFoundation) where
+      open CmatFoundation cmatfnd
       open _≅_
 
       RepJud : Type
@@ -147,26 +152,24 @@ record CmatSignature : Type where
       private
         unquoteDecl isoRepJud' = declareRecordIsoΣ isoRepJud' (quote Jud)
 
-      isoRepJud : Jud ≅ RepJud
+      isoRepJud : Jud cmatfnd ≅ RepJud
       isoRepJud = isoRepJud'
 
       isGroupoidRepJud : isGroupoid RepJud
       isGroupoidRepJud = isOfHLevelΣ 3 isGroupoidMode λ m →
                          isOfHLevelΣ 3 (isSet→isGroupoid isSetCtx) (λ _ → isGroupoidRHS)
 
-    isGroupoidJud : isGroupoid Jud
-    isGroupoidJud = isOfHLevelRetractFromIso 3 isoRepJud isGroupoidRepJud
+      isGroupoidJud : isGroupoid (Jud cmatfnd)
+      isGroupoidJud = isOfHLevelRetractFromIso 3 isoRepJud isGroupoidRepJud
 
-    {-
-    -- contextual arity
-    CArity' : (Mode → Type) → Mode → Type
-    CArity' X m = List (Σ[ n ∈ Mode ] Junctor m n × RHS' X n)
+  {-
+  -- contextual arity
+  CArity' : (Mode → Type) → Mode → Type
+  CArity' X m = List (Σ[ n ∈ Mode ] Junctor m n × RHS' X n)
 
-    mapCArity' : ∀ {X Y : Mode → Type} → (f : ∀ m → X m → Y m) → CArity' X m → CArity' Y m
-    mapCArity' f = map (λ (n , Φ , rhs) → n , Φ , mapRHS' f rhs)
-    -}
-
-  open CmatFoundation.Jud public
+  mapCArity' : ∀ {X Y : Mode → Type} → (f : ∀ m → X m → Y m) → CArity' X m → CArity' Y m
+  mapCArity' f = map (λ (n , Φ , rhs) → n , Φ , mapRHS' f rhs)
+  -}
 
   module _ (m0 : Mode) where
 
@@ -179,13 +182,13 @@ record CmatSignature : Type where
     open CmatFoundation cmatfndOpen
 
     JudOpen : Type
-    JudOpen = Jud
+    JudOpen = Jud cmatfndOpen
 
     CArity : Type
     CArity = List JudOpen
 
     isGroupoidCArity : isGroupoid CArity
-    isGroupoidCArity = isOfHLevelList 1 isGroupoidJud
+    isGroupoidCArity = isOfHLevelList 1 (isGroupoidJud cmatfndOpen)
 
   module _ (cmatfnd : CmatFoundation) where
     open MatSignature
@@ -194,11 +197,16 @@ record CmatSignature : Type where
     {- The signature of the MAT translation.
     -}
     matsigClosed : MatSignature
-    Sort matsigClosed = Jud
-    isGroupoidSort matsigClosed = isGroupoidJud
+    Sort matsigClosed = Jud cmatfnd
+    isGroupoidSort matsigClosed = isGroupoidJud cmatfnd
+
+    judClosed : (Γ : Ctx m) → Jud (cmatfndOpen m) → Jud cmatfnd
+    judClosed Γ (Φ ⊢ crhs) = Γ :⦊ Φ ⊢ crhs
+    judClosed Γ (Φ ⊩ CmatFoundation.jhom Ψ Ξ) = Γ :⦊ Φ ⊩ jhom Ψ Ξ
+    judClosed Γ (Φ ⊩ CmatFoundation.sub Ψ) = Γ ⊩ jhom Φ Ψ
 
     arityClosed : (Γ : Ctx m) → CArity m → Arity matsigClosed
-    arityClosed Γ = map (λ (Φ ⊩ rhs) → (Γ :⦊ Φ ⊩ rhs))
+    arityClosed Γ = map (judClosed Γ)
 
     length-arityClosed : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
       → length (arityClosed Γ arity) ≡ length arity
@@ -208,8 +216,7 @@ record CmatSignature : Type where
       → (p0 : Fin (length (arityClosed Γ arity)))
       → (p1 : Fin (length arity))
       → (p : PathP (λ i → Fin (length-arityClosed Γ arity i)) p0 p1)
-      → lookup (arityClosed Γ arity) p0
-       ≡ ((Γ :⦊ jud'ctx (lookup arity p1)) ⊩ jud'rhs (lookup arity p1))
+      → lookup (arityClosed Γ arity) p0 ≡ judClosed Γ (lookup arity p1)
     lookup-arityClosed Γ = lookup-map _
 
   module _ (m0 : Mode) where

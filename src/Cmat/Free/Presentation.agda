@@ -20,7 +20,7 @@ module Cmat.Free.Presentation where
 
 record FreeCmat (cmatsig : CmatSignature) : Type where
   open CmatSignature cmatsig
-  open Jud
+  --open CmatFoundation
 
   field
     CustomOperation : ∀ {m} → RHS m → Type
@@ -54,29 +54,31 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
   arity (whiskerR {m} {n} {p} {Φ} {Ψ} Ξ) = (◇ ⊩ jhom Φ Ψ) ∷ []
 
   -- The cold translation
-  module _ (m0 : Mode) where
+  module _ (cmatfnd : CmatFoundation) where
 
-    fmatCold : FreeMat (matsigOpen m0)
+    fmatCold : FreeMat (matsigClosed cmatfnd)
     FreeMat.Operation fmatCold (Γ ⊩ rhs) = Operation rhs
     FreeMat.isSetOperation fmatCold = isSetOperation
-    FreeMat.arity fmatCold {Γ ⊩ rhs} o = arityOpen Γ (arity o)
+    FreeMat.arity fmatCold {Γ ⊩ rhs} o = arityClosed cmatfnd Γ (arity o)
 
   -- The hot translation
-  module _ (m0 : Mode) where
+  module _ (cmatfnd : CmatFoundation) where
 
-    open MatSignature (matsigOpen m0)
+    open MatSignature (matsigClosed cmatfnd)
+    open CmatFoundation cmatfnd
 
-    data OperationHot : Jud m0 → Type where
-      inctx : ∀ {m} {Φ : Junctor m0 m} {rhs : RHS m} → (o : Operation rhs) → OperationHot (Φ ⊩ rhs)
-      tmsub : ∀ {m} {Φ Ψ : Junctor m0 m} {rhs : RHS m} → OperationHot (Φ ⊩ rhs)
+    data OperationHot : Jud cmatfnd → Type where
+      inctx : ∀ {m} {Γ : Ctx m} {rhs : RHS m} → (o : Operation rhs) → OperationHot (Γ ⊩ rhs)
+      tmsub : ∀ {m} {Γ Δ : Ctx m} {rhs : RHS m} → OperationHot (Γ ⊩ rhs)
 
-    isSetOperationHot : ∀ {J : Jud m0} → isSet (OperationHot J)
+    isSetOperationHot : ∀ {J : Jud cmatfnd} → isSet (OperationHot J)
     isSetOperationHot = {!!}
 
-    arityHot : ∀ {J : Jud m0} → OperationHot J → MatSignature.Arity (matsigOpen m0)
-    arityHot {Γ ⊩ rhs} (inctx o) = arityOpen Γ (arity o)
-    arityHot (tmsub {m} {Γ} {Δ} {rhs}) = (Δ ⊩ rhs) ∷ (◇ ⊩ jhom Γ Δ) ∷ []
+    arityHot : ∀ {J : Jud cmatfnd} → OperationHot J → Arity
+    arityHot {Γ ⊩ rhs} (inctx o) = arityClosed cmatfnd Γ (arity o)
+    arityHot (tmsub {m} {Γ} {Δ} {rhs}) = (Δ ⊩ rhs) ∷ {!(◇ ⊩ jhom Γ Δ)!} ∷ []
 
+{-
     fmatHot : FreeMat (matsigOpen m0)
     FreeMat.Operation fmatHot = OperationHot
     FreeMat.isSetOperation fmatHot = isSetOperationHot
@@ -179,3 +181,4 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     matHot : Mat (matsigOpen m0)
     Mat.getFreeMat matHot = fmatHot
     Mat.getMatEqTheory matHot = eqTheoryHot
+-}
