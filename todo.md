@@ -16,6 +16,7 @@
   - For each context (naturally) `TermF Cold => TermF Hot`
   - `TermF Cold (FreePsh X) ~= TermF Hot X`
 - Quotiented presentation: equational theory w.r.t. hot translation
+  - Note: you cannot use the terminal context, because a morphism `T.Φ -> T.Ψ` and a context `Γ` do not yield `Γ.Φ -> Γ.Ψ`.
 - Quotiented translation to equational theory on hot translation
   - Characterize warm models with equations. They consist of:
     - a model functor from `catModeJunctor` to `CategoriesInSetCategory`
