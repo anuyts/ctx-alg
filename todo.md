@@ -13,16 +13,24 @@
 - MAT signature: OK
 - Free CMAT: OK
 - Proofs about this
-  - For each context (naturally) `TermF Cold => TermF Hot`
-  - `TermF Cold (FreePsh X) ~= TermF Hot X`
-- Quotiented presentation: equational theory w.r.t. hot translation
+  - `TermF fmatCold (FreePsh X) ~= TermF matHotTmsub X`
+  - `TermF matColdCat (FreePsh X) ~= TermF matHotCat X`
+- CMAT Presentation: equational theory w.r.t. hot translation
   - Note: you cannot use the terminal context, because a morphism `T.Φ -> T.Ψ` and a context `Γ` do not yield `Γ.Φ -> Γ.Ψ`.
-- Quotiented translation to equational theory on hot translation
-  - Characterize warm models with equations. They consist of:
-    - a model functor from `catModeJunctor` to `CategoriesInSetCategory`
+- CMAT translation to equational theory on hot translation
+  - Characterize hot models with equations. They consist of:
+    - a model functor `ftrCatCtx : catModeJunctor -> catCatInSet`
+      - non-skew: mapping out the objects yields `pshCtx : catModeJunctor -> catSet`
+      - skew: a morphsim from `pshCtx`
     - a presheaf for every custom RHS
-    - a functor from `(Coslice m0)^op \times catModeJunctor` to `CategoriesInSetCategory` for the `jhom` RHS
-    - the above, partially applied to the initial coslice `(m0, id_m0)`, yields the model functor (so you can omit that one)
+    - a functor `ftrCatJunctorClosed : (catGrothConstr ftrCatCtx)^op \times catModeJunctor -> catCatInSet` for the `jhom` RHS
+      - non-skew: mapping out the objects factors over `fst : catGrothConstr ftrCatCtx -> catModeJunctor` as
+        `HomFunctor : catModeJunctor^op \times catModeJunctor -> catSet`
+      - skew: a morphism from `HomFunctor`
+    - for every `Γ` a functor `ftrCatJunctorOpen : (catGrothConstr (ftrCatJunctorClosed(Γ,-)))^op \times catModeJunctor -> catCatInSet`
+      - which factors over `catGrothConstr (ftrCatJunctorClosed(Γ,-)) -> catGrothConstr ftrCatCtx` as
+        `ftrCatJunctorClosed`
+    - (We can now generate a presheaf for every (non-custom) RHS)
     - a presheaf morphism for every operator
     - a commutative diagram of presheaf morphisms for every axiom
 - General applications
