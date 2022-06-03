@@ -12,7 +12,7 @@ open import Cubical.Categories.Category
 
 open import Mat.Signature
 open import Mat.Free.Presentation
-import Mat.Free.Term
+open import Mat.Free.Term
 open import Mat.Presentation
 open import Cmat.Signature
 
@@ -95,7 +95,7 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     FreeMat.arity fmatCold = arityCold
 
     open MatEqTheory
-    open Mat.Free.Term fmatCold
+    open TermF fmatCold
 
     -- AxiomColdSubst would be empty
 
@@ -151,8 +151,12 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     FreeMat.isSetOperation fmatHot = isSetOperationHot
     FreeMat.arity fmatHot = arityHot
 
+    ophomCold→Hot : OpHom (fmatCold cmatfnd) fmatHot
+    OpHom.F-operation ophomCold→Hot = cold
+    OpHom.F-arity ophomCold→Hot o = refl
+
     open MatEqTheory
-    open Mat.Free.Term fmatHot
+    open TermF fmatHot
 
     pattern _[_]1 t σ = tmsub $1 (t ∷ σ ∷ [])
     infixl 7 _[_]1
@@ -200,6 +204,16 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
              ]1
            )
 
+    eqTheoryHotTmsub : MatEqTheory fmatHot
+    Axiom eqTheoryHotTmsub = AxiomHotTmsub
+    msetArity eqTheoryHotTmsub = arity2mset ∘ arityAxiomHotTmsub
+    lhs eqTheoryHotTmsub = lhsAxiomHotTmsub
+    rhs eqTheoryHotTmsub = rhsAxiomHotTmsub
+
+    matHotTmsub : Mat (matsigClosed cmatfnd)
+    Mat.getFreeMat matHotTmsub = fmatHot
+    Mat.getMatEqTheory matHotTmsub = eqTheoryHotTmsub
+
     data AxiomHotCat : Jud cmatfnd → Type where
       axiomHotTmsub : ∀{J} → (axiom : AxiomHotTmsub J) → AxiomHotCat J
       axiomColdCat : ∀{J} → (axiom : AxiomColdCat cmatfnd J) → AxiomHotCat J
@@ -215,97 +229,20 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     lhsAxiomHotCat rhsAxiomHotCat : ∀ {J} → (axiom : AxiomHotCat J)
       → TermF (mtyp (arity2mset (arityAxiomHotCat axiom))) J
     lhsAxiomHotCat (axiomHotTmsub axiom) = lhsAxiomHotTmsub axiom
-    lhsAxiomHotCat (axiomColdCat axiom) = {!lhsAxiomColdCat cmatfnd axiom!}
+    lhsAxiomHotCat (axiomColdCat axiom) = opmapTermF _ _ ophomCold→Hot _ (lhsAxiomColdCat cmatfnd axiom)
     lhsAxiomHotCat tmsub-id = arvarF zero [ cold idsub $1 [] ]1
     lhsAxiomHotCat tmsub-comp = arvarF zero [ cold compsub $1 arvarF one ∷ arvarF two ∷ [] ]1
     rhsAxiomHotCat (axiomHotTmsub axiom) = rhsAxiomHotTmsub axiom
-    rhsAxiomHotCat (axiomColdCat axiom) = {!!}
+    rhsAxiomHotCat (axiomColdCat axiom) = opmapTermF _ _ ophomCold→Hot _ (rhsAxiomColdCat cmatfnd axiom)
     rhsAxiomHotCat tmsub-id = arvarF zero
     rhsAxiomHotCat tmsub-comp = arvarF zero [ arvarF one ]1 [ arvarF two ]1
 
-{-
+    eqTheoryHotCat : MatEqTheory fmatHot
+    Axiom eqTheoryHotCat = AxiomHotCat
+    msetArity eqTheoryHotCat = arity2mset ∘ arityAxiomHotCat
+    lhs eqTheoryHotCat = lhsAxiomHotCat
+    rhs eqTheoryHotCat = rhsAxiomHotCat
 
-    arityAxiomHot : ∀ {J} → AxiomHot J → Arity
-    arityAxiomHot (tmsub-id {m} {Γ} {rhs}) = (Γ ⊩ rhs) ∷ []
-    arityAxiomHot (tmsub-comp {m} {Γ} {Δ} {Θ} {rhs}) = (Θ ⊩ rhs) ∷ (◇ ⊩ jhom Δ Θ) ∷ (◇ ⊩ jhom Γ Δ) ∷ []
-    arityAxiomHot (tmsub-commut {m} {Γ} {Δ} {rhs} o) = (◇ ⊩ jhom Γ Δ) ∷ translateArityOpen Δ (arity o)
-
-    open Category catModeJunctor renaming (_∘_ to _⊚_)
-
-    lhsHot rhsHot : ∀ {J} → (axiom : AxiomHot J) → TermF (mtyp (arity2mset (arityAxiomHot axiom))) J
-    lhsHot tmsub-id = arvarF zero [ inctx id-jhom $1 [] ]1
-    lhsHot tmsub-comp = arvarF zero [ arvarF one ]1 [ arvarF two ]1
-    lhsHot (tmsub-commut o) = (inctx o $1 tabulateOverLookup (arityHot (inctx o)) (arvarF ∘ suc)) [ arvarF zero ]1
-    rhsHot tmsub-id = arvarF zero
-    rhsHot tmsub-comp = arvarF zero [ inctx comp-jhom $1
-      subst (TermF _) (cong (_⊩ _) (sym (⋆IdR ◇))) (arvarF two) ∷
-      subst (TermF _) (cong (_⊩ _) (sym (⋆IdR ◇))) (arvarF one)
-      ∷ [] ]1
-    rhsHot (tmsub-commut {m} {Γ} {Δ} {rhs} o) = inctx o $1 tabulateOverLookup (arityHot (inctx o)) (λ pΓ → (
-        let {- Because the action of map is not definitional,
-               everything comes in 3 flavours: the original one, the one in ctx Γ, and the one in ctx Δ.
-            -}
-            p : Fin (length (arity o))
-            p = subst Fin (length-translateArityOpen Γ (arity o)) pΓ
-            pΔ : Fin (length (translateArityOpen Δ (arity o)))
-            pΔ = subst⁻ Fin (length-translateArityOpen Δ (arity o)) p
-            pΓ-eq : PathP (λ i → Fin (length-translateArityOpen Γ (arity o) i)) pΓ p
-            pΓ-eq = subst-filler Fin (length-translateArityOpen Γ (arity o)) pΓ
-            pΔ-eq : PathP (λ i → Fin (length-translateArityOpen Δ (arity o) i)) pΔ p
-            pΔ-eq = symP (subst⁻-filler Fin (length-translateArityOpen Δ (arity o)) p)
-            Jₚ = lookup (arity o) p
-            mₚ = jud'mode Jₚ
-            Φₚ = jud'ctx Jₚ
-            rhsₚ = jud'rhs Jₚ
-            JₚΓ = lookup (translateArityOpen Γ (arity o)) pΓ
-            mₚΓ = jud'mode JₚΓ
-            Γ⦊Φₚ = jud'ctx JₚΓ
-            rhsₚΓ = jud'rhs JₚΓ
-            JₚΔ = lookup (translateArityOpen Δ (arity o)) pΔ
-            mₚΔ = jud'mode JₚΔ
-            Δ⦊Φₚ = jud'ctx JₚΔ
-            rhsₚΔ = jud'rhs JₚΔ
-            JₚΓ-eq : JₚΓ ≡ _
-            JₚΓ-eq = lookup-translateArityOpen Γ (arity o) pΓ p pΓ-eq
-            mₚΓ-eq : mₚΓ ≡ mₚ
-            mₚΓ-eq = cong jud'mode JₚΓ-eq
-            Γ⦊Φₚ-eq : PathP (λ i → Junctor m0 (mₚΓ-eq i)) (Γ⦊Φₚ) (Γ ⦊ Φₚ)
-            Γ⦊Φₚ-eq = cong jud'ctx JₚΓ-eq
-            rhsₚΓ-eq : PathP (λ i → RHS (mₚΓ-eq i)) rhsₚΓ rhsₚ
-            rhsₚΓ-eq = cong jud'rhs JₚΓ-eq
-            JₚΔ-eq : JₚΔ ≡ _
-            JₚΔ-eq = lookup-translateArityOpen Δ (arity o) pΔ p pΔ-eq
-            mₚΔ-eq : mₚΔ ≡ mₚ
-            mₚΔ-eq = cong jud'mode JₚΔ-eq
-            Δ⦊Φₚ-eq : PathP (λ i → Junctor m0 (mₚΔ-eq i)) (Δ⦊Φₚ) (Δ ⦊ Φₚ)
-            Δ⦊Φₚ-eq = cong jud'ctx JₚΔ-eq
-            rhsₚΔ-eq : PathP (λ i → RHS (mₚΔ-eq i)) rhsₚΔ rhsₚ
-            rhsₚΔ-eq = cong jud'rhs JₚΔ-eq
-        in -- Need a term of type Γ⦊Φₚ ⊩ rhsₚΓ @ mₚΓ
-           subst (TermF _) (sym JₚΓ-eq) (
-             -- Need a term of type Γ ⦊ Φₚ ⊩ rhsₚ @ mₚ
-             ( -- Need a term of type Δ ⦊ Φₚ ⊩ rhsₚ @ mₚ
-               subst (TermF _) JₚΔ-eq (
-                 -- Need a term of type Δ⦊Φₚ ⊩ rhsₚΔ @ mₚΔ
-                 arvarF (suc pΔ)
-               )
-             )
-             [
-               inctx (whiskerR Φₚ) $1 (
-                 subst (TermF _) (cong (_⊩ jhom Γ Δ) (sym (⋆IdR ◇))) (arvarF zero)
-               ) ∷ []
-             ]1
-           )
-      ))
-
-    eqTheoryHot : MatEqTheory fmatHot
-    Axiom eqTheoryHot = AxiomHot
-    --isSetAxiom eqTheoryHot = isSetAxiomHot
-    msetArity eqTheoryHot = arity2mset ∘ arityAxiomHot
-    lhs eqTheoryHot = lhsHot
-    rhs eqTheoryHot = rhsHot
-
-    matHot : Mat (matsigOpen m0)
-    Mat.getFreeMat matHot = fmatHot
-    Mat.getMatEqTheory matHot = eqTheoryHot
--}
+    matHotCat : Mat (matsigClosed cmatfnd)
+    Mat.getFreeMat matHotCat = fmatHot
+    Mat.getMatEqTheory matHotCat = eqTheoryHotCat

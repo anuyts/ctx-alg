@@ -21,7 +21,7 @@ open import Cubical.Categories.Limits.Initial
 
 open import Mat.Signature
 open import Mat.Free.Presentation
-import Mat.Free.Term
+open import Mat.Free.Term
 import Mat.Free.Model
 import Mat.Term
 open import Mat.Presentation
@@ -32,7 +32,7 @@ module Mat.Model {matsig : MatSignature} (mat : Mat matsig) where
 open MatSignature matsig
 open Mat
 open FreeMat (getFreeMat mat)
-open Mat.Free.Term (getFreeMat mat)
+open TermF (getFreeMat mat)
 open Mat.Free.Model (getFreeMat mat)
 open MatEqTheory (getMatEqTheory mat)
 open Mat.Term mat

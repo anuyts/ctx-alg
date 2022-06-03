@@ -11,14 +11,14 @@ open import Cubical.Categories.Monad.Base
 
 open import Mat.Signature
 open import Mat.Free.Presentation
-import Mat.Free.Term
+open import Mat.Free.Term
 
 module Mat.Presentation where
 
 record MatEqTheory {matsig : MatSignature} (presF : FreeMat matsig) : Type where
   open MatSignature matsig
   open FreeMat presF
-  open Mat.Free.Term presF
+  open TermF presF
   open Category hiding (_∘_)
   open Functor
   open IsMonad

@@ -8,7 +8,7 @@ open import Cubical.Data.FinData
 
 open import Mat.Signature
 open import Mat.Free.Presentation
-import Mat.Free.Term
+open import Mat.Free.Term
 open import Mat.Presentation
 
 module Mat.Instances.MonoidAction where
@@ -42,7 +42,7 @@ Operation fmatMonoidAction = OperatorMonoidAction
 isSetOperation fmatMonoidAction = {!!}
 arity fmatMonoidAction = arityMonoidAction
 
-open Mat.Free.Term fmatMonoidAction
+open TermF fmatMonoidAction
 
 data AxiomMonoidAction : SortMonoidAction → Type where
   mappend-lUnit : AxiomMonoidAction theMonoid

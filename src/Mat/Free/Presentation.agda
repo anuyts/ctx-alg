@@ -111,3 +111,19 @@ record FreeMat (matsig : MatSignature) : Type where
   -- Forgetful functor sending models to their carrier
   ftrForgetModel1 : Functor catModel1 catMSet
   ftrForgetModel1 = ForgetAlgebra ftrTerm1
+
+module _ {matsig : MatSignature} (fmat1 fmat2 : FreeMat matsig) where
+
+  open MatSignature matsig
+  open FreeMat
+  open Term1
+
+  record OpHom : Type where
+    field
+      F-operation : ∀ {sort} → Operation fmat1 sort → Operation fmat2 sort
+      F-arity : ∀ {sort} (o : Operation fmat1 sort) → arity fmat2 (F-operation o) ≡ arity fmat1 o
+  open OpHom
+
+  opmapTerm1 : OpHom → ∀ {X} sort → Term1 fmat1 X sort → Term1 fmat2 X sort
+  operation (opmapTerm1 ophom {X} sort t) = F-operation ophom (operation t)
+  arguments (opmapTerm1 ophom {X} sort t) = subst (Arguments X) (sym (F-arity ophom (operation t))) (arguments t)
