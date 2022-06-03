@@ -23,13 +23,14 @@
       - non-skew: mapping out the objects yields `pshCtx : catModeJunctor -> catSet`
       - skew: a morphsim from `pshCtx`
     - a presheaf for every custom RHS
-    - a functor `ftrCatJunctorClosed : (catGrothConstr ftrCatCtx)^op \times catModeJunctor -> catCatInSet` for the `jhom` RHS
+    - a functor `ftrCatJunctorClosed : (catGrothConstr ftrCatCtx)^op \times catModeJunctor -> catCatInSet` for the `jhom` RHS sending `m, n, Γ : Ctx m` to `Junctor Γ m n`,
       - non-skew: mapping out the objects factors over `fst : catGrothConstr ftrCatCtx -> catModeJunctor` as
         `HomFunctor : catModeJunctor^op \times catModeJunctor -> catSet`
       - skew: a morphism from `HomFunctor`
-    - for every `Γ` a functor `ftrCatJunctorOpen : (catGrothConstr (ftrCatJunctorClosed(Γ,-)))^op \times catModeJunctor -> catCatInSet`
-      - which factors over `catGrothConstr (ftrCatJunctorClosed(Γ,-)) -> catGrothConstr ftrCatCtx` as
-        `ftrCatJunctorClosed`
+    - a functor `catGrothConstr (ftrCatJunctorClosed(-, n)) -> ftrCatCtx(n)` sending `m, Γ : Ctx m, Φ : Junctor Γ m n` to `Γ.Φ : Ctx n`,
+      naturally in `n`
+    - similar natural functors for identity and composition of junctors
+    - lunit, runit, assoc, mixed runit, mixed assoc for context & junctor functors
     - (We can now generate a presheaf for every (non-custom) RHS)
     - a presheaf morphism for every operator
     - a commutative diagram of presheaf morphisms for every axiom
@@ -49,17 +50,23 @@
   - presheaf models
 - Instances
   - SOMATs
+    - define
+    - models are equivalent to those of CMATs (by forgetting/replacing jhoms)
     - scope-check
     - subsume AACMM21 and FSz22
+    - STLC with stuff (based on MAT of types, so you can reuse it)
   - MTT with external mode theory
     - scope-check (ticks!)
     - type-check
     - prettyprint?
     - prove normalization?
+    - based on STLC with stuff
   - dual context
     - prove normalization?
+    - based on STLC with stuff
   - amazing right adjoint
     - prove normalization?
+    - based on STLC with stuff
   - poplmark challenge 1
   - cbpv?
 - Non-instances
