@@ -109,20 +109,13 @@ record CmatSignature : Type where
   CanBeClosed : Type
   CanBeClosed = Terminal catModeJunctor
 
-  module _ {{terminalModeJunctor : CanBeClosed}} where
-    m⊤ : Mode
-    m⊤ = fst terminalModeJunctor
-    isTerminal-m⊤ : isTerminal catModeJunctor m⊤
-    isTerminal-m⊤ = snd terminalModeJunctor
+  PshCtx : Type
+  PshCtx = Functor catModeJunctor (SET _)
 
-    pshCtx : Functor catModeJunctor (SET _)
-    pshCtx = funcComp (HomFunctor catModeJunctor) (rinj (catModeJunctor ^op) catModeJunctor m⊤)
-
-    ◆ : ∀ {m} → Junctor m m⊤
-    ◆ = fst (isTerminal-m⊤ _)
-
-    ◆η : ∀ {m} → (Φ : Junctor m m⊤) → Φ ≡ ◆
-    ◆η Φ = sym (snd (isTerminal-m⊤ _) Φ)
+  record CmatFoundation : Type where
+    constructor cmatfndClosed
+    field
+      pshCtx : PshCtx
 
     Ctx : Mode → Type
     Ctx m = fst (F-ob pshCtx m)
@@ -130,88 +123,101 @@ record CmatSignature : Type where
     isSetCtx : isSet (Ctx m)
     isSetCtx {m} = snd (F-ob pshCtx m)
 
-    _⦊'_ : Ctx m → Junctor m n → Ctx n
-    Γ ⦊' Ψ = Γ ⦊ Ψ
+    _:⦊_ : Ctx m → Junctor m n → Ctx n
+    Γ :⦊ Ψ = F-hom pshCtx Ψ Γ
 
-    infixl 6 _⦊'_
+    record Jud : Type where
+      eta-equality
+      constructor _⊩_
+      field
+        {jud'mode} : Mode
+        jud'ctx : Ctx jud'mode
+        jud'rhs : RHS jud'mode
 
-    -- A substitution `Δ ⊢ sub Γ` is a junctor morphism `Δ ⊢ jhom ◇ (◆ ⦊ Γ)`
-    -- from the identity junctor `◇` to the constant junctor on `Γ`.
-    --sub : ∀ {m} → Ctx m → RHS m
-    --sub Γ = jhom ◇ (◆ ⦊ Γ)
+    pattern _⊢_ Γ crhsT = Γ ⊩ custom crhsT
 
-  record Jud (m0 : Mode) : Type where
-    eta-equality
-    constructor _⊩_
-    field
-      {jud'mode} : Mode
-      jud'ctx : Junctor m0 jud'mode
-      jud'rhs : RHS jud'mode
+    infix 5 _⊩_ _⊢_
 
-  open Jud
+    module _ where
+      open _≅_
 
-  pattern _⊢_ Γ crhsT = Γ ⊩ custom crhsT
+      RepJud : Type
+      RepJud = Σ[ m ∈ Mode ] Σ[ Γ ∈ Ctx m ] RHS m
 
-  infix 5 _⊩_ _⊢_
+      private
+        unquoteDecl isoRepJud' = declareRecordIsoΣ isoRepJud' (quote Jud)
+
+      isoRepJud : Jud ≅ RepJud
+      isoRepJud = isoRepJud'
+
+      isGroupoidRepJud : isGroupoid RepJud
+      isGroupoidRepJud = isOfHLevelΣ 3 isGroupoidMode λ m →
+                         isOfHLevelΣ 3 (isSet→isGroupoid isSetCtx) (λ _ → isGroupoidRHS)
+
+    isGroupoidJud : isGroupoid Jud
+    isGroupoidJud = isOfHLevelRetractFromIso 3 isoRepJud isGroupoidRepJud
+
+    {-
+    -- contextual arity
+    CArity' : (Mode → Type) → Mode → Type
+    CArity' X m = List (Σ[ n ∈ Mode ] Junctor m n × RHS' X n)
+
+    mapCArity' : ∀ {X Y : Mode → Type} → (f : ∀ m → X m → Y m) → CArity' X m → CArity' Y m
+    mapCArity' f = map (λ (n , Φ , rhs) → n , Φ , mapRHS' f rhs)
+    -}
+
+  open CmatFoundation.Jud public
 
   module _ (m0 : Mode) where
-    open _≅_
 
-    RepJud : Type
-    RepJud = Σ[ m ∈ Mode ] Σ[ Γ ∈ Junctor m0 m ] RHS m
+    pshYoneda : PshCtx
+    pshYoneda = funcComp (HomFunctor catModeJunctor) (rinj _ _ m0)
 
-    private
-      unquoteDecl isoRepJud' = declareRecordIsoΣ isoRepJud' (quote Jud)
+    cmatfndOpen : CmatFoundation
+    cmatfndOpen = cmatfndClosed pshYoneda
 
-    isoRepJud : Jud m0 ≅ RepJud
-    isoRepJud = isoRepJud'
+    open CmatFoundation cmatfndOpen
 
-    isGroupoidRepJud : isGroupoid RepJud
-    isGroupoidRepJud = isOfHLevelΣ 3 isGroupoidMode λ m → isOfHLevelΣ 3 (isSet→isGroupoid isSetJunctor) (λ _ → isGroupoidRHS)
+    JudOpen : Type
+    JudOpen = Jud
 
-  isGroupoidJud : ∀ {m0} → isGroupoid (Jud m0)
-  isGroupoidJud {m0} = isOfHLevelRetractFromIso 3 (isoRepJud m0) (isGroupoidRepJud m0)
+    CArity : Type
+    CArity = List JudOpen
 
-  -- contextual arity
-  CArity' : (Mode → Type) → Mode → Type
-  CArity' X m = List (Σ[ n ∈ Mode ] Junctor m n × RHS' X n)
+    isGroupoidCArity : isGroupoid CArity
+    isGroupoidCArity = isOfHLevelList 1 isGroupoidJud
 
-  mapCArity' : ∀ {X Y : Mode → Type} → (f : ∀ m → X m → Y m) → CArity' X m → CArity' Y m
-  mapCArity' f = map (λ (n , Φ , rhs) → n , Φ , mapRHS' f rhs)
-
-  CArity : Mode → Type
-  CArity m0 = List (Jud m0)
-
-  isGroupoidCArity : ∀ {m} → isGroupoid (CArity m)
-  isGroupoidCArity =
-    isOfHLevelList 1 (isGroupoidJud)
-
-  module _ where
+  module _ (cmatfnd : CmatFoundation) where
     open MatSignature
+    open CmatFoundation cmatfnd
 
     {- The signature of the MAT translation.
     -}
-    matsigOpen : Mode → MatSignature
-    Sort (matsigOpen m0) = Jud m0
-    isGroupoidSort (matsigOpen m0) = isGroupoidJud
+    matsigClosed : MatSignature
+    Sort matsigClosed = Jud
+    isGroupoidSort matsigClosed = isGroupoidJud
 
-    matsigClosed : {{_ : CanBeClosed}} → MatSignature
-    matsigClosed = matsigOpen m⊤
+    arityClosed : (Γ : Ctx m) → CArity m → Arity matsigClosed
+    arityClosed Γ = map (λ (Φ ⊩ rhs) → (Γ :⦊ Φ ⊩ rhs))
 
-    arityOpen : ∀ {m0 m} (Γ : Junctor m0 m) → CArity m → Arity (matsigOpen m0)
-    arityOpen Γ = map (λ (Φ ⊩ rhs) → (Γ ⦊ Φ ⊩ rhs))
+    length-arityClosed : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
+      → length (arityClosed Γ arity) ≡ length arity
+    length-arityClosed Γ = length-map _
 
-    length-arityOpen : ∀ {m0 m} (Γ : Junctor m0 m) → (arity : CArity m)
-      → length (arityOpen Γ arity) ≡ length arity
-    length-arityOpen Γ = length-map _
-
-    lookup-arityOpen : ∀ {m0 m} (Γ : Junctor m0 m) → (arity : CArity m)
-      → (p0 : Fin (length (arityOpen Γ arity)))
+    lookup-arityClosed : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
+      → (p0 : Fin (length (arityClosed Γ arity)))
       → (p1 : Fin (length arity))
-      → (p : PathP (λ i → Fin (length-arityOpen Γ arity i)) p0 p1)
-      → lookup (arityOpen Γ arity) p0
-       ≡ ((Γ ⦊ jud'ctx (lookup arity p1)) ⊩ jud'rhs (lookup arity p1))
-    lookup-arityOpen Γ = lookup-map _
+      → (p : PathP (λ i → Fin (length-arityClosed Γ arity i)) p0 p1)
+      → lookup (arityClosed Γ arity) p0
+       ≡ ((Γ :⦊ jud'ctx (lookup arity p1)) ⊩ jud'rhs (lookup arity p1))
+    lookup-arityClosed Γ = lookup-map _
 
-    arityClosed : {{_ : CanBeClosed}} → ∀ {m} (Γ : Ctx m) → CArity m → Arity matsigClosed
-    arityClosed = arityOpen
+  module _ (m0 : Mode) where
+
+    matsigOpen = matsigClosed (cmatfndOpen m0)
+
+    arityOpen = arityClosed (cmatfndOpen m0)
+
+    length-arityOpen = length-arityClosed (cmatfndOpen m0)
+
+    lookup-arityOpen = lookup-arityClosed (cmatfndOpen m0)
