@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --type-in-type #-}
+{-# OPTIONS --cubical --type-in-type --allow-unsolved-metas #-}
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism renaming (Iso to _≅_)
@@ -200,31 +200,36 @@ record CmatSignature : Type where
     Sort matsigClosed = Jud cmatfnd
     isGroupoidSort matsigClosed = isGroupoidJud cmatfnd
 
-    judClosed : (Γ : Ctx m) → Jud (cmatfndOpen m) → Jud cmatfnd
-    judClosed Γ (Φ ⊢ crhs) = Γ :⦊ Φ ⊢ crhs
-    judClosed Γ (Φ ⊩ CmatFoundation.jhom Ψ Ξ) = Γ :⦊ Φ ⊩ jhom Ψ Ξ
-    judClosed Γ (Φ ⊩ CmatFoundation.sub Ψ) = Γ ⊩ jhom Φ Ψ
+    pretranslateJudClosed : Jud (cmatfndOpen m) → Σ[ n ∈ Mode ] (Junctor m n) × RHS n
+    pretranslateJudClosed (Φ ⊢ crhs) = _ , Φ , custom crhs
+    pretranslateJudClosed (Φ ⊩ CmatFoundation.jhom Ψ Ξ) = _ , Φ , jhom Ψ Ξ
+    pretranslateJudClosed (Φ ⊩ CmatFoundation.sub Ψ) = _ , ◇ , jhom Φ Ψ
 
-    arityClosed : (Γ : Ctx m) → CArity m → Arity matsigClosed
-    arityClosed Γ = map (judClosed Γ)
+    translateJudClosed : (Γ : Ctx m) → Jud (cmatfndOpen m) → Jud cmatfnd
+    translateJudClosed Γ J =
+      let (n , Φ , rhs) = pretranslateJudClosed J
+      in Γ :⦊ Φ ⊩ rhs
 
-    length-arityClosed : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
-      → length (arityClosed Γ arity) ≡ length arity
-    length-arityClosed Γ = length-map _
+    translateArityClosed : (Γ : Ctx m) → CArity m → Arity matsigClosed
+    translateArityClosed Γ = map (translateJudClosed Γ)
 
-    lookup-arityClosed : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
-      → (p0 : Fin (length (arityClosed Γ arity)))
+    length-translateArityClosed : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
+      → length (translateArityClosed Γ arity) ≡ length arity
+    length-translateArityClosed Γ = length-map _
+
+    lookup-translateArityClosed : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
+      → (p0 : Fin (length (translateArityClosed Γ arity)))
       → (p1 : Fin (length arity))
-      → (p : PathP (λ i → Fin (length-arityClosed Γ arity i)) p0 p1)
-      → lookup (arityClosed Γ arity) p0 ≡ judClosed Γ (lookup arity p1)
-    lookup-arityClosed Γ = lookup-map _
+      → (p : PathP (λ i → Fin (length-translateArityClosed Γ arity i)) p0 p1)
+      → lookup (translateArityClosed Γ arity) p0 ≡ translateJudClosed Γ (lookup arity p1)
+    lookup-translateArityClosed Γ = lookup-map _
 
   module _ (m0 : Mode) where
 
     matsigOpen = matsigClosed (cmatfndOpen m0)
 
-    arityOpen = arityClosed (cmatfndOpen m0)
+    translateArityOpen = translateArityClosed (cmatfndOpen m0)
 
-    length-arityOpen = length-arityClosed (cmatfndOpen m0)
+    length-translateArityOpen = length-translateArityClosed (cmatfndOpen m0)
 
-    lookup-arityOpen = lookup-arityClosed (cmatfndOpen m0)
+    lookup-translateArityOpen = lookup-translateArityClosed (cmatfndOpen m0)
