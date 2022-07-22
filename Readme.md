@@ -35,10 +35,15 @@ In `Cmat`, we define CMATs (contextual multisorted algebraic theories), as well 
 - The **cold** translation, which yields a free MAT with no substitution operations,
 - The **hot** translation, which yields a free MAT with substitution operations, that can be extended with
    - an equational theory about substitution
-   - the axioms of the source CMAT
-     Both translations have the same signature, and are indexed by a CMAT foundation, which determines what are the contexts of the resulting language.
+   - the axioms of the source CMAT.
+
+Both translations have the same signature, and are indexed by a CMAT foundation, which determines what are the contexts of the resulting language.
      
-Different parts are added in different places. The following table gives a bit of an overview:
+Different parts are added in different places. The following table gives a bit of an overview. It should be read as follows:
+- The bold lines are titles,
+- Under every bold line we list the operations added there,
+- Operations from the left and from above (and from the upper-left) are also inherited,
+- "Custom" stands for operations custom to the specific theory at hand.
   
   | **Custom**            | **CMAT**    | **Cold**                  | **Hot**           |
   |:--------------------- |:----------- |:------------------------- |:----------------- |
