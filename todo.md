@@ -15,8 +15,8 @@
 - Proofs about this
   - `TermF fmatCold (FreePsh X) ~= TermQ matHotTmsub X`
     - Note: free presheaves over `X` involve a circularity!
-      -> Don't do it, `X` is empty.
-      -> Well first check F&Sz: they add metavariables with delayed substitutions in the syntax
+      -> Rely on matHotTmsub instead
+      -> F&Sz instead add metavariables with delayed substitutions in the syntax
     - Trivially embed `fmatCold` in `matHotTmsub`
     - Map `matHotTmsub` to `fmatCold` with a cold environment
     - Identity at `fmatCold`: trivial
