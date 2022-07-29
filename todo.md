@@ -10,11 +10,18 @@
   - elim (in cubical library?)
 
 # CMATs
-- MAT signature: OK
-- Free CMAT: OK
+- MAT signature: **OK**
+- Free CMAT: **OK**
 - Proofs about this
-  - `TermF fmatCold (FreePsh X) ~= TermF matHotTmsub X`
-  - `TermF matColdCat (FreePsh X) ~= TermF matHotCat X`
+  - `TermF fmatCold (FreePsh X) ~= TermQ matHotTmsub X`
+    - Note: free presheaves over `X` involve a circularity!
+      -> Don't do it, `X` is empty.
+      -> Well first check F&Sz: they add metavariables with delayed substitutions in the syntax
+    - Trivially embed `fmatCold` in `matHotTmsub`
+    - Map `matHotTmsub` to `fmatCold` with a cold environment
+    - Identity at `fmatCold`: trivial
+    - Identity at `matHotTmsub`: needs to be phrased for arbitrary environment
+  - `TermQ matColdCat (FreePsh X) ~= TermQ matHotCat X`
 - CMAT Presentation: equational theory w.r.t. hot translation
   - Note: you cannot use the terminal context, because a morphism `T.Φ -> T.Ψ` and a context `Γ` do not yield `Γ.Φ -> Γ.Ψ`.
 - CMAT translation to equational theory on hot translation
