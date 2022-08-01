@@ -147,35 +147,18 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
       (cold (inctx o) $1 tabulateOverLookup (arityCold cmatfnd (inctx o)) (arvarF ∘ suc))
       [ cold (mixWhiskerR _) $1 arvarF zero ∷ (cold idsub $1 []) ∷ [] ]1
     rhsAxiomHotTmsub (tmsub-commut {m} {Γ} {Δ} {rhs} o) =
-      cold (inctx o) $1 tabulateOverLookup (arityCold cmatfnd (inctx o)) λ pΓ →
-        let p : Fin (length (arity o))
-            p = subst Fin (length-translateArityClosed cmatfnd Γ (arity o)) pΓ
-            pΔ : Fin (length (translateArityClosed cmatfnd Δ (arity o)))
-            pΔ = subst⁻ Fin (length-translateArityClosed cmatfnd Δ (arity o)) p
-            pΓ-eq : PathP (λ i → Fin (length-translateArityClosed cmatfnd Γ (arity o) i)) pΓ p
-            pΓ-eq = subst-filler Fin (length-translateArityClosed cmatfnd Γ (arity o)) pΓ
-            pΔ-eq : PathP (λ i → Fin (length-translateArityClosed cmatfnd Δ (arity o) i)) pΔ p
-            pΔ-eq = symP (subst⁻-filler Fin (length-translateArityClosed cmatfnd Δ (arity o)) p)
-            Jₚ = lookup (arity o) p
-            JₚΓ = lookup (translateArityClosed cmatfnd Γ (arity o)) pΓ
-            JₚΓ-eq : JₚΓ ≡ _
-            JₚΓ-eq = lookup-translateArityClosed cmatfnd Γ (arity o) pΓ p pΓ-eq
-            JₚΔ = lookup (translateArityClosed cmatfnd Δ (arity o)) pΔ
-            JₚΔ-eq : JₚΔ ≡ _
-            JₚΔ-eq = lookup-translateArityClosed cmatfnd Δ (arity o) pΔ p pΔ-eq
-        in -- need a term at JₚΓ
-           subst (TermF _) (sym JₚΓ-eq) (
-             -- need a term at translateJudClosed cmatfnd Γ Jₚ
-             ( -- need a term at translateJudClosed cmatfnd Δ Jₚ
-               subst (TermF _) JₚΔ-eq (
-                 -- need a term at JₚΔ
-                 arvarF (suc pΔ)
-               )
-             )
-             [
-               cold (mixWhiskerR _) $1 arvarF zero ∷ (cold idsub $1 []) ∷ []
-             ]1
-           )
+      cold (inctx o) $1 processArityO (arity o) (λ {J (p , e) → (suc p) , e})
+      where processArityO : (arityO : CArity m) →
+                            (∀ J → arity2mset (translateArityClosed cmatfnd Δ arityO) J .fst
+                                 → arity2mset ((Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)) J .fst) →
+                            MatSignature.Arguments
+                              (matsigClosed cmatfnd)
+                              (TermF (mtyp (arity2mset ((Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)))))
+                              (translateArityClosed cmatfnd Γ arityO)
+            processArityO [] f = []
+            processArityO (J ∷ arityO) f =
+              varF (f _ (zero , refl)) [ cold (mixWhiskerR _) $1 arvarF zero ∷ (cold idsub $1 []) ∷ [] ]1
+              ∷ processArityO arityO λ {J (p , e) → f J ((suc p) , e)}
 
     eqTheoryHotTmsub : MatEqTheory fmatHot
     Axiom eqTheoryHotTmsub = AxiomHotTmsub
