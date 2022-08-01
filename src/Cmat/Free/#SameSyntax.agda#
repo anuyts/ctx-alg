@@ -164,5 +164,5 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
     isHotAlg1-msetEnvirCold J (term1 (cold (compsub)) (ρ ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree =
       compsub $1 ρ [ _ ⊢ idsub $1 [] ]Cofree ∷ (τ [ _ ⊢ σ ]Cofree) ∷ []
     isHotAlg1-msetEnvirCold J (term1 (cold (mixWhiskerL Θ)) (τ ∷ [])) [ Δ ⊢ σ ]Cofree =
-      {!mixWhiskerL Θ $1 ?!}
+      {!!}
     isHotAlg1-msetEnvirCold J (term1 (cold (mixWhiskerR Ξ)) (τ ∷ [])) [ Δ ⊢ σ ]Cofree = {!!}
