@@ -1,6 +1,7 @@
 {-# OPTIONS --cubical --type-in-type --experimental-lossy-unification #-}
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Data.List hiding ([_])
 open import Cubical.Data.List.Dependent
 open import Cubical.Reflection.RecordEquiv
 open import Cubical.Foundations.HLevels
@@ -72,7 +73,7 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
   open MatSignature matsig
   open FreeMat {matsig}
   open TermF {matsig}
-  open FreeCmat fcmat
+  open FreeCmat fcmat renaming (arity to carity)
 
   open Category
   open Functor
@@ -159,8 +160,13 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
     -- msetEnvirCold is an algebra for Term1 hot
     isHotAlg1-msetEnvirCold : IsAlgebra (ftrTerm1 (fmatHot cmatfnd)) msetEnvirCold
     isHotAlg1-msetEnvirCold J (term1 (tmsub) (t ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree = t [ _ ⊢ τ [ _ ⊢ σ ]Cofree ]Cofree
-    isHotAlg1-msetEnvirCold J (term1 (cold (inctx o)) args) [ Δ ⊢ σ ]Cofree =
-      {!inctx o $1 ?!}
+    isHotAlg1-msetEnvirCold J (term1 (cold (inctx {m} {Γ} o)) args) [ Δ ⊢ σ ]Cofree =
+      inctx o $1 mapOverSpan
+        (translateJudClosed cmatfnd Γ)
+        (translateJudClosed cmatfnd Δ)
+        (λ J' tCofree → tCofree [ _ ⊢ mixWhiskerR _ $1 σ ∷ (idsub $1 []) ∷ [] ]Cofree)
+        (carity o)
+        args
     isHotAlg1-msetEnvirCold J (term1 (cold (idsub)) []) [ Δ ⊢ σ ]Cofree = σ
     --isHotAlg1-msetEnvirCold J (term1 (cold (compsub)) (ρ ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree =
     --  compsub $1 ρ [ _ ⊢ idsub $1 [] ]Cofree ∷ (τ [ _ ⊢ σ ]Cofree) ∷ []

@@ -5,7 +5,7 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Transport
 open import Cubical.Data.Empty
 open import Cubical.Data.List
-open import Cubical.Data.List.FinData
+open import Cubical.Data.List.FinData renaming (lookup to _!_)
 open import Cubical.Data.List.Dependent
 open import Cubical.Data.FinData
 open import Cubical.Categories.Category
@@ -148,18 +148,16 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     lhsAxiomHotTmsub (tmsub-commut {m} {Γ} {Δ} {rhs} o) =
       (cold (inctx o) $1 tabulateOverLookup (arityCold cmatfnd (inctx o)) (arvarF ∘ suc)) [ arvarF zero ]1
     rhsAxiomHotTmsub (tmsub-commut {m} {Γ} {Δ} {rhs} o) =
-      cold (inctx o) $1 processArityO (arity o) (λ {J (p , e) → (suc p) , e})
-      where processArityO : (arityO : CArity m) →
-                            (∀ J → arity2mset (translateArityClosed cmatfnd Δ arityO) J .fst
-                                 → arity2mset ((Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)) J .fst) →
-                            MatSignature.Arguments
-                              (matsigClosed cmatfnd)
-                              (TermF (mtyp (arity2mset ((Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)))))
-                              (translateArityClosed cmatfnd Γ arityO)
-            processArityO [] f = []
-            processArityO (J ∷ arityO) f =
-              varF (f _ (zero , refl)) [ cold (mixWhiskerR _) $1 arvarF zero ∷ (cold idsub $1 []) ∷ [] ]1
-              ∷ processArityO arityO λ {J (p , e) → f J ((suc p) , e)}
+      cold (inctx o) $1 mapOverSpan
+        (translateJudClosed cmatfnd Δ)
+        (translateJudClosed cmatfnd Γ)
+        (λ J x → varF x [ cold (mixWhiskerR _) $1 arvarF zero ∷ (cold idsub $1 []) ∷ [] ]1)
+        (arity o)
+        (tabulateOverLookup
+          {B = λ J → (arity2mset ((Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)) J .fst)}
+          (translateArityClosed cmatfnd Δ (arity o))
+          (λ p → suc p , refl)
+        )
 
     eqTheoryHotTmsub : MatEqTheory fmatHot
     Axiom eqTheoryHotTmsub = AxiomHotTmsub
