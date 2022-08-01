@@ -18,6 +18,7 @@ open import Mat.Free.Term
 open import Mat.Free.Model
 open import Mat.Presentation
 open import Mat.Term
+open import Mat.Model
 open import Cmat.Signature
 open import Cmat.Free.Presentation
 
@@ -174,3 +175,11 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
       mixWhiskerL Θ $1 (ρ [ _ ⊢ idsub $1 [] ]Cofree) ∷ (τ [ _ ⊢ σ ]Cofree) ∷ []
     isHotAlg1-msetEnvirCold J (term1 (cold (mixWhiskerR Ξ)) (ρ ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree =
       mixWhiskerR Ξ $1 (ρ [ _ ⊢ idsub $1 [] ]Cofree) ∷ (τ [ _ ⊢ σ ]Cofree) ∷ []
+
+    hotAlg1-msetEnvirCold : Algebra (ftrTerm1 (fmatHot cmatfnd))
+    hotAlg1-msetEnvirCold = algebra msetEnvirCold isHotAlg1-msetEnvirCold
+
+    -- msetEnvirCold respects the equational theory for Term1 hot
+
+    respectsEqTheory1-msetEnvirCold : respectsEqTheory1 (matHotTmsub cmatfnd) hotAlg1-msetEnvirCold
+    respectsEqTheory1-msetEnvirCold (tmsub-commut o) f = {!!}
