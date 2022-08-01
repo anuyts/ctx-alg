@@ -89,7 +89,7 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     arityCold idsub = []
     --arityCold (compsub {m} {Γ} {Δ} {Θ}) = (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub Δ) ∷ []
     arityCold (mixWhiskerL {n} {p} {Ω} Θ {Φ} {Ψ}) = (Θ ⊩ jhom Φ Ψ) ∷ (Ω ⊩ sub (Θ F.:⦊ Φ)) ∷ []
-    arityCold (mixWhiskerR {n} {p} {Ω} {Γ} {Δ} Ξ) = (Γ ⊩ sub Δ) ∷ (Ω ⊩ sub (Γ F.:⦊ Ξ)) ∷ []
+    arityCold (mixWhiskerR {n} {p} {Ω} {Γ} {Δ} Ξ) = (Γ ⊩ sub Δ)    ∷ (Ω ⊩ sub (Γ F.:⦊ Ξ)) ∷ []
 
     fmatCold : FreeMat (matsigClosed cmatfnd)
     FreeMat.Operation fmatCold = OperationCold
@@ -135,19 +135,35 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     pattern _[_]1 t σ = tmsub $1 (t ∷ σ ∷ [])
     infixl 7 _[_]1
 
-    data AxiomHotTmsub : Jud cmatfnd → Type where
-      tmsub-commut : ∀ {m} {Γ Δ : F.Ctx m} {rhs : LoneRHS m} (o : Operation rhs)
-        → AxiomHotTmsub (Γ ⊩ translateRHSClosedEmptyContext cmatfnd rhs)
-        -- → AxiomHotTmsub (translateJudClosed cmatfnd Γ (◇ ⊩ rhs))
+    data AxiomHot : Jud cmatfnd → Type where
+      tmsub-inctx : ∀ {m} {Γ Δ : F.Ctx m} {rhs : LoneRHS m} (o : Operation rhs)
+        → AxiomHot (Γ ⊩ translateRHSClosedEmptyContext cmatfnd rhs)
+      tmsub-mixWhiskerL : ∀ {n p} {Ω' Ω : F.Ctx p} (Θ : F.Ctx n) {Φ Ψ : Junctor n p} → AxiomHot (Ω' ⊩ sub (Θ F.:⦊ Ψ))
+      tmsub-mixWhiskerR : ∀ {n p} {Ω' Ω : F.Ctx p} {Γ Δ : F.Ctx n} (Ξ : Junctor n p) → AxiomHot (Ω' ⊩ sub (Δ F.:⦊ Ξ))
+      tmsub-lunit : ∀ {Γ Δ : F.Ctx m} → AxiomHot (Γ ⊩ sub Δ)
+      tmsub-runit : ∀ {Γ : F.Ctx m} {rhs : F.RHS m} → AxiomHot (Γ ⊩ rhs)
+      tmsub-assoc : ∀ {Γ Δ Θ : F.Ctx m} {rhs : F.RHS m} → AxiomHot (Γ ⊩ rhs)
 
-    arityAxiomHotTmsub : ∀{J} → AxiomHotTmsub J → Arity
-    arityAxiomHotTmsub (tmsub-commut {m} {Γ} {Δ} {rhs} o) = (Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)
+    arityAxiomHot : ∀{J} → AxiomHot J → Arity
+    arityAxiomHot (tmsub-inctx {m} {Γ} {Δ} {rhs} o) = (Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)
+    arityAxiomHot (tmsub-mixWhiskerL {n} {p} {Ω'} {Ω} Θ {Φ} {Ψ}) = (Θ ⊩ jhom Φ Ψ) ∷ (Ω ⊩ sub (Θ F.:⦊ Φ)) ∷ (Ω' ⊩ sub Ω) ∷ []
+    arityAxiomHot (tmsub-mixWhiskerR {n} {p} {Ω'} {Ω} {Γ} {Δ} Ξ) = (Γ ⊩ sub Δ)    ∷ (Ω ⊩ sub (Γ F.:⦊ Ξ)) ∷ (Ω' ⊩ sub Ω) ∷ []
+    arityAxiomHot (tmsub-lunit {m}{Γ}{Δ}) = (Γ ⊩ sub Δ) ∷ []
+    arityAxiomHot (tmsub-runit {m}{Γ}{rhs}) = (Γ ⊩ rhs) ∷ []
+    arityAxiomHot (tmsub-assoc {m}{Γ}{Δ}{Θ}{rhs}) = (Θ ⊩ rhs) ∷ (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub Δ) ∷ []
 
-    lhsAxiomHotTmsub rhsAxiomHotTmsub : ∀ {J} → (axiom : AxiomHotTmsub J)
-      → TermF (mtyp (arity2mset (arityAxiomHotTmsub axiom))) J
-    lhsAxiomHotTmsub (tmsub-commut {m} {Γ} {Δ} {rhs} o) =
+    lhsAxiomHot rhsAxiomHot : ∀ {J} → (axiom : AxiomHot J)
+      → TermF (mtyp (arity2mset (arityAxiomHot axiom))) J
+    lhsAxiomHot (tmsub-inctx {m} {Γ} {Δ} {rhs} o) =
       (cold (inctx o) $1 tabulateOverLookup (arityCold cmatfnd (inctx o)) (arvarF ∘ suc)) [ arvarF zero ]1
-    rhsAxiomHotTmsub (tmsub-commut {m} {Γ} {Δ} {rhs} o) =
+    lhsAxiomHot (tmsub-mixWhiskerL {n} {p} {Ω'} {Ω} Θ {Φ} {Ψ}) =
+      (cold (mixWhiskerL Θ) $1 arvarF zero ∷ arvarF one ∷ []) [ arvarF two ]1
+    lhsAxiomHot (tmsub-mixWhiskerR {n} {p} {Ω'} {Ω} {Γ} {Δ} Ξ) =
+      (cold (mixWhiskerR Ξ) $1 arvarF zero ∷ arvarF one ∷ []) [ arvarF two ]1
+    lhsAxiomHot tmsub-lunit = (cold idsub $1 []) [ arvarF zero ]1
+    lhsAxiomHot tmsub-runit = arvarF zero [ cold idsub $1 [] ]1
+    lhsAxiomHot tmsub-assoc = arvarF zero [ arvarF one ]1 [ arvarF two ]1
+    rhsAxiomHot (tmsub-inctx {m} {Γ} {Δ} {rhs} o) =
       cold (inctx o) $1 mapOverSpan
         (translateJudClosed cmatfnd Δ)
         (translateJudClosed cmatfnd Γ)
@@ -158,50 +174,20 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
           (translateArityClosed cmatfnd Δ (arity o))
           (λ p → suc p , refl)
         )
+    rhsAxiomHot (tmsub-mixWhiskerL {n} {p} {Ω'} {Ω} Θ {Φ} {Ψ}) =
+      cold (mixWhiskerL Θ) $1 arvarF zero ∷ (arvarF one [ arvarF two ]1) ∷ []
+    rhsAxiomHot (tmsub-mixWhiskerR {n} {p} {Ω'} {Ω} {Γ} {Δ} Ξ) =
+      cold (mixWhiskerR Ξ) $1 arvarF zero ∷ (arvarF one [ arvarF two ]1) ∷ []
+    rhsAxiomHot tmsub-lunit = arvarF zero
+    rhsAxiomHot tmsub-runit = arvarF zero
+    rhsAxiomHot tmsub-assoc = arvarF zero [ arvarF one [ arvarF two ]1 ]1
 
-    eqTheoryHotTmsub : MatEqTheory fmatHot
-    Axiom eqTheoryHotTmsub = AxiomHotTmsub
-    msetArity eqTheoryHotTmsub = arity2mset ∘ arityAxiomHotTmsub
-    lhs eqTheoryHotTmsub = lhsAxiomHotTmsub
-    rhs eqTheoryHotTmsub = rhsAxiomHotTmsub
+    eqTheoryHot : MatEqTheory fmatHot
+    Axiom eqTheoryHot = AxiomHot
+    msetArity eqTheoryHot = arity2mset ∘ arityAxiomHot
+    lhs eqTheoryHot = lhsAxiomHot
+    rhs eqTheoryHot = rhsAxiomHot
 
-    matHotTmsub : Mat (matsigClosed cmatfnd)
-    Mat.getFreeMat matHotTmsub = fmatHot
-    Mat.getMatEqTheory matHotTmsub = eqTheoryHotTmsub
-
-    data AxiomHotCat : Jud cmatfnd → Type where
-      axiomHotTmsub : ∀{J} → (axiom : AxiomHotTmsub J) → AxiomHotCat J
-      --axiomColdCat : ∀{J} → (axiom : AxiomColdCat cmatfnd J) → AxiomHotCat J
-      tmsub-lunit : ∀ {Γ Δ : F.Ctx m} → AxiomHotCat (Γ ⊩ sub Δ)
-      tmsub-runit : ∀ {Γ : F.Ctx m} {rhs : F.RHS m} → AxiomHotCat (Γ ⊩ rhs)
-      tmsub-assoc : ∀ {Γ Δ Θ : F.Ctx m} {rhs : F.RHS m} → AxiomHotCat (Γ ⊩ rhs)
-
-    arityAxiomHotCat : ∀{J} → AxiomHotCat J → Arity
-    arityAxiomHotCat (axiomHotTmsub axiom) = arityAxiomHotTmsub axiom
-    --arityAxiomHotCat (axiomColdCat axiom) = arityAxiomColdCat cmatfnd axiom
-    arityAxiomHotCat (tmsub-lunit {m}{Γ}{Δ}) = (Γ ⊩ sub Δ) ∷ []
-    arityAxiomHotCat (tmsub-runit {m}{Γ}{rhs}) = (Γ ⊩ rhs) ∷ []
-    arityAxiomHotCat (tmsub-assoc {m}{Γ}{Δ}{Θ}{rhs}) = (Θ ⊩ rhs) ∷ (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub Δ) ∷ []
-
-    lhsAxiomHotCat rhsAxiomHotCat : ∀ {J} → (axiom : AxiomHotCat J)
-      → TermF (mtyp (arity2mset (arityAxiomHotCat axiom))) J
-    lhsAxiomHotCat (axiomHotTmsub axiom) = lhsAxiomHotTmsub axiom
-    --lhsAxiomHotCat (axiomColdCat axiom) = opmapTermF _ _ ophomCold→Hot _ (lhsAxiomColdCat cmatfnd axiom)
-    lhsAxiomHotCat tmsub-lunit = (cold idsub $1 []) [ arvarF zero ]1
-    lhsAxiomHotCat tmsub-runit = arvarF zero [ cold idsub $1 [] ]1
-    lhsAxiomHotCat tmsub-assoc = arvarF zero [ arvarF one ]1 [ arvarF two ]1
-    rhsAxiomHotCat (axiomHotTmsub axiom) = rhsAxiomHotTmsub axiom
-    --rhsAxiomHotCat (axiomColdCat axiom) = opmapTermF _ _ ophomCold→Hot _ (rhsAxiomColdCat cmatfnd axiom)
-    rhsAxiomHotCat tmsub-lunit = arvarF zero
-    rhsAxiomHotCat tmsub-runit = arvarF zero
-    rhsAxiomHotCat tmsub-assoc = arvarF zero [ arvarF one [ arvarF two ]1 ]1
-
-    eqTheoryHotCat : MatEqTheory fmatHot
-    Axiom eqTheoryHotCat = AxiomHotCat
-    msetArity eqTheoryHotCat = arity2mset ∘ arityAxiomHotCat
-    lhs eqTheoryHotCat = lhsAxiomHotCat
-    rhs eqTheoryHotCat = rhsAxiomHotCat
-
-    matHotCat : Mat (matsigClosed cmatfnd)
-    Mat.getFreeMat matHotCat = fmatHot
-    Mat.getMatEqTheory matHotCat = eqTheoryHotCat
+    matHot : Mat (matsigClosed cmatfnd)
+    Mat.getFreeMat matHot = fmatHot
+    Mat.getMatEqTheory matHot = eqTheoryHot
