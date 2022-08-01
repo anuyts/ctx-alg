@@ -220,6 +220,12 @@ record CmatSignature : Type where
       let (n , Φ , rhs) = pretranslateJudClosed J
       in Γ :⦊ Φ ⊩ rhs
 
+    -- Special case when the context is empty; we can then simplify Γ :⦊ ◇ to Γ.
+    translateRHSClosedEmptyContext : CmatFoundation.RHS (cmatfndOpen m) m → RHS m
+    translateRHSClosedEmptyContext (CmatFoundation.custom crhs) = custom crhs
+    translateRHSClosedEmptyContext (CmatFoundation.jhom Ψ Φ) = jhom Ψ Φ
+    translateRHSClosedEmptyContext (CmatFoundation.sub Ψ) = jhom ◇ Ψ
+
     translateArityClosed : (Γ : Ctx m) → CArity m → Arity matsigClosed
     translateArityClosed Γ = map (translateJudClosed Γ)
 

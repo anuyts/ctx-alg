@@ -67,7 +67,8 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
 
     data OperationCold : Jud cmatfnd → Type where
       inctx : ∀ {m} {Γ : F.Ctx m} {rhs : LoneRHS m} → (o : Operation rhs)
-        → OperationCold (translateJudClosed cmatfnd Γ (◇ ⊩ rhs))
+        → OperationCold (Γ ⊩ translateRHSClosedEmptyContext cmatfnd rhs)
+        -- → OperationCold (translateJudClosed cmatfnd Γ (◇ ⊩ rhs))
       idsub : ∀ {m} {Γ : F.Ctx m} → OperationCold (Γ ⊩ sub Γ)
       --compsub : ∀ {m} {Γ Δ Θ : F.Ctx m} → OperationCold (Γ ⊩ sub Θ)
       -- The following two involve a delayed substitution from Ω
@@ -136,7 +137,8 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
 
     data AxiomHotTmsub : Jud cmatfnd → Type where
       tmsub-commut : ∀ {m} {Γ Δ : F.Ctx m} {rhs : LoneRHS m} (o : Operation rhs)
-        → AxiomHotTmsub (translateJudClosed cmatfnd Γ (◇ ⊩ rhs))
+        → AxiomHotTmsub (Γ ⊩ translateRHSClosedEmptyContext cmatfnd rhs)
+        -- → AxiomHotTmsub (translateJudClosed cmatfnd Γ (◇ ⊩ rhs))
 
     arityAxiomHotTmsub : ∀{J} → AxiomHotTmsub J → Arity
     arityAxiomHotTmsub (tmsub-commut {m} {Γ} {Δ} {rhs} o) = (Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)
@@ -144,8 +146,7 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     lhsAxiomHotTmsub rhsAxiomHotTmsub : ∀ {J} → (axiom : AxiomHotTmsub J)
       → TermF (mtyp (arity2mset (arityAxiomHotTmsub axiom))) J
     lhsAxiomHotTmsub (tmsub-commut {m} {Γ} {Δ} {rhs} o) =
-      (cold (inctx o) $1 tabulateOverLookup (arityCold cmatfnd (inctx o)) (arvarF ∘ suc))
-      [ cold (mixWhiskerR _) $1 arvarF zero ∷ (cold idsub $1 []) ∷ [] ]1
+      (cold (inctx o) $1 tabulateOverLookup (arityCold cmatfnd (inctx o)) (arvarF ∘ suc)) [ arvarF zero ]1
     rhsAxiomHotTmsub (tmsub-commut {m} {Γ} {Δ} {rhs} o) =
       cold (inctx o) $1 processArityO (arity o) (λ {J (p , e) → (suc p) , e})
       where processArityO : (arityO : CArity m) →
