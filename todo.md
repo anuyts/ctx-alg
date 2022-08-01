@@ -12,6 +12,10 @@
 # CMATs
 - MAT signature: **OK**
 - Free CMAT: **OK**
+- Make changes
+  - `mixWhiskerL/R` should not take a substitution
+  - `matHot` needs mixed whiskering equations
+  - `matCold` should differ from `matHot` only in that `tmsub` applies only to other substitutions
 - Proofs about this
   - `TermF fmatCold (FreePsh X) ~= TermQ matHotTmsub X`
     - Note: free presheaves over `X` involve a circularity!
