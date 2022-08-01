@@ -1,8 +1,10 @@
 {-# OPTIONS --cubical --type-in-type --experimental-lossy-unification #-}
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Function
 open import Cubical.Data.List hiding ([_])
 open import Cubical.Data.List.Dependent
+open import Cubical.Data.FinData
 open import Cubical.Reflection.RecordEquiv
 open import Cubical.Foundations.HLevels
 
@@ -78,7 +80,7 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
   open TermF {matsig}
   open FreeCmat fcmat renaming (arity to carity)
 
-  open Category
+  open Category hiding (_∘_)
   open Functor
   open NaturalBijection
   open _⊣_
@@ -187,23 +189,70 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
     respectsEqTheory1-msetEnvirCold (tmsub-inctx {m}{Γ}{Δ}{rhs} o) f =
       cong mkCofree (funExt λ Ω → funExt λ σ → congS (inctx o $1_) (
         _
-          ≡⟨ {!!} ⟩
-        {!!}
-          ≡⟨ {!!} ⟩
-        {!!}
-          ≡⟨ {!!} ⟩
-        {!!}
-          ≡⟨ {!!} ⟩
-        {!!}
-          ≡⟨ {!!} ⟩
-        {!!}
-          ≡⟨ {!!} ⟩
-        {!!}
-          ≡⟨ {!!} ⟩
-        {!!}
-          ≡⟨ {!!} ⟩
-        {!!}
-          ≡⟨ {!!} ⟩
+          ≡⟨ sym (mapOverSpan∘Idfun
+               (translateJudClosed cmatfnd Δ)
+               (translateJudClosed cmatfnd Ω)
+               _
+               _
+               (carity o)
+             ) ≡$ _ ⟩
+        _
+          ≡⟨ sym (mapOverSpan∘Idfun
+               (translateJudClosed cmatfnd Δ)
+               (translateJudClosed cmatfnd Ω)
+               _
+               _
+               (carity o)
+             ) ≡$ _ ⟩
+        _
+          ≡⟨ congS (λ g → mapOverSpan
+               (translateJudClosed cmatfnd Δ)
+               (translateJudClosed cmatfnd Ω)
+               g
+               (carity o)
+               (tabulateOverLookup (arityCold cmatfnd (inctx o)) λ p → arvarF (fmatHot cmatfnd) (suc p))
+             ) (
+               funExt λ J → funExt λ t → congS (λ σ → _[_⊢_]Cofree
+                 (model1→F-algStr
+                   (fmatHot cmatfnd)
+                   hotAlg1-msetEnvirCold
+                   (translateJudClosed cmatfnd Δ J)
+                   (mapTermF (fmatHot cmatfnd) f (translateJudClosed cmatfnd Δ J) t)
+                   )
+                 _
+                 σ) {!!}
+                 {-
+                 Write τ for f zero
+                 Then we have:
+                 LHS: (τ [ σ ]Cof * _)[ id ]
+                 RHS: (τ [ id ]Cof * _)[ (σ * _)[ id ] ]
+                 -}
+             ) ⟩
+        _
+          ≡⟨ mapOverSpan-∘
+               (translateJudClosed cmatfnd Δ)
+               (translateJudClosed cmatfnd Γ)
+               (translateJudClosed cmatfnd Ω)
+               _
+               _
+               (carity o)
+             ≡$ _ ⟩
+        _
+          ≡⟨ mapOverSpan∘Idfun
+               (translateJudClosed cmatfnd Γ)
+               (translateJudClosed cmatfnd Ω)
+               _
+               _
+               (carity o)
+             ≡$ _ ⟩
+        _
+          ≡⟨ mapOverSpan∘Idfun
+               (translateJudClosed cmatfnd Γ)
+               (translateJudClosed cmatfnd Ω)
+               _
+               _
+               (carity o)
+             ≡$ _ ⟩
         _ ∎
       ))
     respectsEqTheory1-msetEnvirCold (tmsub-mixWhiskerL Θ) f = refl
