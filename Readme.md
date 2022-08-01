@@ -38,28 +38,33 @@ In `Cmat`, we define CMATs (contextual multisorted algebraic theories), as well 
    - the axioms of the source CMAT.
 
 Both translations have the same signature, and are indexed by a CMAT foundation, which determines what are the contexts of the resulting language.
-     
+
 Different parts are added in different places. The following table gives a bit of an overview. It should be read as follows:
+
 - The bold lines are titles,
+
 - Under every bold line we list the operations added there,
+
 - Operations from the left and from above (and from the upper-left) are also inherited,
+
 - "Custom" stands for operations custom to the specific theory at hand.
   
-  | **Custom**            | **CMAT**    | **Cold**                  | **Hot**           |
-  |:--------------------- |:----------- |:------------------------- |:----------------- |
-  | **Operations**        | **`fcmat`** | **`fmatCold`**            | **`fmatHot`**     |
-  | Custom                | `id-jhom`   | `idsub`                   | `tmsub`           |
-  |                       | `comp-jhom` | `compsub`                 |                   |
-  |                       | `whiskerL`  | `mixWhiskerL`             |                   |
-  |                       | `whiskerR`  | `mixWhiskerR`             |                   |
-  | **Equations**         |             |                           | **`matHotTmsub`** |
-  |                       |             |                           | `tmsub-commut`    |
-  |                       |             | **`matColdCat`**          | **`matHotCat`**   |
-  |                       |             | Ctx & sub form a category | `tmsub-id`        |
-  |                       |             |                           | `tmsub-comp`      |
-  | **Equational theory** | **`cmat`**  | **Non-existent**          | **`matHot`**      |
-  | Custom                | Whiskering  |                           | Whiskering        |
-  |                       |             |                           |                   |
+  | **Custom**            | **CMAT**    | **Cold**       | **Hot**           |
+  |:--------------------- |:----------- |:-------------- |:----------------- |
+  | **Operations**        | **`fcmat`** | **`fmatCold`** | **`fmatHot`**     |
+  | Custom                | `id-jhom`   | `idsub`        | `tmsub`           |
+  |                       | `comp-jhom` | `compsub`      |                   |
+  |                       | `whiskerL`  | `mixWhiskerL`  |                   |
+  |                       | `whiskerR`  | `mixWhiskerR`  |                   |
+  | **Equations**         |             |                | **`matHotTmsub`** |
+  |                       |             |                | `tmsub-commut`    |
+  |                       |             |                | **`matHotCat`**   |
+  |                       |             |                | `tmsub-lunit`     |
+  |                       |             |                | `tmsub-runit`     |
+  |                       |             |                | `tmsub-assoc`     |
+  | **Equational theory** | **`cmat`**  |                | **`matHot`**      |
+  | Custom                | Whiskering  |                | Mixed Whiskering  |
+  |                       |             |                |                   |
 
 The setup is as follows:
 
