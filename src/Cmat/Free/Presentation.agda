@@ -165,15 +165,13 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     lhsAxiomHot tmsub-assoc = arvarF zero [ arvarF one ]1 [ arvarF two ]1
     rhsAxiomHot (tmsub-inctx {m} {Γ} {Δ} {rhs} o) =
       cold (inctx o) $1 mapOverSpan
+        {B = TermF (mtyp (arity2mset ((Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o))))}
+        {B' = TermF (mtyp (arity2mset (arityAxiomHot (tmsub-inctx o))))}
         (translateJudClosed cmatfnd Δ)
         (translateJudClosed cmatfnd Γ)
-        (λ J x → varF x [ cold (mixWhiskerR _) $1 arvarF zero ∷ (cold idsub $1 []) ∷ [] ]1)
+        (λ J x → x [ cold (mixWhiskerR _) $1 arvarF zero ∷ (cold idsub $1 []) ∷ [] ]1)
         (arity o)
-        (tabulateOverLookup
-          {B = λ J → (arity2mset ((Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)) J .fst)}
-          (translateArityClosed cmatfnd Δ (arity o))
-          (λ p → suc p , refl)
-        )
+        (tabulateOverLookup (arityCold cmatfnd (inctx o)) (arvarF ∘ suc))
     rhsAxiomHot (tmsub-mixWhiskerL {n} {p} {Ω'} {Ω} Θ {Φ} {Ψ}) =
       cold (mixWhiskerL Θ) $1 arvarF zero ∷ (arvarF one [ arvarF two ]1) ∷ []
     rhsAxiomHot (tmsub-mixWhiskerR {n} {p} {Ω'} {Ω} {Γ} {Δ} Ξ) =

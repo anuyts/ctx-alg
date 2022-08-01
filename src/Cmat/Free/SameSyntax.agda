@@ -53,6 +53,8 @@ module CommonSignature {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFo
      This is akin to Fiore & Szamozvancev's substitution exponential ⦗_,_⦘.
   -}
   record CofreeTypedPsh (S X : MType) (J : Jud cmatfnd) : Type where
+    eta-equality
+    constructor mkCofree
     open Jud J
     field
       _[_⊢_]Cofree : (Δ : Ctx jud'mode) → S (Δ ⊩ sub jud'ctx) → X (Δ ⊩ jud'rhs)
@@ -85,10 +87,10 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
   module _ (msetX : MSet) where
 
     TermHot : MType
-    TermHot = TermQ (matHotTmsub cmatfnd) (mtyp msetX)
+    TermHot = TermQ (matHot cmatfnd) (mtyp msetX)
 
     msetHot : MSet
-    msetHot = msetTermQ (matHotTmsub cmatfnd) msetX
+    msetHot = msetTermQ (matHot cmatfnd) msetX
 
     private
       testHot : TermHot ≡ mtyp msetHot
@@ -181,5 +183,31 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
 
     -- msetEnvirCold respects the equational theory for Term1 hot
 
-    respectsEqTheory1-msetEnvirCold : respectsEqTheory1 (matHotTmsub cmatfnd) hotAlg1-msetEnvirCold
-    respectsEqTheory1-msetEnvirCold (tmsub-commut o) f = {!!}
+    respectsEqTheory1-msetEnvirCold : respectsEqTheory1 (matHot cmatfnd) hotAlg1-msetEnvirCold
+    respectsEqTheory1-msetEnvirCold (tmsub-inctx {m}{Γ}{Δ}{rhs} o) f =
+      cong mkCofree (funExt λ Ω → funExt λ σ → congS (inctx o $1_) (
+        _
+          ≡⟨ {!!} ⟩
+        {!!}
+          ≡⟨ {!!} ⟩
+        {!!}
+          ≡⟨ {!!} ⟩
+        {!!}
+          ≡⟨ {!!} ⟩
+        {!!}
+          ≡⟨ {!!} ⟩
+        {!!}
+          ≡⟨ {!!} ⟩
+        {!!}
+          ≡⟨ {!!} ⟩
+        {!!}
+          ≡⟨ {!!} ⟩
+        {!!}
+          ≡⟨ {!!} ⟩
+        _ ∎
+      ))
+    respectsEqTheory1-msetEnvirCold (tmsub-mixWhiskerL Θ) f = refl
+    respectsEqTheory1-msetEnvirCold (tmsub-mixWhiskerR Ξ) f = refl
+    respectsEqTheory1-msetEnvirCold tmsub-lunit f = refl
+    respectsEqTheory1-msetEnvirCold tmsub-runit f = refl
+    respectsEqTheory1-msetEnvirCold tmsub-assoc f = refl
