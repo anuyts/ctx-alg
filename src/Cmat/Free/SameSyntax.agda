@@ -3,6 +3,9 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.List.Dependent
 
+open import Cubical.Categories.Category
+open import Cubical.Categories.Functor
+open import Cubical.Categories.Adjoint
 open import Cubical.Categories.Instances.FunctorAlgebras
 open import Cubical.Categories.Instances.EilenbergMoore
 
@@ -52,6 +55,12 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
   open TermF {matsig}
   open FreeCmat fcmat
 
+  open Category
+  open Functor
+  open NaturalBijection
+  open _⊣_
+  open AlgebraHom
+
   module _ (msetX : MSet) where
 
     TermHot : MType
@@ -90,14 +99,23 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
     coldAlg1-msetHot = algebra msetHot isColdAlg1-msetHot
 
     -- msetHot is an EM-algebra for TermF cold
+    -- instead prove that inverses are adjoint in the cubical library and compose adjunctions
     coldEMAlgF-msetHot : EMAlgebra (monadTermF (fmatCold cmatfnd))
     coldEMAlgF-msetHot = model1→F (fmatCold cmatfnd) coldAlg1-msetHot
 
     -- we can handle leaves
-    --freeSubst→msetHot
+    substX→termHot : ∀ J → SubstX J → TermHot J
+    substX→termHot J (x [ σ ]Free) = join1Q (term1 tmsub (varQ x ∷ σ ∷ []))
 
-{-
-    heatUp : ∀ {J} → TermCold J → TermHot J
-    heatUp (varF (x [ σ ]Free)) = join1Q (term1 tmsub (varQ x ∷ σ ∷ []))
-    heatUp (join1F (term1 o args)) = join1Q (term1 (cold o) {!!})
--}
+    -- same but viewed as a morphism of MSets
+    msetHom-substX→termHot : catMSet [ msetSubstX , msetHot ]
+    msetHom-substX→termHot = substX→termHot
+
+    -- transpose the morphism under ftrFreeModelF ⊣ ftrForgetModelF
+    emalgHom-termCold→termHot :
+      catModelF (fmatCold cmatfnd) [ ftrFreeModelF (fmatCold cmatfnd) ⟅ msetSubstX ⟆ , coldEMAlgF-msetHot ]
+    emalgHom-termCold→termHot = _♯ (adjModelF (fmatCold cmatfnd)) {msetSubstX} {coldEMAlgF-msetHot} substX→termHot
+
+    -- extract
+    termCold→termHot : ∀ J → TermCold J → TermHot J
+    termCold→termHot = carrierHom emalgHom-termCold→termHot
