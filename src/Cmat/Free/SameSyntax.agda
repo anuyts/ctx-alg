@@ -159,10 +159,12 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
     -- msetEnvirCold is an algebra for Term1 hot
     isHotAlg1-msetEnvirCold : IsAlgebra (ftrTerm1 (fmatHot cmatfnd)) msetEnvirCold
     isHotAlg1-msetEnvirCold J (term1 (tmsub) (t ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree = t [ _ ⊢ τ [ _ ⊢ σ ]Cofree ]Cofree
-    isHotAlg1-msetEnvirCold J (term1 (cold (inctx o)) args) [ Δ ⊢ σ ]Cofree = {!!}
+    isHotAlg1-msetEnvirCold J (term1 (cold (inctx o)) args) [ Δ ⊢ σ ]Cofree =
+      {!inctx o $1 ?!}
     isHotAlg1-msetEnvirCold J (term1 (cold (idsub)) []) [ Δ ⊢ σ ]Cofree = σ
-    isHotAlg1-msetEnvirCold J (term1 (cold (compsub)) (ρ ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree =
-      compsub $1 ρ [ _ ⊢ idsub $1 [] ]Cofree ∷ (τ [ _ ⊢ σ ]Cofree) ∷ []
-    isHotAlg1-msetEnvirCold J (term1 (cold (mixWhiskerL Θ)) (τ ∷ [])) [ Δ ⊢ σ ]Cofree =
-      {!mixWhiskerL Θ $1 ?!}
-    isHotAlg1-msetEnvirCold J (term1 (cold (mixWhiskerR Ξ)) (τ ∷ [])) [ Δ ⊢ σ ]Cofree = {!!}
+    --isHotAlg1-msetEnvirCold J (term1 (cold (compsub)) (ρ ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree =
+    --  compsub $1 ρ [ _ ⊢ idsub $1 [] ]Cofree ∷ (τ [ _ ⊢ σ ]Cofree) ∷ []
+    isHotAlg1-msetEnvirCold J (term1 (cold (mixWhiskerL Θ)) (ρ ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree =
+      mixWhiskerL Θ $1 (ρ [ _ ⊢ idsub $1 [] ]Cofree) ∷ (τ [ _ ⊢ σ ]Cofree) ∷ []
+    isHotAlg1-msetEnvirCold J (term1 (cold (mixWhiskerR Ξ)) (ρ ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree =
+      mixWhiskerR Ξ $1 (ρ [ _ ⊢ idsub $1 [] ]Cofree) ∷ (τ [ _ ⊢ σ ]Cofree) ∷ []
