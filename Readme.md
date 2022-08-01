@@ -72,7 +72,7 @@ The setup is as follows:
    - CMAT foundations, consisting of:
       - a covariant presheaf of contexts over the category of modes and junctors.
          - The translation is called **closed** in general,
-         - The translation is called **open** if the presheaf of contexts is representable.
+         - The translation is called **open** if the presheaf of contexts is representable, meaning that junctors from the representing mode `m0` serve as contexts.
    - the common MAT signature `matsigClosed` of the **cold**/**hot** translation.
 
 - `Cmat.Free.Presentation` defines the presentation of a free CMAT, which is almost a RHS-indexed container, only we get to specify a junctor for every argument of every operator. It also defines two translations:

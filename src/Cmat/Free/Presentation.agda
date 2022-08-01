@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --type-in-type #-}
+{-# OPTIONS --cubical --type-in-type --allow-unsolved-metas #-}
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function

@@ -25,7 +25,10 @@ module Cmat.Signature where
 open Category
 open Functor
 
-{- Instantiators should see to it that the mode can be inferred
+{- Signature of a Cmat presentation.
+   See Readme.md for more info.
+
+   Instantiators should see to it that the mode can be inferred
    from the type of junctors/customRHS. -}
 record CmatSignature : Type where
   no-eta-equality
@@ -61,6 +64,9 @@ record CmatSignature : Type where
   PshCtx : Type
   PshCtx = Functor catModeJunctor (SET _)
 
+  {- Cmat Foundations
+     A Cmat foundation is a presheaf of contexts.
+  -}
   record CmatFoundation : Type where
     constructor cmatfndClosed
     field
@@ -127,6 +133,7 @@ record CmatSignature : Type where
     isGroupoidRHS : isGroupoid (RHS m)
     isGroupoidRHS = {!!} --isOfHLevelRetractFromIso 3 isoRepRHS isGroupoidRepRHS
 
+  -- Judgements will serve as the sorts of the translation to a MAT.
   record Jud (cmatfnd : CmatFoundation) : Type where
     eta-equality
     constructor _⊩_
@@ -142,6 +149,7 @@ record CmatSignature : Type where
 
   infix 5 _⊩_ _⊢_
 
+  -- HLevel of Jud
   module _ (cmatfnd : CmatFoundation) where
       open CmatFoundation cmatfnd
       open _≅_
@@ -171,6 +179,7 @@ record CmatSignature : Type where
   mapCArity' f = map (λ (n , Φ , rhs) → n , Φ , mapRHS' f rhs)
   -}
 
+  -- Representable Cmat foundations
   module _ (m0 : Mode) where
 
     pshYoneda : PshCtx
@@ -190,6 +199,7 @@ record CmatSignature : Type where
     isGroupoidCArity : isGroupoid CArity
     isGroupoidCArity = isOfHLevelList 1 (isGroupoidJud cmatfndOpen)
 
+  -- Closed translation
   module _ (cmatfnd : CmatFoundation) where
     open MatSignature
     open CmatFoundation cmatfnd
@@ -224,6 +234,7 @@ record CmatSignature : Type where
       → lookup (translateArityClosed Γ arity) p0 ≡ translateJudClosed Γ (lookup arity p1)
     lookup-translateArityClosed Γ = lookup-map _
 
+  -- Open translation = closed translation where the CMAT foundation is representable
   module _ (m0 : Mode) where
 
     matsigOpen = matsigClosed (cmatfndOpen m0)
