@@ -16,6 +16,11 @@
   - `mixWhiskerL/R` should not take a substitution
   - `matHot` needs mixed whiskering equations
   - `matCold` should differ from `matHot` only in that `tmsub` applies only to other substitutions
+- CMAT -> MAT:
+  - Closed -> Found
+  - Open -> Levitate
+- SOMAT -> CMAT: List
+- SOMAT -> MAT: Scope
 - Proofs about this
   - `TermF fmatCold (FreePsh X) ~= TermQ matHotTmsub X`
     - Note: free presheaves over `X` involve a circularity!

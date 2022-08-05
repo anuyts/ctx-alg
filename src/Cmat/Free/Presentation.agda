@@ -4,6 +4,8 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Transport
 open import Cubical.Data.Empty
+open import Cubical.Data.Unit
+open import Cubical.Data.Bool
 open import Cubical.Data.List
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
 open import Cubical.Data.List.Dependent
@@ -58,99 +60,115 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
   arity (whiskerL {m} {n} {p} Ξ {Φ} {Ψ}) = (Ξ ⊩ jhom Φ Ψ) ∷ []
   arity (whiskerR {m} {n} {p} {Φ} {Ψ} Ξ) = (◇ ⊩ jhom Φ Ψ) ∷ []
 
-  -- The cold translation
+  -- The hot/cold translation
   module _ (cmatfnd : CmatFoundation) where
 
     open MatSignature (matsigClosed cmatfnd)
     private
       module F = CmatFoundation cmatfnd
 
-    data OperationCold : Jud cmatfnd → Type where
-      inctx : ∀ {m} {Γ : F.Ctx m} {rhs : LoneRHS m} → (o : Operation rhs)
-        → OperationCold (Γ ⊩ translateRHSClosedEmptyContext cmatfnd rhs)
-        -- → OperationCold (translateJudClosed cmatfnd Γ (◇ ⊩ rhs))
-      idsub : ∀ {m} {Γ : F.Ctx m} → OperationCold (Γ ⊩ sub Γ)
-      --compsub : ∀ {m} {Γ Δ Θ : F.Ctx m} → OperationCold (Γ ⊩ sub Θ)
+    data OperationClosed : (heat : Heat) → Jud cmatfnd → Type where
+      inctx : ∀ {heat} {m} {Γ : F.Ctx m} {rhs : LoneRHS m} → (o : Operation rhs)
+        → OperationClosed heat (Γ ⊩ translateRHSClosedEmptyContext cmatfnd rhs)
+        -- → OperationClosed heat (translateJudClosed cmatfnd Γ (◇ ⊩ rhs))
+      idsub : ∀ {heat} {m} {Γ : F.Ctx m} → OperationClosed heat (Γ ⊩ sub Γ)
+      --compsub : ∀ {m} {Γ Δ Θ : F.Ctx m} → OperationClosed heat (Γ ⊩ sub Θ)
       -- The following two involve a delayed substitution from Ω
-      mixWhiskerL : ∀ {n p} {Ω : F.Ctx p} (Θ : F.Ctx n) {Φ Ψ : Junctor n p} → OperationCold (Ω ⊩ sub (Θ F.:⦊ Ψ))
-      mixWhiskerR : ∀ {n p} {Ω : F.Ctx p} {Γ Δ : F.Ctx n} (Ξ : Junctor n p) → OperationCold (Ω ⊩ sub (Δ F.:⦊ Ξ))
+      mixWhiskerL : ∀ {heat} {n p} (Θ : F.Ctx n) {Φ Ψ : Junctor n p} → OperationClosed heat (Θ F.:⦊ Φ ⊩ sub (Θ F.:⦊ Ψ))
+      mixWhiskerR : ∀ {heat} {n p} {Γ Δ : F.Ctx n} (Ξ : Junctor n p) → OperationClosed heat (Γ F.:⦊ Ξ ⊩ sub (Δ F.:⦊ Ξ))
       -- mixWhiskerL t ∘ mixWhiskerR s = mixWhiskerR s ∘ mixWhiskerL (t [ Γ.s ])
       -- mixWhiskerL (whiskerR t) = mixWhiskerR (mixWhiskerL t)
       -- mixWhiskerL respects id-jhom and comp-jhom
       -- mixWhiskerR respects idsub and compsub
       -- mixWhiskerL respects :⦊
       -- mixWhiskerR respects ◇ and ⦊
+      gensub : ∀ {heat} {m} {Γ Δ : F.Ctx m} {rhs : F.RHS m}
+        → {{u : F.Substitutable heat rhs}} → OperationClosed heat (Γ ⊩ rhs)
 
-    isSetOperationCold : ∀ {J} → isSet (OperationCold J)
-    isSetOperationCold = {!!} -- via reflection
+    pattern tmsub = gensub {hot} {{tt}}
+    pattern compsub = gensub {cold} {{tt}}
 
-    arityCold : ∀ {J} → OperationCold J → Arity
-    arityCold (inctx {m} {Γ} {rhs} o) = translateArityClosed cmatfnd Γ (arity o)
-    arityCold idsub = []
-    --arityCold (compsub {m} {Γ} {Δ} {Θ}) = (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub Δ) ∷ []
-    arityCold (mixWhiskerL {n} {p} {Ω} Θ {Φ} {Ψ}) = (Θ ⊩ jhom Φ Ψ) ∷ (Ω ⊩ sub (Θ F.:⦊ Φ)) ∷ []
-    arityCold (mixWhiskerR {n} {p} {Ω} {Γ} {Δ} Ξ) = (Γ ⊩ sub Δ)    ∷ (Ω ⊩ sub (Γ F.:⦊ Ξ)) ∷ []
+    OperationCold = OperationClosed cold
+    OperationHot = OperationClosed hot
 
-    fmatCold : FreeMat (matsigClosed cmatfnd)
-    FreeMat.Operation fmatCold = OperationCold
-    FreeMat.isSetOperation fmatCold = isSetOperationCold
-    FreeMat.arity fmatCold = arityCold
+    isSetOperationClosed : ∀ {heat} {J} → isSet (OperationClosed heat J)
+    isSetOperationClosed = {!!} -- via reflection
+
+    arityClosed : ∀ {heat} {J} → OperationClosed heat J → Arity
+    arityClosed (inctx {heat} {m} {Γ} {rhs} o) = translateArityClosed cmatfnd Γ (arity o)
+    arityClosed idsub = []
+    arityClosed (mixWhiskerL {heat} {n} {p} Θ {Φ} {Ψ}) = (Θ ⊩ jhom Φ Ψ) ∷ []
+    arityClosed (mixWhiskerR {heat} {n} {p} {Γ} {Δ} Ξ) = (Γ ⊩ sub Δ)    ∷ []
+    arityClosed (gensub {heat} {m} {Γ} {Δ} {rhs}) = (Δ ⊩ rhs) ∷ (Γ ⊩ sub Δ) ∷ []
+
+    fmatClosed : Heat → FreeMat (matsigClosed cmatfnd)
+    FreeMat.Operation (fmatClosed heat) = OperationClosed heat
+    FreeMat.isSetOperation (fmatClosed heat) = isSetOperationClosed
+    FreeMat.arity (fmatClosed heat) = arityClosed
+
+    fmatCold = fmatClosed cold
+    fmatHot = fmatClosed hot
+
+    ophomCold→Hot : OpHom fmatCold fmatHot
+    OpHom.F-operation ophomCold→Hot (inctx o) = inctx o
+    OpHom.F-operation ophomCold→Hot idsub = idsub
+    OpHom.F-operation ophomCold→Hot (mixWhiskerL Θ) = mixWhiskerL Θ
+    OpHom.F-operation ophomCold→Hot (mixWhiskerR Ξ) = mixWhiskerR Ξ
+    OpHom.F-operation ophomCold→Hot (gensub {cold} {m} {Γ} {Δ} {rhs}) = gensub {hot} {m} {Γ} {Δ} {rhs}
+    OpHom.F-arity ophomCold→Hot (inctx o) = refl
+    OpHom.F-arity ophomCold→Hot idsub = refl
+    OpHom.F-arity ophomCold→Hot (mixWhiskerL Θ) = refl
+    OpHom.F-arity ophomCold→Hot (mixWhiskerR Ξ) = refl
+    OpHom.F-arity ophomCold→Hot (gensub) = refl
 
     open MatEqTheory
-    open TermF fmatCold
+    private
+      module TermFClosed (heat : Heat) = TermF (fmatClosed heat)
+    open TermFClosed
 
+    pattern _[_]1 t σ = gensub $1 (t ∷ σ ∷ [])
+    infixl 7 _[_]1
+
+    data AxiomClosed : Heat → Jud cmatfnd → Type where
+      gensub-inctx : ∀ {heat} {m} {Γ Δ : F.Ctx m} {rhs : LoneRHS m}
+        {{u : Substitutable _ heat (translateRHSClosedEmptyContext cmatfnd rhs)}} (o : Operation rhs)
+        → AxiomClosed heat (Γ ⊩ translateRHSClosedEmptyContext cmatfnd rhs)
+      gensub-lunit : ∀ {heat} {Γ Δ : F.Ctx m} → AxiomClosed heat (Γ ⊩ sub Δ)
+      gensub-runit : ∀ {heat} {Γ : F.Ctx m} {rhs : F.RHS m} {{u : F.Substitutable heat rhs}} → AxiomClosed heat (Γ ⊩ rhs)
+      gensub-assoc : ∀ {heat} {Γ Δ Θ : F.Ctx m} {rhs : F.RHS m} {{u : F.Substitutable heat rhs}} → AxiomClosed heat (Γ ⊩ rhs)
+
+    arityAxiomClosed : ∀ {heat} {J} → AxiomClosed heat J → Arity
+    arityAxiomClosed (gensub-inctx {heat} {m} {Γ} {Δ} {rhs} o) = (Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)
+    arityAxiomClosed (gensub-lunit {heat} {m}{Γ}{Δ}) = (Γ ⊩ sub Δ) ∷ []
+    arityAxiomClosed (gensub-runit {heat} {m}{Γ}{rhs}) = (Γ ⊩ rhs) ∷ []
+    arityAxiomClosed (gensub-assoc {heat} {m}{Γ}{Δ}{Θ}{rhs}) = (Θ ⊩ rhs) ∷ (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub Δ) ∷ []
+
+    lhsAxiomClosed rhsAxiomClosed : ∀ {heat} {J} → (axiom : AxiomClosed heat J)
+      → TermF heat (mtyp (arity2mset (arityAxiomClosed axiom))) J
+    lhsAxiomClosed (gensub-inctx {heat} {m} {Γ} {Δ} {rhs} o) =
+      (inctx o $1 tabulateOverLookup (arityClosed {heat} (inctx o)) (arvarF _ ∘ suc)) [ arvarF _ zero ]1
+    lhsAxiomClosed gensub-lunit = (idsub $1 []) [ arvarF _ zero ]1
+    lhsAxiomClosed gensub-runit = arvarF _ zero [ idsub $1 [] ]1
+    lhsAxiomClosed gensub-assoc = arvarF _ zero [ arvarF _ one ]1 [ arvarF _ two ]1
+    rhsAxiomClosed (gensub-inctx {heat} {m} {Γ} {Δ} {rhs} o) =
+      inctx o $1 mapOverSpan
+        {B = TermF heat (mtyp (arity2mset ((Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o))))}
+        {B' = TermF heat (mtyp (arity2mset (arityAxiomClosed {heat} (gensub-inctx o))))}
+        (translateJudClosed cmatfnd Δ)
+        (translateJudClosed cmatfnd Γ)
+        (λ J x → {!x [ mixWhiskerR _ $1 arvarF _ zero ∷ [] ]1!})
+        (arity o)
+        {!tabulateOverLookup (arityCold cmatfnd (inctx o)) (arvarF _ ∘ suc)!}
+    rhsAxiomClosed gensub-lunit = arvarF _ zero
+    rhsAxiomClosed gensub-runit = arvarF _ zero
+    rhsAxiomClosed gensub-assoc = arvarF _ zero [ arvarF _ one [ arvarF _ two ]1 ]1
+
+{-
     -- AxiomColdTmsub would be empty
     -- AxiomColdCat would be empty
 
   -- The hot translation
   module _ (cmatfnd : CmatFoundation) where
-
-    open MatSignature (matsigClosed cmatfnd)
-    private
-      module F = CmatFoundation cmatfnd
-
-    data OperationHot : Jud cmatfnd → Type where
-      cold : ∀ {J} → OperationCold cmatfnd J → OperationHot J
-      tmsub : ∀ {m} {Γ Δ : F.Ctx m} {rhs : RHS cmatfnd m} → OperationHot (Γ ⊩ rhs)
-
-    isSetOperationHot : ∀ {J : Jud cmatfnd} → isSet (OperationHot J)
-    isSetOperationHot = {!!}
-
-    arityHot : ∀ {J : Jud cmatfnd} → OperationHot J → Arity
-    arityHot (cold o) = arityCold cmatfnd o
-    arityHot (tmsub {m} {Γ} {Δ} {rhs}) = (Δ ⊩ rhs) ∷ (Γ ⊩ sub Δ) ∷ []
-
-    fmatHot : FreeMat (matsigClosed cmatfnd)
-    FreeMat.Operation fmatHot = OperationHot
-    FreeMat.isSetOperation fmatHot = isSetOperationHot
-    FreeMat.arity fmatHot = arityHot
-
-    ophomCold→Hot : OpHom (fmatCold cmatfnd) fmatHot
-    OpHom.F-operation ophomCold→Hot = cold
-    OpHom.F-arity ophomCold→Hot o = refl
-
-    open MatEqTheory
-    open TermF fmatHot
-
-    pattern _[_]1 t σ = tmsub $1 (t ∷ σ ∷ [])
-    infixl 7 _[_]1
-
-    data AxiomHot : Jud cmatfnd → Type where
-      tmsub-inctx : ∀ {m} {Γ Δ : F.Ctx m} {rhs : LoneRHS m} (o : Operation rhs)
-        → AxiomHot (Γ ⊩ translateRHSClosedEmptyContext cmatfnd rhs)
-      tmsub-mixWhiskerL : ∀ {n p} {Ω' Ω : F.Ctx p} (Θ : F.Ctx n) {Φ Ψ : Junctor n p} → AxiomHot (Ω' ⊩ sub (Θ F.:⦊ Ψ))
-      tmsub-mixWhiskerR : ∀ {n p} {Ω' Ω : F.Ctx p} {Γ Δ : F.Ctx n} (Ξ : Junctor n p) → AxiomHot (Ω' ⊩ sub (Δ F.:⦊ Ξ))
-      tmsub-lunit : ∀ {Γ Δ : F.Ctx m} → AxiomHot (Γ ⊩ sub Δ)
-      tmsub-runit : ∀ {Γ : F.Ctx m} {rhs : F.RHS m} → AxiomHot (Γ ⊩ rhs)
-      tmsub-assoc : ∀ {Γ Δ Θ : F.Ctx m} {rhs : F.RHS m} → AxiomHot (Γ ⊩ rhs)
-
-    arityAxiomHot : ∀{J} → AxiomHot J → Arity
-    arityAxiomHot (tmsub-inctx {m} {Γ} {Δ} {rhs} o) = (Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)
-    arityAxiomHot (tmsub-mixWhiskerL {n} {p} {Ω'} {Ω} Θ {Φ} {Ψ}) = (Θ ⊩ jhom Φ Ψ) ∷ (Ω ⊩ sub (Θ F.:⦊ Φ)) ∷ (Ω' ⊩ sub Ω) ∷ []
-    arityAxiomHot (tmsub-mixWhiskerR {n} {p} {Ω'} {Ω} {Γ} {Δ} Ξ) = (Γ ⊩ sub Δ)    ∷ (Ω ⊩ sub (Γ F.:⦊ Ξ)) ∷ (Ω' ⊩ sub Ω) ∷ []
-    arityAxiomHot (tmsub-lunit {m}{Γ}{Δ}) = (Γ ⊩ sub Δ) ∷ []
-    arityAxiomHot (tmsub-runit {m}{Γ}{rhs}) = (Γ ⊩ rhs) ∷ []
-    arityAxiomHot (tmsub-assoc {m}{Γ}{Δ}{Θ}{rhs}) = (Θ ⊩ rhs) ∷ (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub Δ) ∷ []
 
     lhsAxiomHot rhsAxiomHot : ∀ {J} → (axiom : AxiomHot J)
       → TermF (mtyp (arity2mset (arityAxiomHot axiom))) J
@@ -189,3 +207,4 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     matHot : Mat (matsigClosed cmatfnd)
     Mat.getFreeMat matHot = fmatHot
     Mat.getMatEqTheory matHot = eqTheoryHot
+-}

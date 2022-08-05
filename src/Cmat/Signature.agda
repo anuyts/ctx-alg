@@ -4,6 +4,9 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism renaming (Iso to _≅_)
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Transport
+open import Cubical.Data.Empty
+open import Cubical.Data.Unit
+open import Cubical.Data.Bool
 open import Cubical.Data.Nat
 open import Cubical.Data.Sum hiding (map)
 open import Cubical.Data.Sigma
@@ -24,6 +27,10 @@ module Cmat.Signature where
 
 open Category
 open Functor
+
+Heat = Bool
+pattern hot = true
+pattern cold = false
 
 {- Signature of a Cmat presentation.
    See Readme.md for more info.
@@ -93,6 +100,17 @@ record CmatSignature : Type where
 
     RHS : Mode → Type
     RHS m = RHS' CustomRHS m
+
+    Substitutable : Heat → ∀ {m} → RHS m → Type
+    Substitutable cold (custom crhs) = ⊥
+    Substitutable cold (jhom Ψ Φ) = ⊥
+    Substitutable cold (sub x) = Unit
+    Substitutable hot rhs = Unit
+
+    instance
+      subSubstitutable : ∀ {heat} {m} {Γ : Ctx m} → Substitutable heat (sub Γ)
+      subSubstitutable {cold} = tt
+      subSubstitutable {hot} = tt
 
     module _ where
       open _≅_
@@ -226,6 +244,12 @@ record CmatSignature : Type where
     translateRHSClosedEmptyContext (CmatFoundation.jhom Ψ Φ) = jhom Ψ Φ
     translateRHSClosedEmptyContext (CmatFoundation.sub Ψ) = jhom ◇ Ψ
 
+    {-instance
+      translateRHSSubstitutable→translateJudSubstitutable :
+        ∀ {heat} {Γ : Ctx m} {J : Jud (cmatfndOpen m)}
+        → {{u : Substitutable heat {!translateRHSClosedEmptyContext {!jud'rhs J!}!}}}
+        → Substitutable heat (jud'rhs (translateJudClosed Γ J))
+-}
     translateArityClosed : (Γ : Ctx m) → CArity m → Arity matsigClosed
     translateArityClosed Γ = map (translateJudClosed Γ)
 
