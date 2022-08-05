@@ -4,6 +4,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism renaming (Iso to _≅_)
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Transport
+import Cubical.Foundations.Id as Id
 open import Cubical.Data.Empty
 open import Cubical.Data.Unit
 open import Cubical.Data.Bool
@@ -28,7 +29,7 @@ module Cmat.Signature where
 open Category
 open Functor
 
-Heat = Bool
+Temp = Bool
 pattern hot = true
 pattern cold = false
 
@@ -101,14 +102,14 @@ record CmatSignature : Type where
     RHS : Mode → Type
     RHS m = RHS' CustomRHS m
 
-    Substitutable : Heat → ∀ {m} → RHS m → Type
+    Substitutable : Temp → ∀ {m} → RHS m → Type
     Substitutable cold (custom crhs) = ⊥
     Substitutable cold (jhom Ψ Φ) = ⊥
     Substitutable cold (sub x) = Unit
     Substitutable hot rhs = Unit
 
     instance
-      subSubstitutable : ∀ {heat} {m} {Γ : Ctx m} → Substitutable heat (sub Γ)
+      subSubstitutable : ∀ {temp} {m} {Γ : Ctx m} → Substitutable temp (sub Γ)
       subSubstitutable {cold} = tt
       subSubstitutable {hot} = tt
 
@@ -244,12 +245,14 @@ record CmatSignature : Type where
     translateRHSClosedEmptyContext (CmatFoundation.jhom Ψ Φ) = jhom Ψ Φ
     translateRHSClosedEmptyContext (CmatFoundation.sub Ψ) = jhom ◇ Ψ
 
-    {-instance
-      translateRHSSubstitutable→translateJudSubstitutable :
-        ∀ {heat} {Γ : Ctx m} {J : Jud (cmatfndOpen m)}
-        → {{u : Substitutable heat {!translateRHSClosedEmptyContext {!jud'rhs J!}!}}}
-        → Substitutable heat (jud'rhs (translateJudClosed Γ J))
--}
+    translateRHSSubstitutable→hot :
+        ∀ {temp} {m} {Γ : Ctx m} {rhs : CmatFoundation.RHS (cmatfndOpen m) m}
+        → Substitutable temp (translateRHSClosedEmptyContext rhs)
+        → temp Id.≡ hot
+    translateRHSSubstitutable→hot {hot} {rhs = CmatFoundation.custom crhs} u = Id.refl
+    translateRHSSubstitutable→hot {hot} {rhs = CmatFoundation.jhom Ψ Φ} u = Id.refl
+    translateRHSSubstitutable→hot {hot} {rhs = CmatFoundation.sub x} u = Id.refl
+
     translateArityClosed : (Γ : Ctx m) → CArity m → Arity matsigClosed
     translateArityClosed Γ = map (translateJudClosed Γ)
 
