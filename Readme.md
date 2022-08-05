@@ -49,23 +49,23 @@ Different parts are added in different places. The following table gives a bit o
 
 - "Custom" stands for operations custom to the specific theory at hand.
   
-  | **Custom**            | **CMAT**    | **Cold**       | **Hot**                 |
-  |:--------------------- |:----------- |:-------------- |:----------------------- |
-  | **Operations**        | **`fcmat`** | **`fmatCold`** | **`fmatHot`**           |
-  | Custom                | `id-jhom`   | `idsub`        | `tmsub`                 |
-  |                       | `comp-jhom` | `compsub`      |                         |
-  |                       | `whiskerL`  | `mixWhiskerL`  |                         |
-  |                       | `whiskerR`  | `mixWhiskerR`  |                         |
-  | **Equations**         |             |                | **`matHot`**            |
-  |                       |             |                | `tmsub-commut`          |
-  |                       |             |                | **`tmsub-mixWhiskerL`** |
-  |                       |             |                | **`tmsub-mixWhiskerR`** |
-  |                       |             |                | `tmsub-lunit`           |
-  |                       |             |                | `tmsub-runit`           |
-  |                       |             |                | `tmsub-assoc`           |
-  | **Equational theory** | **`cmat`**  |                | **`matHot`**            |
-  | Custom                | Whiskering  |                | Mixed Whiskering        |
-  |                       |             |                |                         |
+  | **Custom**            | **CMAT**    | **Cold**         | **Hot**        |
+  |:--------------------- |:----------- |:---------------- |:-------------- |
+  | **Operations**        | **`fcmat`** | **`fmatCold`**   | **`fmatHot`**  |
+  | Custom                | `id-jhom`   | `idsub`          |                |
+  |                       |             | `gensub` =       | `gensub` =     |
+  |                       | `comp-jhom` | `compsub`        | `tmsub`        |
+  |                       | `whiskerL`  | `mixWhiskerL`    |                |
+  |                       | `whiskerR`  | `mixWhiskerR`    |                |
+  | **Equations**         |             | **`matCold`**    | **`matHot`**   |
+  |                       |             |                  | `tmsub-inctx`  |
+  |                       |             | `compsub-lunit`  |                |
+  |                       |             | `compsub-runit`  | `tmsub-runit`  |
+  |                       |             | `compsub-assoc`  | `tmsub-assoc`  |
+  |                       |             | Mixed whiskering |                |
+  |                       |             | except 1 law     |                |
+  | **Equational theory** | **`cmat`**  |                  | **`matHotEq`** |
+  | Custom                | Whiskering  |                  | 1 mixed wh law |
 
 The setup is as follows:
 

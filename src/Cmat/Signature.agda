@@ -69,6 +69,13 @@ record CmatSignature : Type where
   ◇ : Junctor m m
   ◇ = id catModeJunctor
 
+  ⦊IdL : {m n : Mode} (Φ : Junctor m n) → ◇ ⦊ Φ ≡ Φ
+  ⦊IdL = ⋆IdL catModeJunctor
+  ⦊IdR : {m n : Mode} (Φ : Junctor m n) → Φ ⦊ ◇ ≡ Φ
+  ⦊IdR = ⋆IdR catModeJunctor
+  ⦊Assoc : {m n o p : Mode} (Φ : Junctor m n) (Ψ : Junctor n o) (Ξ : Junctor o p) → (Φ ⦊ Ψ) ⦊ Ξ ≡ Φ ⦊ (Ψ ⦊ Ξ)
+  ⦊Assoc = ⋆Assoc catModeJunctor
+
   PshCtx : Type
   PshCtx = Functor catModeJunctor (SET _)
 
@@ -76,6 +83,7 @@ record CmatSignature : Type where
      A Cmat foundation is a presheaf of contexts.
   -}
   record CmatFoundation : Type where
+    no-eta-equality
     constructor cmatfndClosed
     field
       pshCtx : PshCtx
@@ -88,6 +96,11 @@ record CmatSignature : Type where
 
     _:⦊_ : Ctx m → Junctor m n → Ctx n
     Γ :⦊ Ψ = F-hom pshCtx Ψ Γ
+
+    :⦊IdR : {n : Mode} (Γ : Ctx n) → Γ :⦊ ◇ ≡ Γ
+    :⦊IdR Γ = F-id pshCtx ≡$ Γ
+    :⦊Assoc : {n o p : Mode} (Γ : Ctx n) (Ψ : Junctor n o) (Ξ : Junctor o p) → (Γ :⦊ Ψ) :⦊ Ξ ≡ Γ :⦊ (Ψ ⦊ Ξ)
+    :⦊Assoc Γ Ψ Ξ = sym (F-seq pshCtx Ψ Ξ ≡$ Γ)
 
     data RHS' (X : Mode → Type) (m : Mode) : Type where
       custom : (crhs : X m) → RHS' X m
