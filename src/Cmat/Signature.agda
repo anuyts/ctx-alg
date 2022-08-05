@@ -84,7 +84,7 @@ record CmatSignature : Type where
   -}
   record CmatFoundation : Type where
     no-eta-equality
-    constructor cmatfndClosed
+    constructor cmatfndSettled
     field
       pshCtx : PshCtx
 
@@ -217,76 +217,76 @@ record CmatSignature : Type where
     pshYoneda : PshCtx
     pshYoneda = funcComp (HomFunctor catModeJunctor) (rinj _ _ m0)
 
-    cmatfndOpen : CmatFoundation
-    cmatfndOpen = cmatfndClosed pshYoneda
+    cmatfndLevitated : CmatFoundation
+    cmatfndLevitated = cmatfndSettled pshYoneda
 
-    open CmatFoundation cmatfndOpen
+    open CmatFoundation cmatfndLevitated
 
-    JudOpen : Type
-    JudOpen = Jud cmatfndOpen
+    JudLevitated : Type
+    JudLevitated = Jud cmatfndLevitated
 
     CArity : Type
-    CArity = List JudOpen
+    CArity = List JudLevitated
 
     isGroupoidCArity : isGroupoid CArity
-    isGroupoidCArity = isOfHLevelList 1 (isGroupoidJud cmatfndOpen)
+    isGroupoidCArity = isOfHLevelList 1 (isGroupoidJud cmatfndLevitated)
 
-  -- Closed translation
+  -- Settled translation
   module _ (cmatfnd : CmatFoundation) where
     open MatSignature
     open CmatFoundation cmatfnd
 
     {- The signature of the MAT translation.
     -}
-    matsigClosed : MatSignature
-    Sort matsigClosed = Jud cmatfnd
-    isGroupoidSort matsigClosed = isGroupoidJud cmatfnd
+    matsigSettled : MatSignature
+    Sort matsigSettled = Jud cmatfnd
+    isGroupoidSort matsigSettled = isGroupoidJud cmatfnd
 
-    pretranslateJudClosed : Jud (cmatfndOpen m) → Σ[ n ∈ Mode ] (Junctor m n) × RHS n
-    pretranslateJudClosed (Φ ⊢ crhs) = _ , Φ , custom crhs
-    pretranslateJudClosed (Φ ⊩ CmatFoundation.jhom Ψ Ξ) = _ , Φ , jhom Ψ Ξ
-    pretranslateJudClosed (Φ ⊩ CmatFoundation.sub Ψ) = _ , ◇ , jhom Φ Ψ
+    pretranslateJudSettled : Jud (cmatfndLevitated m) → Σ[ n ∈ Mode ] (Junctor m n) × RHS n
+    pretranslateJudSettled (Φ ⊢ crhs) = _ , Φ , custom crhs
+    pretranslateJudSettled (Φ ⊩ CmatFoundation.jhom Ψ Ξ) = _ , Φ , jhom Ψ Ξ
+    pretranslateJudSettled (Φ ⊩ CmatFoundation.sub Ψ) = _ , ◇ , jhom Φ Ψ
 
-    translateJudClosed : (Γ : Ctx m) → Jud (cmatfndOpen m) → Jud cmatfnd
-    translateJudClosed Γ J =
-      let (n , Φ , rhs) = pretranslateJudClosed J
+    translateJudSettled : (Γ : Ctx m) → Jud (cmatfndLevitated m) → Jud cmatfnd
+    translateJudSettled Γ J =
+      let (n , Φ , rhs) = pretranslateJudSettled J
       in Γ :⦊ Φ ⊩ rhs
 
     -- Special case when the context is empty; we can then simplify Γ :⦊ ◇ to Γ.
-    translateRHSClosedEmptyContext : CmatFoundation.RHS (cmatfndOpen m) m → RHS m
-    translateRHSClosedEmptyContext (CmatFoundation.custom crhs) = custom crhs
-    translateRHSClosedEmptyContext (CmatFoundation.jhom Ψ Φ) = jhom Ψ Φ
-    translateRHSClosedEmptyContext (CmatFoundation.sub Ψ) = jhom ◇ Ψ
+    translateRHSSettledEmptyContext : CmatFoundation.RHS (cmatfndLevitated m) m → RHS m
+    translateRHSSettledEmptyContext (CmatFoundation.custom crhs) = custom crhs
+    translateRHSSettledEmptyContext (CmatFoundation.jhom Ψ Φ) = jhom Ψ Φ
+    translateRHSSettledEmptyContext (CmatFoundation.sub Ψ) = jhom ◇ Ψ
 
     translateRHSSubstitutable→hot :
-        ∀ {temp} {m} {Γ : Ctx m} {rhs : CmatFoundation.RHS (cmatfndOpen m) m}
-        → Substitutable temp (translateRHSClosedEmptyContext rhs)
+        ∀ {temp} {m} {Γ : Ctx m} {rhs : CmatFoundation.RHS (cmatfndLevitated m) m}
+        → Substitutable temp (translateRHSSettledEmptyContext rhs)
         → temp Id.≡ hot
     translateRHSSubstitutable→hot {hot} {rhs = CmatFoundation.custom crhs} u = Id.refl
     translateRHSSubstitutable→hot {hot} {rhs = CmatFoundation.jhom Ψ Φ} u = Id.refl
     translateRHSSubstitutable→hot {hot} {rhs = CmatFoundation.sub x} u = Id.refl
 
-    translateArityClosed : (Γ : Ctx m) → CArity m → Arity matsigClosed
-    translateArityClosed Γ = map (translateJudClosed Γ)
+    translateAritySettled : (Γ : Ctx m) → CArity m → Arity matsigSettled
+    translateAritySettled Γ = map (translateJudSettled Γ)
 
-    length-translateArityClosed : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
-      → length (translateArityClosed Γ arity) ≡ length arity
-    length-translateArityClosed Γ = length-map _
+    length-translateAritySettled : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
+      → length (translateAritySettled Γ arity) ≡ length arity
+    length-translateAritySettled Γ = length-map _
 
-    lookup-translateArityClosed : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
-      → (p0 : Fin (length (translateArityClosed Γ arity)))
+    lookup-translateAritySettled : ∀ {m} (Γ : Ctx m) → (arity : CArity m)
+      → (p0 : Fin (length (translateAritySettled Γ arity)))
       → (p1 : Fin (length arity))
-      → (p : PathP (λ i → Fin (length-translateArityClosed Γ arity i)) p0 p1)
-      → lookup (translateArityClosed Γ arity) p0 ≡ translateJudClosed Γ (lookup arity p1)
-    lookup-translateArityClosed Γ = lookup-map _
+      → (p : PathP (λ i → Fin (length-translateAritySettled Γ arity i)) p0 p1)
+      → lookup (translateAritySettled Γ arity) p0 ≡ translateJudSettled Γ (lookup arity p1)
+    lookup-translateAritySettled Γ = lookup-map _
 
-  -- Open translation = closed translation where the CMAT foundation is representable
+  -- Levitated translation = closed translation where the CMAT foundation is representable
   module _ (m0 : Mode) where
 
-    matsigOpen = matsigClosed (cmatfndOpen m0)
+    matsigLevitated = matsigSettled (cmatfndLevitated m0)
 
-    translateArityOpen = translateArityClosed (cmatfndOpen m0)
+    translateArityLevitated = translateAritySettled (cmatfndLevitated m0)
 
-    length-translateArityOpen = length-translateArityClosed (cmatfndOpen m0)
+    length-translateArityLevitated = length-translateAritySettled (cmatfndLevitated m0)
 
-    lookup-translateArityOpen = lookup-translateArityClosed (cmatfndOpen m0)
+    lookup-translateArityLevitated = lookup-translateAritySettled (cmatfndLevitated m0)

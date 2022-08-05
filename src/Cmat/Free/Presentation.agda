@@ -30,7 +30,7 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
   -- Basically a judgement whose context is the identity junctor:
   -- ◇ ⊩ rhs @ m
   LoneRHS : Mode → Type
-  LoneRHS m = RHS (cmatfndOpen m) m
+  LoneRHS m = RHS (cmatfndLevitated m) m
 
   field
     CustomOperation : ∀ {m} → LoneRHS m → Type
@@ -66,43 +66,43 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
   -- The hot/cold translation
   module _ (cmatfnd : CmatFoundation) where
 
-    open MatSignature (matsigClosed cmatfnd)
+    open MatSignature (matsigSettled cmatfnd)
     private
       module F = CmatFoundation cmatfnd
 
-    data OperationClosed : (temp : Temp) → Jud cmatfnd → Type where
+    data OperationSettled : (temp : Temp) → Jud cmatfnd → Type where
       inctx : ∀ {temp} {m} {Γ : F.Ctx m} {rhs : LoneRHS m} → (o : Operation rhs)
-        → OperationClosed temp (Γ ⊩ translateRHSClosedEmptyContext cmatfnd rhs)
-        -- → OperationClosed temp (translateJudClosed cmatfnd Γ (◇ ⊩ rhs))
-      idsub : ∀ {temp} {m} {Γ : F.Ctx m} → OperationClosed temp (Γ ⊩ sub Γ)
-      mixWhiskerL : ∀ {temp} {n p} (Θ : F.Ctx n) {Φ Ψ : Junctor n p} → OperationClosed temp (Θ F.:⦊ Φ ⊩ sub (Θ F.:⦊ Ψ))
-      mixWhiskerR : ∀ {temp} {n p} {Γ Δ : F.Ctx n} (Ξ : Junctor n p) → OperationClosed temp (Γ F.:⦊ Ξ ⊩ sub (Δ F.:⦊ Ξ))
+        → OperationSettled temp (Γ ⊩ translateRHSSettledEmptyContext cmatfnd rhs)
+        -- → OperationSettled temp (translateJudSettled cmatfnd Γ (◇ ⊩ rhs))
+      idsub : ∀ {temp} {m} {Γ : F.Ctx m} → OperationSettled temp (Γ ⊩ sub Γ)
+      mixWhiskerL : ∀ {temp} {n p} (Θ : F.Ctx n) {Φ Ψ : Junctor n p} → OperationSettled temp (Θ F.:⦊ Φ ⊩ sub (Θ F.:⦊ Ψ))
+      mixWhiskerR : ∀ {temp} {n p} {Γ Δ : F.Ctx n} (Ξ : Junctor n p) → OperationSettled temp (Γ F.:⦊ Ξ ⊩ sub (Δ F.:⦊ Ξ))
       gensub : ∀ {temp} {m} {Γ Δ : F.Ctx m} {rhs : F.RHS m}
-        → {{u : F.Substitutable temp rhs}} → OperationClosed temp (Γ ⊩ rhs)
+        → {{u : F.Substitutable temp rhs}} → OperationSettled temp (Γ ⊩ rhs)
 
     pattern tmsub = gensub {hot} {{tt}}
     pattern compsub = gensub {rhs = sub _}
 
-    OperationCold = OperationClosed cold
-    OperationHot = OperationClosed hot
+    OperationCold = OperationSettled cold
+    OperationHot = OperationSettled hot
 
-    isSetOperationClosed : ∀ {temp} {J} → isSet (OperationClosed temp J)
-    isSetOperationClosed = {!!} -- via reflection
+    isSetOperationSettled : ∀ {temp} {J} → isSet (OperationSettled temp J)
+    isSetOperationSettled = {!!} -- via reflection
 
-    arityClosed : ∀ {temp} {J} → OperationClosed temp J → Arity
-    arityClosed (inctx {temp} {m} {Γ} {rhs} o) = translateArityClosed cmatfnd Γ (arity o)
-    arityClosed idsub = []
-    arityClosed (mixWhiskerL {temp} {n} {p} Θ {Φ} {Ψ}) = (Θ ⊩ jhom Φ Ψ) ∷ []
-    arityClosed (mixWhiskerR {temp} {n} {p} {Γ} {Δ} Ξ) = (Γ ⊩ sub Δ)    ∷ []
-    arityClosed (gensub {temp} {m} {Γ} {Δ} {rhs}) = (Δ ⊩ rhs) ∷ (Γ ⊩ sub Δ) ∷ []
+    aritySettled : ∀ {temp} {J} → OperationSettled temp J → Arity
+    aritySettled (inctx {temp} {m} {Γ} {rhs} o) = translateAritySettled cmatfnd Γ (arity o)
+    aritySettled idsub = []
+    aritySettled (mixWhiskerL {temp} {n} {p} Θ {Φ} {Ψ}) = (Θ ⊩ jhom Φ Ψ) ∷ []
+    aritySettled (mixWhiskerR {temp} {n} {p} {Γ} {Δ} Ξ) = (Γ ⊩ sub Δ)    ∷ []
+    aritySettled (gensub {temp} {m} {Γ} {Δ} {rhs}) = (Δ ⊩ rhs) ∷ (Γ ⊩ sub Δ) ∷ []
 
-    fmatClosed : Temp → FreeMat (matsigClosed cmatfnd)
-    FreeMat.Operation (fmatClosed temp) = OperationClosed temp
-    FreeMat.isSetOperation (fmatClosed temp) = isSetOperationClosed
-    FreeMat.arity (fmatClosed temp) = arityClosed
+    fmatSettled : Temp → FreeMat (matsigSettled cmatfnd)
+    FreeMat.Operation (fmatSettled temp) = OperationSettled temp
+    FreeMat.isSetOperation (fmatSettled temp) = isSetOperationSettled
+    FreeMat.arity (fmatSettled temp) = aritySettled
 
-    fmatCold = fmatClosed cold
-    fmatHot = fmatClosed hot
+    fmatCold = fmatSettled cold
+    fmatHot = fmatSettled hot
 
     ophomCold→Hot : OpHom fmatCold fmatHot
     OpHom.F-operation ophomCold→Hot (inctx o) = inctx o
@@ -118,8 +118,8 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
 
     open MatEqTheory
     private
-      module TermFClosed (temp : Temp) = TermF (fmatClosed temp)
-    open TermFClosed
+      module TermFSettled (temp : Temp) = TermF (fmatSettled temp)
+    open TermFSettled
 
     substCtxRHS⁻ : ∀ {heat} {m} {X} {Γ Γ' : F.Ctx m} {rhs rhs'}
       → Γ ≡ Γ'
@@ -143,135 +143,135 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     pattern _[_]1 t σ = gensub $1 (t ∷ σ ∷ [])
     infixl 7 _[_]1
 
-    data AxiomClosed : Temp → Jud cmatfnd → Type where
+    data AxiomSettled : Temp → Jud cmatfnd → Type where
       -- The output of tmsub-inctx has a translated rhs, which is never a sub.
       -- Therefore, for it to be substitutable, we need to be in the hot case.
       gensub-inctx : ∀ {m} {Γ Δ : F.Ctx m} {rhs : LoneRHS m} (o : Operation rhs)
-        → AxiomClosed hot (Γ ⊩ translateRHSClosedEmptyContext cmatfnd rhs)
-      gensub-lunit : ∀ {temp} {Γ Δ : F.Ctx m} → AxiomClosed temp (Γ ⊩ sub Δ)
-      gensub-runit : ∀ {temp} {Γ : F.Ctx m} {rhs : F.RHS m} {{u : F.Substitutable temp rhs}} → AxiomClosed temp (Γ ⊩ rhs)
-      gensub-assoc : ∀ {temp} {Γ Δ Θ : F.Ctx m} {rhs : F.RHS m} {{u : F.Substitutable temp rhs}} → AxiomClosed temp (Γ ⊩ rhs)
+        → AxiomSettled hot (Γ ⊩ translateRHSSettledEmptyContext cmatfnd rhs)
+      gensub-lunit : ∀ {temp} {Γ Δ : F.Ctx m} → AxiomSettled temp (Γ ⊩ sub Δ)
+      gensub-runit : ∀ {temp} {Γ : F.Ctx m} {rhs : F.RHS m} {{u : F.Substitutable temp rhs}} → AxiomSettled temp (Γ ⊩ rhs)
+      gensub-assoc : ∀ {temp} {Γ Δ Θ : F.Ctx m} {rhs : F.RHS m} {{u : F.Substitutable temp rhs}} → AxiomSettled temp (Γ ⊩ rhs)
       -- mixWhiskerL t ∘ mixWhiskerR s = mixWhiskerR s ∘ mixWhiskerL (t [ Γ.s ])
       -- We cannot yet state this, because we cannot substitute t in the cold model.
       -- This will be added together with the custom rules that can also refer to substitution.
-      --gensub-mixWhiskerLR : ∀ {temp} {Γ Δ : F.Ctx m} {Φ Ψ : Junctor m n} → AxiomClosed temp (Γ F.:⦊ Φ ⊩ sub (Δ F.:⦊ Ψ))
+      --gensub-mixWhiskerLR : ∀ {temp} {Γ Δ : F.Ctx m} {Φ Ψ : Junctor m n} → AxiomSettled temp (Γ F.:⦊ Φ ⊩ sub (Δ F.:⦊ Ψ))
       -- mixWhiskerL (whiskerR t) = mixWhiskerR (mixWhiskerL t)
       mixWhiskerL-whiskerR : ∀ {temp} {m n o : Mode} {Γ : F.Ctx m} {Φ Ψ : Junctor m n} {Ξ : Junctor n o}
-        → AxiomClosed temp (Γ F.:⦊ (Φ ⦊ Ξ) ⊩ sub (Γ F.:⦊ (Ψ ⦊ Ξ)))
+        → AxiomSettled temp (Γ F.:⦊ (Φ ⦊ Ξ) ⊩ sub (Γ F.:⦊ (Ψ ⦊ Ξ)))
       -- mixWhiskerL respects idJHom and compJHom
       mixWhiskerL-idJHom : ∀ {temp} {m n : Mode} {Γ : F.Ctx m} {Φ : Junctor m n}
-        → AxiomClosed temp ((Γ F.:⦊ Φ) ⊩ sub (Γ F.:⦊ Φ))
+        → AxiomSettled temp ((Γ F.:⦊ Φ) ⊩ sub (Γ F.:⦊ Φ))
       mixWhiskerL-compJHom : ∀ {temp} {m n : Mode} {Γ : F.Ctx m} {Φ Ψ Ξ : Junctor m n}
-        → AxiomClosed temp ((Γ F.:⦊ Φ) ⊩ sub (Γ F.:⦊ Ξ))
+        → AxiomSettled temp ((Γ F.:⦊ Φ) ⊩ sub (Γ F.:⦊ Ξ))
       -- mixWhiskerR respects idsub and compsub
       mixWhiskerR-idsub : ∀ {temp} {m n : Mode} {Γ : F.Ctx m} {Φ : Junctor m n}
-        → AxiomClosed temp ((Γ F.:⦊ Φ) ⊩ sub (Γ F.:⦊ Φ))
+        → AxiomSettled temp ((Γ F.:⦊ Φ) ⊩ sub (Γ F.:⦊ Φ))
       mixWhiskerR-compsub : ∀ {temp} {m n : Mode} {Γ Δ Θ : F.Ctx m} {Φ : Junctor m n}
-        → AxiomClosed temp ((Γ F.:⦊ Φ) ⊩ sub (Θ F.:⦊ Φ))
+        → AxiomSettled temp ((Γ F.:⦊ Φ) ⊩ sub (Θ F.:⦊ Φ))
       -- mixWhiskerL respects :⦊
       mixWhiskerL-:⦊ : ∀ {temp} {m n o : Mode} {Γ : F.Ctx m} {Φ : Junctor m n} {Ψ Ξ : Junctor n o}
-        → AxiomClosed temp ((Γ F.:⦊ Φ) F.:⦊ Ψ ⊩ sub ((Γ F.:⦊ Φ) F.:⦊ Ξ))
+        → AxiomSettled temp ((Γ F.:⦊ Φ) F.:⦊ Ψ ⊩ sub ((Γ F.:⦊ Φ) F.:⦊ Ξ))
       -- mixWhiskerR respects ◇ and ⦊
       mixWhiskerR-◇ : ∀ {temp} {m : Mode} {Γ Δ : F.Ctx m}
-        → AxiomClosed temp (Γ F.:⦊ ◇ ⊩ sub (Δ F.:⦊ ◇))
+        → AxiomSettled temp (Γ F.:⦊ ◇ ⊩ sub (Δ F.:⦊ ◇))
       mixWhiskerR-⦊ : ∀ {temp} {m n o : Mode} {Γ Δ : F.Ctx m} {Φ : Junctor m n} {Ψ : Junctor n o}
-        → AxiomClosed temp (Γ F.:⦊ (Φ ⦊ Ψ) ⊩ sub (Δ F.:⦊ (Φ ⦊ Ψ)))
+        → AxiomSettled temp (Γ F.:⦊ (Φ ⦊ Ψ) ⊩ sub (Δ F.:⦊ (Φ ⦊ Ψ)))
 
-    AxiomCold = AxiomClosed cold
-    AxiomHot = AxiomClosed hot
+    AxiomCold = AxiomSettled cold
+    AxiomHot = AxiomSettled hot
 
-    arityAxiomClosed : ∀ {temp} {J} → AxiomClosed temp J → Arity
-    arityAxiomClosed (gensub-inctx {m} {Γ} {Δ} {rhs} o) = (Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o)
-    arityAxiomClosed (gensub-lunit {temp} {m}{Γ}{Δ}) = (Γ ⊩ sub Δ) ∷ []
-    arityAxiomClosed (gensub-runit {temp} {m}{Γ}{rhs}) = (Γ ⊩ rhs) ∷ []
-    arityAxiomClosed (gensub-assoc {temp} {m}{Γ}{Δ}{Θ}{rhs}) = (Θ ⊩ rhs) ∷ (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub Δ) ∷ []
-    --arityAxiomClosed (gensub-mixWhiskerLR {temp} {m}{n} {Γ}{Δ}{Φ}{Ψ}) = (Δ ⊩ jhom Φ Ψ) ∷ (Γ ⊩ sub Δ) ∷ []
-    arityAxiomClosed (mixWhiskerL-whiskerR {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) = (Γ ⊩ jhom Φ Ψ) ∷ []
-    arityAxiomClosed (mixWhiskerL-idJHom {temp} {m}{n} {Γ}{Φ}) = []
-    arityAxiomClosed (mixWhiskerL-compJHom {temp} {m}{n} {Γ}{Φ}{Ψ}{Ξ}) = (Γ ⊩ jhom Ψ Ξ) ∷ (Γ ⊩ jhom Φ Ψ) ∷ []
-    arityAxiomClosed (mixWhiskerR-idsub {temp} {m}{n} {Γ}{Φ}) = []
-    arityAxiomClosed (mixWhiskerR-compsub {temp} {m}{n} {Γ}{Δ}{Θ}{Φ}) = (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub Δ) ∷ []
-    arityAxiomClosed (mixWhiskerL-:⦊ {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) = (Γ F.:⦊ Φ ⊩ jhom Ψ Ξ) ∷ []
-    arityAxiomClosed (mixWhiskerR-◇ {temp} {m} {Γ}{Δ}) = (Γ ⊩ sub Δ) ∷ []
-    arityAxiomClosed (mixWhiskerR-⦊ {temp} {m}{n}{o} {Γ}{Δ}{Φ}{Ψ}) = (Γ ⊩ sub Δ) ∷ []
+    arityAxiomSettled : ∀ {temp} {J} → AxiomSettled temp J → Arity
+    arityAxiomSettled (gensub-inctx {m} {Γ} {Δ} {rhs} o) = (Γ ⊩ sub Δ) ∷ translateAritySettled cmatfnd Δ (arity o)
+    arityAxiomSettled (gensub-lunit {temp} {m}{Γ}{Δ}) = (Γ ⊩ sub Δ) ∷ []
+    arityAxiomSettled (gensub-runit {temp} {m}{Γ}{rhs}) = (Γ ⊩ rhs) ∷ []
+    arityAxiomSettled (gensub-assoc {temp} {m}{Γ}{Δ}{Θ}{rhs}) = (Θ ⊩ rhs) ∷ (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub Δ) ∷ []
+    --arityAxiomSettled (gensub-mixWhiskerLR {temp} {m}{n} {Γ}{Δ}{Φ}{Ψ}) = (Δ ⊩ jhom Φ Ψ) ∷ (Γ ⊩ sub Δ) ∷ []
+    arityAxiomSettled (mixWhiskerL-whiskerR {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) = (Γ ⊩ jhom Φ Ψ) ∷ []
+    arityAxiomSettled (mixWhiskerL-idJHom {temp} {m}{n} {Γ}{Φ}) = []
+    arityAxiomSettled (mixWhiskerL-compJHom {temp} {m}{n} {Γ}{Φ}{Ψ}{Ξ}) = (Γ ⊩ jhom Ψ Ξ) ∷ (Γ ⊩ jhom Φ Ψ) ∷ []
+    arityAxiomSettled (mixWhiskerR-idsub {temp} {m}{n} {Γ}{Φ}) = []
+    arityAxiomSettled (mixWhiskerR-compsub {temp} {m}{n} {Γ}{Δ}{Θ}{Φ}) = (Δ ⊩ sub Θ) ∷ (Γ ⊩ sub Δ) ∷ []
+    arityAxiomSettled (mixWhiskerL-:⦊ {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) = (Γ F.:⦊ Φ ⊩ jhom Ψ Ξ) ∷ []
+    arityAxiomSettled (mixWhiskerR-◇ {temp} {m} {Γ}{Δ}) = (Γ ⊩ sub Δ) ∷ []
+    arityAxiomSettled (mixWhiskerR-⦊ {temp} {m}{n}{o} {Γ}{Δ}{Φ}{Ψ}) = (Γ ⊩ sub Δ) ∷ []
 
-    lhsAxiomClosed rhsAxiomClosed : ∀ {temp} {J} → (axiom : AxiomClosed temp J)
-      → TermF temp (mtyp (arity2mset (arityAxiomClosed axiom))) J
-    lhsAxiomClosed (gensub-inctx {m} {Γ} {Δ} {rhs} o) =
-      (inctx o $1 tabulateOverLookup (arityClosed {hot} (inctx o)) (arvarF _ ∘ suc)) [ arvarF _ zero ]1
-    lhsAxiomClosed gensub-lunit = (idsub $1 []) [ arvarF _ zero ]1
-    lhsAxiomClosed gensub-runit = arvarF _ zero [ idsub $1 [] ]1
-    lhsAxiomClosed gensub-assoc = arvarF _ zero [ arvarF _ one ]1 [ arvarF _ two ]1
-    --lhsAxiomClosed (gensub-mixWhiskerLR {temp} {m}{n} {Γ}{Δ}{Φ}{Ψ}) =
+    lhsAxiomSettled rhsAxiomSettled : ∀ {temp} {J} → (axiom : AxiomSettled temp J)
+      → TermF temp (mtyp (arity2mset (arityAxiomSettled axiom))) J
+    lhsAxiomSettled (gensub-inctx {m} {Γ} {Δ} {rhs} o) =
+      (inctx o $1 tabulateOverLookup (aritySettled {hot} (inctx o)) (arvarF _ ∘ suc)) [ arvarF _ zero ]1
+    lhsAxiomSettled gensub-lunit = (idsub $1 []) [ arvarF _ zero ]1
+    lhsAxiomSettled gensub-runit = arvarF _ zero [ idsub $1 [] ]1
+    lhsAxiomSettled gensub-assoc = arvarF _ zero [ arvarF _ one ]1 [ arvarF _ two ]1
+    --lhsAxiomSettled (gensub-mixWhiskerLR {temp} {m}{n} {Γ}{Δ}{Φ}{Ψ}) =
     --  (mixWhiskerL Δ $1 arvarF _ zero ∷ []) [ mixWhiskerR Φ $1 arvarF _ one ∷ [] ]1
-    lhsAxiomClosed (mixWhiskerL-whiskerR {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) =
+    lhsAxiomSettled (mixWhiskerL-whiskerR {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) =
       mixWhiskerL Γ $1 (inctx (whiskerR Ξ) $1 substCtx⁻ (F.:⦊IdR Γ) (arvarF _ zero) ∷ []) ∷ []
-    lhsAxiomClosed (mixWhiskerL-idJHom {temp} {m}{n} {Γ}{Φ}) =
+    lhsAxiomSettled (mixWhiskerL-idJHom {temp} {m}{n} {Γ}{Φ}) =
       mixWhiskerL Γ $1 (inctx idJHom $1 []) ∷ []
-    lhsAxiomClosed (mixWhiskerL-compJHom {temp} {m}{n} {Γ}{Φ}{Ψ}{Ξ}) =
+    lhsAxiomSettled (mixWhiskerL-compJHom {temp} {m}{n} {Γ}{Φ}{Ψ}{Ξ}) =
       mixWhiskerL Γ $1 (inctx compJHom $1
         substCtx⁻ (F.:⦊IdR Γ) (arvarF _ zero) ∷
         substCtx⁻ (F.:⦊IdR Γ) (arvarF _ one) ∷ []) ∷ []
-    lhsAxiomClosed (mixWhiskerR-idsub {temp} {m}{n} {Γ}{Φ}) =
+    lhsAxiomSettled (mixWhiskerR-idsub {temp} {m}{n} {Γ}{Φ}) =
       mixWhiskerR Φ $1 (idsub $1 []) ∷ []
-    lhsAxiomClosed (mixWhiskerR-compsub {temp} {m}{n} {Γ}{Δ}{Θ}{Φ}) =
+    lhsAxiomSettled (mixWhiskerR-compsub {temp} {m}{n} {Γ}{Δ}{Θ}{Φ}) =
       mixWhiskerR Φ $1 (compsub $1 arvarF _ zero ∷ arvarF _ one ∷ []) ∷ []
-    lhsAxiomClosed (mixWhiskerL-:⦊ {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) =
+    lhsAxiomSettled (mixWhiskerL-:⦊ {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) =
       mixWhiskerL (Γ F.:⦊ Φ) $1 arvarF _ zero ∷ []
-    lhsAxiomClosed (mixWhiskerR-◇ {temp} {m} {Γ}{Δ}) =
+    lhsAxiomSettled (mixWhiskerR-◇ {temp} {m} {Γ}{Δ}) =
       mixWhiskerR ◇ $1 arvarF _ zero ∷ []
-    lhsAxiomClosed (mixWhiskerR-⦊ {temp} {m}{n}{o} {Γ}{Δ}{Φ}{Ψ}) =
+    lhsAxiomSettled (mixWhiskerR-⦊ {temp} {m}{n}{o} {Γ}{Δ}{Φ}{Ψ}) =
       mixWhiskerR (Φ ⦊ Ψ) $1 arvarF _ zero ∷ []
 
-    rhsAxiomClosed (gensub-inctx {m} {Γ} {Δ} {rhs} o) =
+    rhsAxiomSettled (gensub-inctx {m} {Γ} {Δ} {rhs} o) =
       inctx o $1 mapOverSpan
-        {B = TermF hot (mtyp (arity2mset ((Γ ⊩ sub Δ) ∷ translateArityClosed cmatfnd Δ (arity o))))}
-        {B' = TermF hot (mtyp (arity2mset (arityAxiomClosed {hot} (gensub-inctx o))))}
-        (translateJudClosed cmatfnd Δ)
-        (translateJudClosed cmatfnd Γ)
+        {B = TermF hot (mtyp (arity2mset ((Γ ⊩ sub Δ) ∷ translateAritySettled cmatfnd Δ (arity o))))}
+        {B' = TermF hot (mtyp (arity2mset (arityAxiomSettled {hot} (gensub-inctx o))))}
+        (translateJudSettled cmatfnd Δ)
+        (translateJudSettled cmatfnd Γ)
         (λ J x → x [ mixWhiskerR _ $1 arvarF _ zero ∷ [] ]1)
         (arity o)
-        (tabulateOverLookup (arityClosed {hot} (inctx o)) (arvarF _ ∘ suc))
-    rhsAxiomClosed gensub-lunit = arvarF _ zero
-    rhsAxiomClosed gensub-runit = arvarF _ zero
-    rhsAxiomClosed gensub-assoc = arvarF _ zero [ arvarF _ one [ arvarF _ two ]1 ]1
-    --rhsAxiomClosed (gensub-mixWhiskerLR {temp} {m}{n} {Γ}{Δ}{Φ}{Ψ}) =
+        (tabulateOverLookup (aritySettled {hot} (inctx o)) (arvarF _ ∘ suc))
+    rhsAxiomSettled gensub-lunit = arvarF _ zero
+    rhsAxiomSettled gensub-runit = arvarF _ zero
+    rhsAxiomSettled gensub-assoc = arvarF _ zero [ arvarF _ one [ arvarF _ two ]1 ]1
+    --rhsAxiomSettled (gensub-mixWhiskerLR {temp} {m}{n} {Γ}{Δ}{Φ}{Ψ}) =
     --  (mixWhiskerR Ψ $1 arvarF _ one ∷ []) [ mixWhiskerL Γ $1 {!? [ ? ]1!} ∷ [] ]1
-    rhsAxiomClosed (mixWhiskerL-whiskerR {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) =
+    rhsAxiomSettled (mixWhiskerL-whiskerR {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) =
       substCtxRHS⁻ (sym (F.:⦊Assoc Γ Φ Ξ)) (cong sub (sym (F.:⦊Assoc Γ Ψ Ξ))) (
         mixWhiskerR Ξ $1 (mixWhiskerL Γ $1 arvarF _ zero ∷ []) ∷ []
       )
-    rhsAxiomClosed (mixWhiskerL-idJHom {temp} {m}{n} {Γ}{Φ}) = idsub $1 []
-    rhsAxiomClosed (mixWhiskerL-compJHom {temp} {m}{n} {Γ}{Φ}{Ψ}{Ξ}) = compsub $1
+    rhsAxiomSettled (mixWhiskerL-idJHom {temp} {m}{n} {Γ}{Φ}) = idsub $1 []
+    rhsAxiomSettled (mixWhiskerL-compJHom {temp} {m}{n} {Γ}{Φ}{Ψ}{Ξ}) = compsub $1
       (mixWhiskerL Γ $1 arvarF _ zero ∷ []) ∷
       (mixWhiskerL Γ $1 arvarF _ one ∷ []) ∷ []
-    rhsAxiomClosed (mixWhiskerR-idsub {temp} {m}{n} {Γ}{Φ}) = idsub $1 []
-    rhsAxiomClosed (mixWhiskerR-compsub {temp} {m}{n} {Γ}{Δ}{Θ}{Φ}) = compsub $1
+    rhsAxiomSettled (mixWhiskerR-idsub {temp} {m}{n} {Γ}{Φ}) = idsub $1 []
+    rhsAxiomSettled (mixWhiskerR-compsub {temp} {m}{n} {Γ}{Δ}{Θ}{Φ}) = compsub $1
       (mixWhiskerR Φ $1 arvarF _ zero ∷ []) ∷
       (mixWhiskerR Φ $1 arvarF _ one ∷ []) ∷ []
-    rhsAxiomClosed (mixWhiskerL-:⦊ {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) =
+    rhsAxiomSettled (mixWhiskerL-:⦊ {temp} {m}{n}{o} {Γ}{Φ}{Ψ}{Ξ}) =
       substCtxRHS⁻ (F.:⦊Assoc Γ Φ Ψ) (cong sub (F.:⦊Assoc Γ Φ Ξ)) (
         mixWhiskerL Γ $1 (inctx (whiskerL Φ) $1 arvarF _ zero ∷ []) ∷ []
       )
-    rhsAxiomClosed (mixWhiskerR-◇ {temp} {m} {Γ}{Δ}) =
+    rhsAxiomSettled (mixWhiskerR-◇ {temp} {m} {Γ}{Δ}) =
       substCtxRHS⁻ (F.:⦊IdR Γ) (cong sub (F.:⦊IdR Δ)) (arvarF _ zero)
-    rhsAxiomClosed (mixWhiskerR-⦊ {temp} {m}{n}{o} {Γ}{Δ}{Φ}{Ψ}) =
+    rhsAxiomSettled (mixWhiskerR-⦊ {temp} {m}{n}{o} {Γ}{Δ}{Φ}{Ψ}) =
       substCtxRHS⁻ (sym (F.:⦊Assoc Γ Φ Ψ)) (cong sub (sym (F.:⦊Assoc Δ Φ Ψ))) (
         mixWhiskerR Ψ $1 (mixWhiskerR Φ $1 arvarF _ zero ∷ []) ∷ []
       )
 
-    eqTheoryClosed : (temp : Temp) → MatEqTheory (fmatClosed temp)
-    Axiom (eqTheoryClosed temp) = AxiomClosed temp
-    msetArity (eqTheoryClosed temp) = arity2mset ∘ arityAxiomClosed
-    lhs (eqTheoryClosed temp) = lhsAxiomClosed
-    rhs (eqTheoryClosed temp) = rhsAxiomClosed
+    eqTheorySettled : (temp : Temp) → MatEqTheory (fmatSettled temp)
+    Axiom (eqTheorySettled temp) = AxiomSettled temp
+    msetArity (eqTheorySettled temp) = arity2mset ∘ arityAxiomSettled
+    lhs (eqTheorySettled temp) = lhsAxiomSettled
+    rhs (eqTheorySettled temp) = rhsAxiomSettled
 
-    eqTheoryCold = eqTheoryClosed cold
-    eqTheoryHot = eqTheoryClosed hot
+    eqTheoryCold = eqTheorySettled cold
+    eqTheoryHot = eqTheorySettled hot
 
-    matClosed : Temp → Mat (matsigClosed cmatfnd)
-    Mat.getFreeMat (matClosed temp) = fmatClosed temp
-    Mat.getMatEqTheory (matClosed temp) = eqTheoryClosed temp
+    matSettled : Temp → Mat (matsigSettled cmatfnd)
+    Mat.getFreeMat (matSettled temp) = fmatSettled temp
+    Mat.getMatEqTheory (matSettled temp) = eqTheorySettled temp
 
-    matCold = matClosed cold
-    matHot = matClosed hot
+    matCold = matSettled cold
+    matHot = matSettled hot

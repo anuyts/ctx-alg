@@ -33,7 +33,7 @@ module CommonSignature {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFo
   open CmatFoundation cmatfnd
 
   matsig : MatSignature
-  matsig = matsigClosed cmatfnd
+  matsig = matsigSettled cmatfnd
 
   open MatSignature matsig
 
@@ -167,8 +167,8 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
     isHotAlg1-msetEnvirCold J (term1 (tmsub) (t ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree = t [ _ ⊢ τ [ _ ⊢ σ ]Cofree ]Cofree
     isHotAlg1-msetEnvirCold J (term1 (cold (inctx {m} {Γ} o)) args) [ Δ ⊢ σ ]Cofree =
       inctx o $1 mapOverSpan
-        (translateJudClosed cmatfnd Γ)
-        (translateJudClosed cmatfnd Δ)
+        (translateJudSettled cmatfnd Γ)
+        (translateJudSettled cmatfnd Δ)
         (λ J' tCofree → tCofree [ _ ⊢ mixWhiskerR _ $1 σ ∷ (idsub $1 []) ∷ [] ]Cofree)
         (carity o)
         args
@@ -190,24 +190,24 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
       cong mkCofree (funExt λ Ω → funExt λ σ → congS (inctx o $1_) (
         _
           ≡⟨ sym (mapOverSpan∘Idfun
-               (translateJudClosed cmatfnd Δ)
-               (translateJudClosed cmatfnd Ω)
+               (translateJudSettled cmatfnd Δ)
+               (translateJudSettled cmatfnd Ω)
                _
                _
                (carity o)
              ) ≡$ _ ⟩
         _
           ≡⟨ sym (mapOverSpan∘Idfun
-               (translateJudClosed cmatfnd Δ)
-               (translateJudClosed cmatfnd Ω)
+               (translateJudSettled cmatfnd Δ)
+               (translateJudSettled cmatfnd Ω)
                _
                _
                (carity o)
              ) ≡$ _ ⟩
         _
           ≡⟨ congS (λ g → mapOverSpan
-               (translateJudClosed cmatfnd Δ)
-               (translateJudClosed cmatfnd Ω)
+               (translateJudSettled cmatfnd Δ)
+               (translateJudSettled cmatfnd Ω)
                g
                (carity o)
                (tabulateOverLookup (arityCold cmatfnd (inctx o)) λ p → arvarF (fmatHot cmatfnd) (suc p))
@@ -216,8 +216,8 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
                  (model1→F-algStr
                    (fmatHot cmatfnd)
                    hotAlg1-msetEnvirCold
-                   (translateJudClosed cmatfnd Δ J)
-                   (mapTermF (fmatHot cmatfnd) f (translateJudClosed cmatfnd Δ J) t)
+                   (translateJudSettled cmatfnd Δ J)
+                   (mapTermF (fmatHot cmatfnd) f (translateJudSettled cmatfnd Δ J) t)
                    )
                  _
                  σ) {!!}
@@ -230,25 +230,25 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
              ) ⟩
         _
           ≡⟨ mapOverSpan-∘
-               (translateJudClosed cmatfnd Δ)
-               (translateJudClosed cmatfnd Γ)
-               (translateJudClosed cmatfnd Ω)
+               (translateJudSettled cmatfnd Δ)
+               (translateJudSettled cmatfnd Γ)
+               (translateJudSettled cmatfnd Ω)
                _
                _
                (carity o)
              ≡$ _ ⟩
         _
           ≡⟨ mapOverSpan∘Idfun
-               (translateJudClosed cmatfnd Γ)
-               (translateJudClosed cmatfnd Ω)
+               (translateJudSettled cmatfnd Γ)
+               (translateJudSettled cmatfnd Ω)
                _
                _
                (carity o)
              ≡$ _ ⟩
         _
           ≡⟨ mapOverSpan∘Idfun
-               (translateJudClosed cmatfnd Γ)
-               (translateJudClosed cmatfnd Ω)
+               (translateJudSettled cmatfnd Γ)
+               (translateJudSettled cmatfnd Ω)
                _
                _
                (carity o)
