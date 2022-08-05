@@ -32,12 +32,16 @@ In `Mat`, we define MATs (multisorted algebraic theories).
 
 In `Cmat`, we define CMATs (contextual multisorted algebraic theories), as well as a few translations:
 
-- The **cold** translation, which yields a free MAT with no substitution operations,
-- The **hot** translation, which yields a free MAT with substitution operations, that can be extended with
-   - an equational theory about substitution
-   - the axioms of the source CMAT.
+- The **settling** translation translates CMATs to MATs. It comes in two flavours:
+  
+   - The **cold** translation, which translates a free CMAT to a MAT with no substitution operations other than substitution composition,
+   - The **hot** translation, which translates a free CMAT to a MAT with substitution operations.
+     It extends to a translation from non-free CMATs to MATs.
+  
+  Both flavours have the same signature, and are indexed by a CMAT foundation, which determines what are the contexts of the resulting language.
 
-Both translations have the same signature, and are indexed by a CMAT foundation, which determines what are the contexts of the resulting language.
+- The **levitating** translation is actually a special case of the **settling** translations, which is indexed by a mode `m0`.
+  To levitate a CMAT is to settle it on the foundation whose contexts at mode `m` are really junctors from `m0` to `m`.
 
 Different parts are added in different places. The following table gives a bit of an overview. It should be read as follows:
 
@@ -49,23 +53,24 @@ Different parts are added in different places. The following table gives a bit o
 
 - "Custom" stands for operations custom to the specific theory at hand.
   
-  | **Custom**            | **CMAT**    | **Cold**         | **Hot**        |
-  |:--------------------- |:----------- |:---------------- |:-------------- |
-  | **Operations**        | **`fcmat`** | **`fmatCold`**   | **`fmatHot`**  |
-  | Custom                | `id-jhom`   | `idsub`          |                |
-  |                       |             | `gensub` =       | `gensub` =     |
-  |                       | `comp-jhom` | `compsub`        | `tmsub`        |
-  |                       | `whiskerL`  | `mixWhiskerL`    |                |
-  |                       | `whiskerR`  | `mixWhiskerR`    |                |
-  | **Equations**         |             | **`matCold`**    | **`matHot`**   |
-  |                       |             |                  | `tmsub-inctx`  |
-  |                       |             | `compsub-lunit`  |                |
-  |                       |             | `compsub-runit`  | `tmsub-runit`  |
-  |                       |             | `compsub-assoc`  | `tmsub-assoc`  |
-  |                       |             | Mixed whiskering |                |
-  |                       |             | except 1 law     |                |
-  | **Equational theory** | **`cmat`**  |                  | **`matHotEq`** |
-  | Custom                | Whiskering  |                  | 1 mixed wh law |
+  | **Custom**            | **CMAT**      | **Cold**            | **Hot**             |
+  |:--------------------- |:------------- |:------------------- |:------------------- |
+  | **Signature**         | **`cmatsig`** | **`matsigSettled`** | **`matsigSettled`** |
+  | **Operations**        | **`fcmat`**   | **`fmatCold`**      | **`fmatHot`**       |
+  | Custom                | `id-jhom`     | `idsub`             |                     |
+  |                       |               | `gensub` =          | `gensub` =          |
+  |                       | `comp-jhom`   | `compsub`           | `tmsub`             |
+  |                       | `whiskerL`    | `mixWhiskerL`       |                     |
+  |                       | `whiskerR`    | `mixWhiskerR`       |                     |
+  | **Equations**         |               | **`matCold`**       | **`matHot`**        |
+  |                       |               |                     | `tmsub-inctx`       |
+  |                       |               | `compsub-lunit`     |                     |
+  |                       |               | `compsub-runit`     | `tmsub-runit`       |
+  |                       |               | `compsub-assoc`     | `tmsub-assoc`       |
+  |                       |               | Mixed whiskering    |                     |
+  |                       |               | except 1 law        |                     |
+  | **Equational theory** | **`cmat`**    |                     | **`matHotEq`**      |
+  | Custom                | Whiskering    |                     | 1 mixed wh law      |
 
 The setup is as follows:
 
@@ -73,17 +78,18 @@ The setup is as follows:
   
    - the signature of a CMAT presentation, consisting of:
       - a category of modes and junctors
-      - a covariant presheaf of contexts (i.e. contexts at every mode, extensible with junctors)
       - custom right-hand-sides (to which we add the native RHSs for substitutions and junctor morphisms)
    - CMAT foundations, consisting of:
       - a covariant presheaf of contexts over the category of modes and junctors.
-         - The translation is called **closed** in general,
-         - The translation is called **open** if the presheaf of contexts is representable, meaning that junctors from the representing mode `m0` serve as contexts.
-   - the common MAT signature `matsigClosed` of the **cold**/**hot** translation.
+         - The translation is called **settled** in general,
+         - The translation is called **levitated** if the presheaf of contexts is representable, meaning that junctors from the representing mode `m0` serve as contexts.
+   - the common MAT signature `matsigSettled` of the **cold**/**hot** translation.
 
-- `Cmat.Free.Presentation` defines the presentation of a free CMAT, which is almost a RHS-indexed container, only we get to specify a junctor for every argument of every operator. It also defines two translations:
+- `Cmat.Free.Presentation` defines the presentation of a free CMAT, which is almost a RHS-indexed container, only we get to specify a junctor for every argument of every operator.
+   It also defines the settling translation, indexed by a "temperature" (hot/cold):
   
-   - The **cold** translation: `fmatCold`, `matColdCat`
-   - The **hot** translation: `fmatHot`, `matHotTmsub`, `matHotCat`
+   - The general **settling** translation: `fmatSettled`, `matSettled`
+   - The **cold** translation: `fmatCold`, `matCold`
+   - The **hot** translation: `fmatHot`, `matHot`
 
 TBD
