@@ -96,6 +96,9 @@ record FreeCmat (cmatsig : CmatSignature) : Type where
     aritySettled (mixWhiskerR {temp} {n} {p} {Γ} {Δ} Ξ) = (Γ ⊩ sub Δ)    ∷ []
     aritySettled (gensub {temp} {m} {Γ} {Δ} {rhs}) = (Δ ⊩ rhs) ∷ (Γ ⊩ sub Δ) ∷ []
 
+    arityCold = aritySettled {cold}
+    arityHot = aritySettled {hot}
+
     fmatSettled : Temp → FreeMat (matsigSettled cmatfnd)
     FreeMat.Operation (fmatSettled temp) = OperationSettled temp
     FreeMat.isSetOperation (fmatSettled temp) = isSetOperationSettled

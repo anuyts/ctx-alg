@@ -12,15 +12,10 @@
 # CMATs
 - MAT signature: **OK**
 - Free CMAT: **OK**
-- Make changes
+- Make changes: **OK**
   - `mixWhiskerL/R` should not take a substitution
   - `matHot` needs mixed whiskering equations
   - `matCold` should differ from `matHot` only in that `tmsub` applies only to other substitutions
-- CMAT -> MAT:
-  - Closed -> Found
-  - Open -> Levitate
-- SOMAT -> CMAT: List
-- SOMAT -> MAT: Scope
 - Proofs about this
   - `TermF fmatCold (FreePsh X) ~= TermQ matHotTmsub X`
     - Note: free presheaves over `X` involve a circularity!
@@ -50,6 +45,8 @@
     - (We can now generate a presheaf for every (non-custom) RHS)
     - a presheaf morphism for every operator
     - a commutative diagram of presheaf morphisms for every axiom
+- SOMAT -> CMAT: Listed
+- SOMAT -> MAT: Scoped
 - General applications
   - Generic substitution
     - Note: generic renaming is not necessary first, because ctx extension is a junctor hence a functor.

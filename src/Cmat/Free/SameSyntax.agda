@@ -118,6 +118,9 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
     -- Mapping from cold to hot --
     ------------------------------
 
+    -- Just use an opmap and an axmap
+
+{-
     -- msetHot is an algebra for Term1 cold
     isColdAlg1-msetHot : IsAlgebra (ftrTerm1 (fmatCold cmatfnd)) msetHot
     isColdAlg1-msetHot J (term1 o args) = join1Q (term1 (cold o) args)
@@ -132,7 +135,7 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
 
     -- we can handle leaves
     substX→termHot : ∀ J → SubstX J → TermHot J
-    substX→termHot J (x [ σ ]Free) = join1Q (term1 tmsub (varQ x ∷ σ ∷ []))
+    substX→termHot J (x [ σ ]Free) = join1Q (term1 gensub (varQ x ∷ σ ∷ []))
 
     -- same but viewed as a morphism of MSets
     msetHom-substX→termHot : catMSet [ msetSubstX , msetHot ]
@@ -146,6 +149,7 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
     -- extract
     termCold→termHot : ∀ J → TermCold J → TermHot J
     termCold→termHot = carrierHom emalgHom-termCold→termHot
+-}
 
     --------------------------------------------------
     -- Mapping from hot to cold with an environment --
@@ -162,9 +166,10 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
       testEnvirCold : mtyp msetEnvirCold ≡ EnvirCold
       testEnvirCold = refl
 
+{-
     -- msetEnvirCold is an algebra for Term1 hot
     isHotAlg1-msetEnvirCold : IsAlgebra (ftrTerm1 (fmatHot cmatfnd)) msetEnvirCold
-    isHotAlg1-msetEnvirCold J (term1 (tmsub) (t ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree = t [ _ ⊢ τ [ _ ⊢ σ ]Cofree ]Cofree
+    isHotAlg1-msetEnvirCold J (term1 (gensub) (t ∷ τ ∷ [])) [ Δ ⊢ σ ]Cofree = t [ _ ⊢ τ [ _ ⊢ σ ]Cofree ]Cofree
     isHotAlg1-msetEnvirCold J (term1 (cold (inctx {m} {Γ} o)) args) [ Δ ⊢ σ ]Cofree =
       inctx o $1 mapOverSpan
         (translateJudSettled cmatfnd Γ)
@@ -186,7 +191,7 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
     -- msetEnvirCold respects the equational theory for Term1 hot
 
     respectsEqTheory1-msetEnvirCold : respectsEqTheory1 (matHot cmatfnd) hotAlg1-msetEnvirCold
-    respectsEqTheory1-msetEnvirCold (tmsub-inctx {m}{Γ}{Δ}{rhs} o) f =
+    respectsEqTheory1-msetEnvirCold (gensub-inctx {m}{Γ}{Δ}{rhs} o) f =
       cong mkCofree (funExt λ Ω → funExt λ σ → congS (inctx o $1_) (
         _
           ≡⟨ sym (mapOverSpan∘Idfun
@@ -255,8 +260,9 @@ module NoCat {cmatsig : CmatSignature} (cmatfnd : CmatSignature.CmatFoundation c
              ≡$ _ ⟩
         _ ∎
       ))
-    respectsEqTheory1-msetEnvirCold (tmsub-mixWhiskerL Θ) f = refl
-    respectsEqTheory1-msetEnvirCold (tmsub-mixWhiskerR Ξ) f = refl
-    respectsEqTheory1-msetEnvirCold tmsub-lunit f = refl
-    respectsEqTheory1-msetEnvirCold tmsub-runit f = refl
-    respectsEqTheory1-msetEnvirCold tmsub-assoc f = refl
+    --respectsEqTheory1-msetEnvirCold (gensub-mixWhiskerL Θ) f = refl
+    --respectsEqTheory1-msetEnvirCold (gensub-mixWhiskerR Ξ) f = refl
+    respectsEqTheory1-msetEnvirCold gensub-lunit f = refl
+    respectsEqTheory1-msetEnvirCold gensub-runit f = refl
+    respectsEqTheory1-msetEnvirCold gensub-assoc f = refl
+-}
