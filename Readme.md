@@ -11,6 +11,9 @@ To clone, use
 git clone --recurse-submodules
 ```
 
+## Further reading
+See related links on [my homepage](https://anuyts.github.io/).
+
 ## General setup
 
 ### Multisorted algebraic theories
