@@ -3,6 +3,7 @@
         https://github.com/agda/cubical/pull/893
         https://github.com/plt-amy/1lab/blob/main/src/1Lab/Reflection/Record.agda
 - h-level of a homotopy co-end?
+- read library combinators: https://arxiv.org/pdf/1812.08079.pdf
 
 # MATs
 - Lower priority
