@@ -1,6 +1,7 @@
 {-# OPTIONS --cubical --type-in-type #-}
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Transport
@@ -51,7 +52,7 @@ module TermF {matsig : MatSignature} (fmat : FreeMat matsig) where
     open _⊣_
 
     -- Free syntax monad
-    data TermF (X : MType) : (sortOut : Sort) → Type
+    data TermF (X : MType) : MType
     isSetTermF : (msetX : MSet) (sortOut : Sort) → isSet (TermF (mtyp msetX) sortOut)
 
     -- TermF acting on MSets
@@ -70,7 +71,7 @@ module TermF {matsig : MatSignature} (fmat : FreeMat matsig) where
 
     -- TermF is really an IW type
     module _ where
-      RepTermF : (X : MType) (sortOut : Sort) → Type
+      RepTermF : (X : MType) → MType
       RepTermF X sortOut =
         IW (λ sort → X sort ⊎ Operation sort)
           (λ sort → ⊎.elim (λ v → ⊥) λ o → Fin (length (arity o)))
@@ -80,14 +81,13 @@ module TermF {matsig : MatSignature} (fmat : FreeMat matsig) where
       {-# TERMINATING #-}
       toRepTermF : (X : MType) (sortOut : Sort) → TermF X sortOut → RepTermF X sortOut
       toRepTermF X sortOut (varF v) = node (inl v) (λ ())
-      toRepTermF X sortOut (join1F (term1 o args)) = node (inr o) λ p → mapOverIdfun (toRepTermF X) (arity o) args !P p
+      toRepTermF X sortOut (o $1 args) = node (inr o) λ p → mapOverIdfun (toRepTermF X) (arity o) args !P p
 
       {-# TERMINATING #-}
       fromRepTermF : (X : MType) (sortOut : Sort) → RepTermF X sortOut → TermF X sortOut
       fromRepTermF X sortOut (node (inl v) u) = varF v
       fromRepTermF X sortOut (node (inr o) args) =
-        join1F (term1 o (mapOverIdfun (fromRepTermF X) (arity o) (tabulateOverLookup (arity o) args)))
-        --λ p → fromRepTermF X (arity o ! p) (args p)
+        o $1 mapOverIdfun (fromRepTermF X) (arity o) (tabulateOverLookup (arity o) args)
 
       {-# TERMINATING #-}
       fromToRepTermF : (X : MType) (sortOut : Sort) (t : TermF X sortOut)
@@ -137,27 +137,27 @@ module TermF {matsig : MatSignature} (fmat : FreeMat matsig) where
       rightInv (isoRepTermF X sortOut) = toFromRepTermF X sortOut
       leftInv (isoRepTermF X sortOut) = fromToRepTermF X sortOut
 
-      pathRepTermF : (X : MType) (sortOut : Sort) → TermF X sortOut ≡ RepTermF X sortOut
-      pathRepTermF X sortOut = ua (isoToEquiv (isoRepTermF X sortOut))
+      --pathRepTermF : (X : MType) (sortOut : Sort) → TermF X sortOut ≡ RepTermF X sortOut
+      --pathRepTermF X sortOut = ua (isoToEquiv (isoRepTermF X sortOut))
 
       isSetRepTermF : (msetX : MSet) (sortOut : Sort) → isSet (RepTermF (mtyp msetX) sortOut)
       isSetRepTermF msetX sortOut = isOfHLevelSuc-IW 1 (λ sort → isSet⊎ (str (msetX sort)) isSetOperation) sortOut
 
-    isSetTermF msetX sortOut = subst⁻ isSet (pathRepTermF (mtyp msetX) sortOut) (isSetRepTermF msetX sortOut)
+    isSetTermF msetX sortOut = isOfHLevelRetractFromIso 2 (isoRepTermF (mtyp msetX) sortOut) (isSetRepTermF msetX sortOut)
 
     -- components of TermF as a functor
     {-# TERMINATING #-}
-    mapTermF : ∀ {X Y} → (∀ sort → X sort → Y sort) → ∀ sort → TermF X sort → TermF Y sort
+    mapTermF : ∀ {X Y} → (X →M Y) → (TermF X →M TermF Y)
     mapTermF f sort (varF x) = varF (f sort x)
     mapTermF f sort (join1F t) = join1F (mapTerm1 (mapTermF f) sort t)
 
     {-# TERMINATING #-}
-    mapTermF-id : ∀ {X} → mapTermF (λ sort → idfun (X sort)) ≡ (λ sort → idfun (TermF X sort))
+    mapTermF-id : ∀ {X} → mapTermF (idfunM X) ≡ idfunM (TermF X)
     mapTermF-id {X} i sort (varF x) = varF x
     mapTermF-id {X} i sort (join1F t) = (
-        join1F (mapTerm1 (mapTermF (λ sort₁ → idfun (X sort₁))) sort t)
+        join1F (mapTerm1 (mapTermF (idfunM X)) sort t)
           ≡⟨ cong join1F ((cong mapTerm1 mapTermF-id ≡$ sort) ≡$ t) ⟩
-        join1F (mapTerm1 (λ sort₁ → idfun (TermF X sort₁)) sort t)
+        join1F (mapTerm1 (idfunM (TermF X)) sort t)
           ≡⟨ cong join1F ((mapTerm1-id ≡$ sort) ≡$ t) ⟩
         join1F t ∎
       ) i
@@ -167,11 +167,11 @@ module TermF {matsig : MatSignature} (fmat : FreeMat matsig) where
       mapTermF (λ sort → g sort ∘ f sort) ≡ (λ sort → mapTermF g sort ∘ mapTermF f sort)
     mapTermF-∘ g f i sort (varF x) = varF (g sort (f sort x))
     mapTermF-∘ g f i sort (join1F t) = (
-        join1F (mapTerm1 (mapTermF (λ sort' → g sort' ∘ f sort')) sort t)
+        join1F (mapTerm1 (mapTermF (g ∘M f)) sort t)
           ≡⟨ cong join1F ((cong mapTerm1 (mapTermF-∘ g f) ≡$ sort) ≡$ t) ⟩
-        join1F (mapTerm1 (λ sort₁ → mapTermF g sort₁ ∘ mapTermF f sort₁) sort t)
+        join1F (mapTerm1 (mapTermF g ∘M mapTermF f) sort t)
           ≡⟨ cong join1F ((mapTerm1-∘ (mapTermF g) (mapTermF f) ≡$ sort) ≡$ t) ⟩
-        join1F (mapTerm1 (mapTermF g) sort (mapTerm1 (mapTermF f) sort t)) ∎
+        join1F ((mapTerm1 (mapTermF g) ∘M mapTerm1 (mapTermF f)) sort t) ∎
       ) i
 
     -- TermF as a functor on catMSet
@@ -183,7 +183,7 @@ module TermF {matsig : MatSignature} (fmat : FreeMat matsig) where
 
     -- components of TermF as a monad
 
-    pureTermF : ∀ {X} sort → X sort → TermF X sort
+    pureTermF : ∀ {X} → (X →M TermF X)
     pureTermF sort = varF
 
     ηTermF : NatTrans (ftrId catMSet) ftrTermF
@@ -251,8 +251,6 @@ module TermF {matsig : MatSignature} (fmat : FreeMat matsig) where
 
     monadTermF : Monad catMSet
     monadTermF = ftrTermF , ismonadTermF
-
-    -- SyntaxQ object
 
     SyntaxF : MType
     SyntaxF = TermF (mtyp msetEmpty)

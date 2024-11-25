@@ -4,6 +4,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Path
+open import Cubical.Foundations.Function
 open import Cubical.Data.List
 open import Cubical.Data.FinData
 open import Cubical.Data.List.FinData renaming (lookup to _!_)
@@ -17,7 +18,7 @@ open import Cubical.Categories.Limits.Initial
 
 module Mat.Signature where
 
-open Category
+open Category hiding (_∘_)
 
 -- A MAT Signature is like a type for MATs: it specifies the set of Sorts.
 record MatSignature : Type where
@@ -34,6 +35,15 @@ record MatSignature : Type where
   -- sort-indexed type
   MType : Type
   MType = Sort → Type
+
+  _→M_ : MType → MType → Type
+  X →M Y = ∀ sort → X sort → Y sort
+
+  idfunM : (X : MType) → (X →M X)
+  idfunM X sort = idfun (X sort)
+
+  _∘M_ : ∀ {X Y Z : MType} → (Y →M Z) → (X →M Y) → (X →M Z)
+  (g ∘M f) sort = g sort ∘ f sort
 
   -- sort-indexed set
   MSet : Type

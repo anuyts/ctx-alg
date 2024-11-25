@@ -154,7 +154,7 @@ module _ where
   model1→F-str-μ :  (m1a : Model1)
     → model1→F-algStr m1a ∘M joinTermF
      ≡ model1→F-algStr m1a ∘M mapTermF (model1→F-algStr m1a)
-  model1→F-str-μ m1a = ?
+  model1→F-str-μ m1a = {!!}
 
   {-# TERMINATING #-}
   model1→F-algStr-joinTermF :

@@ -45,18 +45,16 @@ record FreeMat (matsig : MatSignature) : Type where
       arguments : Arguments X (arity operation)
   open Term1
 
-  mapTerm1 : ∀ {X Y : MType} (f : (sort : Sort) → X sort → Y sort) → (sort : Sort) → Term1 X sort → Term1 Y sort
+  mapTerm1 : ∀ {X Y : MType} (f : X →M Y) → (Term1 X →M Term1 Y)
   operation (mapTerm1 f sort t) = operation t
   arguments (mapTerm1 f sort t) = mapOverIdfun f (arity (operation t)) (arguments t)
 
-  mapTerm1-id : ∀ {X : MType} → (mapTerm1 (λ sort → idfun (X sort))) ≡ (λ sort → idfun (Term1 X sort))
+  mapTerm1-id : ∀ {X : MType} → mapTerm1 (idfunM X) ≡ idfunM (Term1 X)
   operation (mapTerm1-id i sort t) = operation t
   arguments (mapTerm1-id i sort t) = mapOverIdfun-idfun (arity (operation t)) i (arguments t)
 
-  mapTerm1-∘ : ∀ {X Y Z : MType}
-    (g : (sort : Sort) → Y sort → Z sort)
-    (f : (sort : Sort) → X sort → Y sort)
-    → mapTerm1 (λ sort → g sort ∘ f sort) ≡ (λ sort → mapTerm1 g sort ∘ mapTerm1 f sort)
+  mapTerm1-∘ : ∀ {X Y Z : MType} (g : Y →M Z) (f : X →M Y)
+    → mapTerm1 (g ∘M f) ≡ mapTerm1 g ∘M mapTerm1 f
   operation (mapTerm1-∘ g f i sort t) = operation t
   arguments (mapTerm1-∘ g f i sort t) = mapOverIdfun-∘ g f (arity (operation t)) i (arguments t)
 
