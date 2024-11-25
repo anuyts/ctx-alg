@@ -2,7 +2,6 @@
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
-open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Isomorphism renaming (Iso to _≅_)
@@ -29,6 +28,7 @@ open Category renaming (_∘_ to _⊚_)
 open Functor
 
 -- Type of free MAT presentations (MAT presentations without equations)
+-- (These are basically finitely branching indexed containers.)
 record FreeMat (matsig : MatSignature) : Type where
   open MatSignature matsig
 
@@ -37,7 +37,6 @@ record FreeMat (matsig : MatSignature) : Type where
     isSetOperation : {sortOut : Sort} → isSet (Operation sortOut)
     arity : ∀ {sortOut} → Operation sortOut → Arity
 
-  -- SyntaxQ functor
   record Term1 (X : MType) (sortOut : Sort) : Type where
     inductive
     constructor term1
@@ -74,9 +73,11 @@ record FreeMat (matsig : MatSignature) : Type where
     operation (leftInv (isoRepTerm1 X sortOut) t i) = operation t
     arguments (leftInv (isoRepTerm1 X sortOut) t i) = arguments t
 
+    {-
     pathRepTerm1 : (X : MType) (sortOut : Sort)
       → Term1 X sortOut ≡ RepTerm1 X sortOut
     pathRepTerm1 X sortOut = ua (isoToEquiv (isoRepTerm1 X sortOut))
+    -}
 
     isSetRepTerm1 : (msetX : MSet) (sortOut : Sort) → isSet (RepTerm1 (mtyp msetX) sortOut)
     isSetRepTerm1 msetX sortOut =
@@ -84,7 +85,7 @@ record FreeMat (matsig : MatSignature) : Type where
 
   isSetTerm1 : (msetX : MSet) (sortOut : Sort) →  isSet (Term1 (mtyp msetX) sortOut)
   isSetTerm1 msetX sortOut =
-    subst⁻ isSet (pathRepTerm1 (mtyp msetX) sortOut) (isSetRepTerm1 msetX sortOut)
+    isOfHLevelRetractFromIso 2 (isoRepTerm1 (mtyp msetX) sortOut) (isSetRepTerm1 msetX sortOut)
 
   -- Term1 as an action on MSets
   msetTerm1 : MSet → MSet
@@ -98,7 +99,7 @@ record FreeMat (matsig : MatSignature) : Type where
   F-id ftrTerm1 {x = msetX} = mapTerm1-id
   F-seq ftrTerm1 {x = msetX} {y = msetY} {z = precZ} f g = mapTerm1-∘ g f
 
-  -- ModelQs of the MAT presentation are algebras of ftrTerm1
+  -- Model1s of the MAT presentation are algebras of ftrTerm1
   catModel1 : Category ℓ-zero ℓ-zero
   catModel1 = AlgebrasCategory ftrTerm1
 

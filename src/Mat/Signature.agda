@@ -31,34 +31,33 @@ record MatSignature : Type where
   isGroupoidArity : isGroupoid Arity
   isGroupoidArity = isOfHLevelList 1 isGroupoidSort
 
+  -- sort-indexed type
   MType : Type
   MType = Sort → Type
 
+  -- sort-indexed set
   MSet : Type
   MSet = Sort → hSet _
 
+  -- indexed set of well-typed variables
   arity2mset : Arity → MSet
   fst (arity2mset arity sort) = Σ[ p ∈ Fin (length arity) ] arity ! p ≡ sort
-  snd (arity2mset arity sort) (p , e) (p' , e') e1 e2 = cong ΣPathP (ΣPathP (
-    isSetFin _ _ _ _ ,
-    isSet→SquareP (λ i j → isGroupoidSort _ _) _ _ _ _
-    ))
+  snd (arity2mset arity sort) = isSetΣ isSetFin λ p → isOfHLevelPath' 2 isGroupoidSort _ _
 
   mtyp : MSet → MType
   mtyp mset sort = typ (mset sort)
 
+  -- category of indexed sets
   catMSet : Category _ _
   catMSet = ΠC Sort λ _ → SET _
 
-  -- I'd prefer a dependent list
   Arguments : MType → Arity → Type
   Arguments X arity = ListP X arity
-    --(p : Fin (length arity)) → X (arity ! p)
 
   isSetArguments : ∀ precarrier arity → isSet (Arguments (mtyp precarrier) arity)
   isSetArguments precarrier arity = isOfHLevelSucSuc-ListP 0 (λ sort → snd (precarrier sort))
-    --isOfHLevelΠ 2 λ p → str (precarrier (arity ! p))
 
+  -- initial indexed set
   msetEmpty : MSet
   msetEmpty sort = ⊥ , (λ ())
 
