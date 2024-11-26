@@ -45,8 +45,14 @@ open _≅_
 private
   module P≅ = P.PrecatIso
 
--- SyntaxQ monad
-data TermQ (X : MType) : (sort : Sort) → Type where
+{- SyntaxQ monad
+   -------------
+   For the non-equality constructors, `varQ` and `join1Q` are all you need.
+   However, in `byAxion` we want to easily refer to `joinFQ` without relying on too much computation (I guess).
+   Alternatively, we could suffice with `joinFQ`, but then we have to state correctness w.r.t. `joinF` which
+   is again a heavy-duty definition.
+-}
+data TermQ (X : MType) : MType where
   varQ : ∀ {sortOut} → X sortOut → TermQ X sortOut
   join1Q : ∀ {sortOut} → Term1 (TermQ X) sortOut → TermQ X sortOut
   joinFQ : ∀ {sortOut} → TermF (TermQ X) sortOut → TermQ X sortOut
@@ -58,6 +64,21 @@ data TermQ (X : MType) : (sort : Sort) → Type where
     ≡ joinFQ (mapTermF f sortOut (rhs axiom))
   isSetTermQ : ∀ {sortOut} → isSet (TermQ X sortOut)
 
+varQ-M : ∀ {X} → (X →M TermQ X)
+varQ-M sort = varQ
+
+join1Q-M : ∀ {X} → (Term1 (TermQ X) →M TermQ X)
+join1Q-M sort = join1Q
+
+joinFQ-M : ∀ {X} → (TermF (TermQ X) →M TermQ X)
+joinFQ-M sort = joinFQ
+
+joinFQ-varF-M : ∀ {X} → joinFQ-M ∘M varF-M ≡ idfunM (TermQ X)
+joinFQ-varF-M {X} i sort t = joinFQ-varF t i
+
+joinFQ-join1F-M : ∀ {X} → joinFQ-M {X} ∘M join1F-M ≡ join1Q-M ∘M mapTerm1 joinFQ-M
+joinFQ-join1F-M i sort t = joinFQ-join1F t i
+
 -- TermQ acting on MSets
 msetTermQ : MSet → MSet
 fst (msetTermQ msetX sortOut) = TermQ (mtyp msetX) sortOut
@@ -65,21 +86,21 @@ snd (msetTermQ msetX sortOut) = isSetTermQ
 
 -- Components of TermQ as a functor
 {-# TERMINATING #-}
-mapTermQ : ∀ {X Y} → (∀ sort → X sort → Y sort) → ∀ sort → TermQ X sort → TermQ Y sort
+mapTermQ : ∀ {X Y} → (X →M Y) → (TermQ X →M TermQ Y)
 mapTermQ f sort (varQ x) = varQ (f sort x)
 mapTermQ f sort (join1Q t) = join1Q (mapTerm1 (mapTermQ f) sort t)
 mapTermQ f sort (joinFQ t) = joinFQ (mapTermF (mapTermQ f) sort t)
 mapTermQ f sort (joinFQ-varF t i) = joinFQ-varF (mapTermQ f sort t) i
 mapTermQ f sort (joinFQ-join1F t i) = ((
-    (λ sort' → joinFQ ∘ join1F ∘ mapTerm1 (mapTermF (mapTermQ f)) sort')
-      ≡⟨ congS (λ h sort' → h sort' ∘ mapTerm1 (mapTermF (mapTermQ f)) sort') (funExt λ sort' → funExt joinFQ-join1F) ⟩
-    (λ sort' → join1Q ∘ mapTerm1 (λ _ → joinFQ) sort' ∘ mapTerm1 (mapTermF (mapTermQ f)) sort')
-      ≡⟨ congS (λ h sort' → join1Q ∘ h sort') (sym (mapTerm1-∘ _ _)) ⟩
-    (λ sort' → join1Q ∘ mapTerm1 (λ sort'' → joinFQ ∘ mapTermF (mapTermQ f) sort'') sort')
+    joinFQ-M ∘M join1F-M ∘M mapTerm1 (mapTermF (mapTermQ f))
+      ≡⟨ cong (_∘M mapTerm1 (mapTermF (mapTermQ f))) joinFQ-join1F-M ⟩
+    join1Q-M ∘M mapTerm1 joinFQ-M ∘M mapTerm1 (mapTermF (mapTermQ f))
+      ≡⟨ cong (join1Q-M ∘M_) (sym (mapTerm1-∘ _ _)) ⟩
+    join1Q-M ∘M mapTerm1 (joinFQ-M ∘M mapTermF (mapTermQ f))
       ≡⟨⟩
-    (λ sort' → join1Q ∘ mapTerm1 (λ sort'' → mapTermQ f sort'' ∘ joinFQ) sort')
-      ≡⟨ congS (λ h sort' → join1Q ∘ h sort') (mapTerm1-∘ _ _) ⟩
-    ((λ sort' → join1Q ∘ mapTerm1 (mapTermQ f) sort' ∘ mapTerm1 (λ _ → joinFQ) sort')) ∎
+    join1Q-M ∘M mapTerm1 (mapTermQ f ∘M joinFQ-M)
+      ≡⟨ congS (join1Q-M ∘M_) (mapTerm1-∘ _ _) ⟩
+    join1Q-M ∘M mapTerm1 (mapTermQ f) ∘M mapTerm1 joinFQ-M ∎
   ) ≡$ sort ≡$S t) i
 mapTermQ f sort (byAxiom axiom g i) = hcomp
   (λ where

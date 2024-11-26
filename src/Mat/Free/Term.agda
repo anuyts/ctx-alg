@@ -64,6 +64,12 @@ module TermF {matsig : MatSignature} (fmat : FreeMat matsig) where
       varF : ∀ {sortOut} → X sortOut → TermF X sortOut
       join1F : ∀ {sortOut} → Term1 (TermF X) sortOut → TermF X sortOut
 
+    varF-M : ∀ {X} → (X →M TermF X)
+    varF-M sort = varF
+
+    join1F-M : ∀ {X} → (Term1 (TermF X) →M TermF X)
+    join1F-M sort = join1F
+
     arvarF : ∀ {arity : Arity} → (m : Fin (length arity)) → TermF (mtyp (arity2mset arity)) (arity ! m)
     arvarF m = varF (m , refl)
     pattern _$1_ o args = join1F (term1 o args)

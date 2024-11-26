@@ -45,6 +45,8 @@ record MatSignature : Type where
   _∘M_ : ∀ {X Y Z : MType} → (Y →M Z) → (X →M Y) → (X →M Z)
   (g ∘M f) sort = g sort ∘ f sort
 
+  infixr 9 _∘M_
+
   -- sort-indexed set
   MSet : Type
   MSet = Sort → hSet _
