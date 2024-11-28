@@ -169,8 +169,8 @@ module TermF {matsig : MatSignature} (fmat : FreeMat matsig) where
       ) i
 
     {-# TERMINATING #-}
-    mapTermF-∘ : ∀ {X Y Z : MType} → (g : ∀ sort → Y sort → Z sort) → (f : ∀ sort → X sort → Y sort) →
-      mapTermF (λ sort → g sort ∘ f sort) ≡ (λ sort → mapTermF g sort ∘ mapTermF f sort)
+    mapTermF-∘ : ∀ {X Y Z : MType} → (g : Y →M Z) → (f : X →M Y) →
+      mapTermF (g ∘M f) ≡ mapTermF g ∘M mapTermF f
     mapTermF-∘ g f i sort (varF x) = varF (g sort (f sort x))
     mapTermF-∘ g f i sort (join1F t) = (
         join1F (mapTerm1 (mapTermF (g ∘M f)) sort t)
