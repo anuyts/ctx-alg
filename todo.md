@@ -1,13 +1,3 @@
-# Cleanup
-- Mat.Model
-- Mat.Terminating.Presentation
-- Mat.Instances.MonoidAction
-- Cmat
-
-- rename
-  - constructors with implicit sort to get a '
-  - drop -M
-
 # Cubical
 - reflection for data types
         https://github.com/agda/cubical/pull/893
