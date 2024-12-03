@@ -47,11 +47,12 @@ private
 
 {- SyntaxQ monad
    -------------
-   For the non-equality constructors, `varQ'` and `join1Q` are all you need.
+   For the non-equality constructors, `varQ'` and `join1Q'` are all you need.
    However, in `byAxion` we want to easily refer to `joinFQ'` without relying on too much computation (I guess).
-   Alternatively, we could suffice with `joinFQ'`, but then we have to state correctness w.r.t. `joinF` which
+   Alternatively, we could suffice with `joinFQ'`, but then we have to state correctness w.r.t. `joinF'` which
    is again a heavy-duty definition.
 -}
+-- the primes are to signify that the sort is implicit.
 data TermQ (X : MType) : MType where
   varQ' : ∀ {sortOut} → X sortOut → TermQ X sortOut
   join1Q' : ∀ {sortOut} → Term1 (TermQ X) sortOut → TermQ X sortOut

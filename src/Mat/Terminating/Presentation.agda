@@ -1,6 +1,6 @@
 {-# OPTIONS --cubical --type-in-type #-}
 
-{- This file is not in use, and attempts to use the workaround desribed by Fiore & Szamozvancev (2022)
+{- This file is OBSOLETE, and attempts to use the workaround desribed by Fiore & Szamozvancev (2022)
 to convince Agda of termination of eliminators without using sized types. I decided this workaround
 was becoming too frustrating, so now I just use a TERMINATING pragma. -}
 
