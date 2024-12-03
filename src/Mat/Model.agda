@@ -39,7 +39,7 @@ open Mat.Term mat
 
 open Category hiding (_∘_)
 open Functor
-open Algebra
+open Algebra renaming (str to algStr)
 open IsMonad
 open NatTrans
 open IsEMAlgebra
@@ -80,7 +80,7 @@ mFoldModelQ msetX mA = _♯ adjModelQ {c = msetX} {d = mA}
 
 foldModelQ : (msetX : MSet) → (mA : ModelQ)
   → catMSet [ msetX , F-ob ftrForgetModelQ mA ]
-  → ∀ sort → TermQ (mtyp msetX) sort → typ (carrier (fst mA) sort)
+  → (TermQ (mtyp msetX) →M mtyp (carrier (fst mA)))
 foldModelQ msetX mA f = mFoldModelQ msetX mA f .carrierHom
 
 mFoldModelQ-nat :  (msetX : MSet) → (mA mB : ModelQ)
@@ -101,14 +101,14 @@ mFoldModelQ-nat msetX mA mB mG f =
 foldModelQ-nat : (msetX : MSet) → (mA mB : ModelQ)
   → (mG : catModelQ [ mA , mB ])
   → (f : catMSet [ msetX , F-ob ftrForgetModelQ mA ])
-  → foldModelQ msetX mB (λ sort → F-hom ftrForgetModelQ {x = mA} {y = mB} mG sort ∘ f sort)
-   ≡ (λ sort → F-hom ftrForgetModelQ {x = mA} {y = mB} mG sort ∘ foldModelQ msetX mA f sort)
+  → foldModelQ msetX mB (F-hom ftrForgetModelQ {x = mA} {y = mB} mG ∘M f)
+   ≡ F-hom ftrForgetModelQ {x = mA} {y = mB} mG ∘M foldModelQ msetX mA f
 foldModelQ-nat msetX mA mB mG f i = mFoldModelQ-nat msetX mA mB mG f i .carrierHom
 
 mFoldModelQ-uniq : (msetX : MSet) → (mA : ModelQ)
   → (f : catMSet [ msetX , F-ob ftrForgetModelQ mA ])
   → (mG : catModelQ [ F-ob ftrFreeModelQ msetX , mA ])
-  → (λ sort → mG .carrierHom sort ∘ pureTermQ sort) ≡ f
+  → mG .carrierHom ∘M pureTermQ ≡ f
   → mFoldModelQ msetX mA f ≡ mG
 mFoldModelQ-uniq msetX mA f mG ef =
   mFoldModelQ msetX mA f
@@ -124,20 +124,19 @@ mFoldModelQ-uniq msetX mA f mG ef =
 foldModelQ-uniq : (msetX : MSet) → (mA : ModelQ)
   → (f : catMSet [ msetX , F-ob ftrForgetModelQ mA ])
   → (mG : catModelQ [ F-ob ftrFreeModelQ msetX , mA ])
-  → (λ sort → mG .carrierHom sort ∘ pureTermQ sort) ≡ f
+  → mG .carrierHom ∘M pureTermQ ≡ f
   → foldModelQ msetX mA f ≡ mG .carrierHom
 foldModelQ-uniq msetX mA f mG ef i = mFoldModelQ-uniq msetX mA f mG ef i .carrierHom
 
 foldModelQ-uniq2 : (msetX : MSet) → (mA : ModelQ)
   → (mG mH : catModelQ [ F-ob ftrFreeModelQ msetX , mA ])
-  → (λ (sort : Sort) → mG .carrierHom sort ∘ pureTermQ sort)
-   ≡ (λ (sort : Sort) → mH .carrierHom sort ∘ pureTermQ sort)
+  → mG .carrierHom ∘M pureTermQ ≡ mH .carrierHom ∘M pureTermQ
   → mG .carrierHom ≡ mH .carrierHom
 foldModelQ-uniq2 msetX mA mG mH e =
   mG .carrierHom
-    ≡⟨ sym (foldModelQ-uniq msetX mA (λ sort → mG .carrierHom sort ∘ pureTermQ sort) mG refl) ⟩
-  foldModelQ msetX mA (λ sort → mG .carrierHom sort ∘ pureTermQ sort)
-    ≡⟨ foldModelQ-uniq msetX mA (λ sort → mG .carrierHom sort ∘ pureTermQ sort) mH (sym e) ⟩
+    ≡⟨ sym (foldModelQ-uniq msetX mA (mG .carrierHom ∘M pureTermQ) mG refl) ⟩
+  foldModelQ msetX mA (mG .carrierHom ∘M pureTermQ)
+    ≡⟨ foldModelQ-uniq msetX mA (mG .carrierHom ∘M pureTermQ) mH (sym e) ⟩
   mH .carrierHom ∎
 
 -- catModelQ as a full subcategory of catModelF and catModel1
@@ -145,9 +144,9 @@ foldModelQ-uniq2 msetX mA mG mH e =
 -- catModelFEq and catModel1Eq
 respectsEqTheoryF : ModelF → Type
 respectsEqTheoryF mA = ∀ {sort} → (axiom : Axiom sort)
-  → (f : ∀ sort' → mtyp (msetArity axiom) sort' → mtyp (mA .fst .carrier) sort')
-  → (mA .fst .str sort ∘ mapTermF f sort) (lhs axiom)
-   ≡ (mA .fst .str sort ∘ mapTermF f sort) (rhs axiom)
+  → (f : mtyp (msetArity axiom) →M mtyp (mA .fst .carrier))
+  → (mA .fst .algStr sort ∘ mapTermF f sort) (lhs axiom)
+   ≡ (mA .fst .algStr sort ∘ mapTermF f sort) (rhs axiom)
 
 isProp-respectsEqTheoryF : (mFA : ModelF) → isProp (respectsEqTheoryF mFA)
 isProp-respectsEqTheoryF mFA =
@@ -252,273 +251,274 @@ P≅.ret isoftrModel1Eq≅FEq = ftrModel1Eq→FEq→1Eq
 -- catModel1Eq → catModelQ
 
 {-# TERMINATING #-}
-model1Eq→Q-algStr : (m1EqA : Model1Eq) → IsAlgebra ftrTermQ (m1EqA .fst .carrier)
-model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (varQ x) = x
-model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (join1Q t) =
-  α1 sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t)
-model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ t) =
-  αF sort (mapTermF (model1Eq→Q-algStr m1EqA) sort t)
+[model1Eq→Q]algStr : (m1EqA : Model1Eq) → IsAlgebra ftrTermQ (m1EqA .fst .carrier)
+[model1Eq→Q]algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (varQ x) = x
+[model1Eq→Q]algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (join1Q t) =
+  α1 sort (mapTerm1 ([model1Eq→Q]algStr m1EqA) sort t)
+[model1Eq→Q]algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ t) =
+  αF sort (mapTermF ([model1Eq→Q]algStr m1EqA) sort t)
   where αF : IsAlgebra ftrTermF msetA
-        αF = model1→F (algebra msetA α1) .fst .str
-model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ-varF t i) =
-  model1Eq→Q-algStr m1EqA sort t
-model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ-join1F t i) = (
+        αF = model1→F (algebra msetA α1) .fst .algStr
+[model1Eq→Q]algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ-varF t i) =
+  [model1Eq→Q]algStr m1EqA sort t
+[model1Eq→Q]algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (joinFQ-join1F t i) = (
     α1 sort
-      (mapTerm1 (model1→F-algStr (algebra msetA α1)) sort
-        (mapTerm1 (mapTermF (model1Eq→Q-algStr (algebra msetA α1 , respectsEqA))) sort t))
+      (mapTerm1 ([model1→F]algStr (algebra msetA α1)) sort
+        (mapTerm1 (mapTermF ([model1Eq→Q]algStr (algebra msetA α1 , respectsEqA))) sort t))
       ≡⟨ cong (α1 sort) (sym (mapTerm1-∘ _ _) ≡$ sort ≡$S t) ⟩
     α1 sort (mapTerm1 (λ sort₁ →
-       model1→F-algStr (algebra msetA α1) sort₁ ∘ mapTermF (model1Eq→Q-algStr m1EqA) sort₁
+       [model1→F]algStr (algebra msetA α1) sort₁ ∘ mapTermF ([model1Eq→Q]algStr m1EqA) sort₁
        ) sort t)
       ≡⟨⟩
     α1 sort (mapTerm1 (λ sort₁ →
-       model1Eq→Q-algStr (algebra msetA α1 , respectsEqA) sort₁ ∘ joinFQ
+       [model1Eq→Q]algStr (algebra msetA α1 , respectsEqA) sort₁ ∘ joinFQ
        ) sort t)
       ≡⟨ cong (α1 sort) (mapTerm1-∘ _ _ ≡$ sort ≡$S t) ⟩
     α1 sort
-      (mapTerm1 (model1Eq→Q-algStr (algebra msetA α1 , respectsEqA)) sort
+      (mapTerm1 ([model1Eq→Q]algStr (algebra msetA α1 , respectsEqA)) sort
         (mapTerm1 (λ sort₁ → joinFQ) sort t)) ∎
   ) i
-model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (byAxiom axiom f i) =
+[model1Eq→Q]algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (byAxiom axiom f i) =
   lemma2 i
   where αF : IsAlgebra ftrTermF msetA
-        αF = model1→F (algebra msetA α1) .fst .str
-        lemma : αF sort (mapTermF (λ sort' → model1Eq→Q-algStr m1EqA sort' ∘ f sort') sort (lhs axiom))
-              ≡ αF sort (mapTermF (λ sort' → model1Eq→Q-algStr m1EqA sort' ∘ f sort') sort (rhs axiom))
-        lemma = respectsEqA axiom λ sort' → model1Eq→Q-algStr m1EqA sort' ∘ f sort'
-        lemma2 : αF sort (mapTermF (model1Eq→Q-algStr m1EqA) sort (mapTermF f sort (lhs axiom)))
-               ≡ αF sort (mapTermF (model1Eq→Q-algStr m1EqA) sort (mapTermF f sort (rhs axiom)))
+        αF = model1→F (algebra msetA α1) .fst .algStr
+        lemma : αF sort (mapTermF ([model1Eq→Q]algStr m1EqA ∘M f) sort (lhs axiom))
+              ≡ αF sort (mapTermF ([model1Eq→Q]algStr m1EqA ∘M f) sort (rhs axiom))
+        lemma = respectsEqA axiom ([model1Eq→Q]algStr m1EqA ∘M f)
+        lemma2 : αF sort (mapTermF ([model1Eq→Q]algStr m1EqA) sort (mapTermF f sort (lhs axiom)))
+               ≡ αF sort (mapTermF ([model1Eq→Q]algStr m1EqA) sort (mapTermF f sort (rhs axiom)))
         lemma2 =
-          αF sort (mapTermF (model1Eq→Q-algStr m1EqA) sort (mapTermF f sort (lhs axiom)))
-            ≡⟨ sym (cong (αF sort) (funExt⁻ (funExt⁻ (mapTermF-∘ (model1Eq→Q-algStr m1EqA) f) sort) (lhs axiom))) ⟩
-          αF sort (mapTermF (λ sort' → model1Eq→Q-algStr m1EqA sort' ∘ f sort') sort (lhs axiom))
+          αF sort (mapTermF ([model1Eq→Q]algStr m1EqA) sort (mapTermF f sort (lhs axiom)))
+            ≡⟨ sym (cong (αF sort) (funExt⁻ (funExt⁻ (mapTermF-∘ ([model1Eq→Q]algStr m1EqA) f) sort) (lhs axiom))) ⟩
+          αF sort (mapTermF ([model1Eq→Q]algStr m1EqA ∘M f) sort (lhs axiom))
             ≡⟨ lemma ⟩
-          αF sort (mapTermF (λ sort' → model1Eq→Q-algStr m1EqA sort' ∘ f sort') sort (rhs axiom))
-            ≡⟨ cong (αF sort) (funExt⁻ (funExt⁻ (mapTermF-∘ (model1Eq→Q-algStr m1EqA) f) sort) (rhs axiom)) ⟩
-          αF sort (mapTermF (model1Eq→Q-algStr m1EqA) sort (mapTermF f sort (rhs axiom))) ∎
-model1Eq→Q-algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (isSetTermQ t1 t2 et et' i j) = snd (msetA sort)
-  (model1Eq→Q-algStr m1EqA sort t1)
-  (model1Eq→Q-algStr m1EqA sort t2)
-  (λ i → model1Eq→Q-algStr m1EqA sort (et i))
-  (λ i → model1Eq→Q-algStr m1EqA sort (et' i)) i j
+          αF sort (mapTermF ([model1Eq→Q]algStr m1EqA ∘M f) sort (rhs axiom))
+            ≡⟨ cong (αF sort) (funExt⁻ (funExt⁻ (mapTermF-∘ ([model1Eq→Q]algStr m1EqA) f) sort) (rhs axiom)) ⟩
+          αF sort (mapTermF ([model1Eq→Q]algStr m1EqA) sort (mapTermF f sort (rhs axiom))) ∎
+[model1Eq→Q]algStr m1EqA@(algebra msetA α1 , respectsEqA) sort (isSetTermQ t1 t2 et et' i j) = snd (msetA sort)
+  ([model1Eq→Q]algStr m1EqA sort t1)
+  ([model1Eq→Q]algStr m1EqA sort t2)
+  (λ i → [model1Eq→Q]algStr m1EqA sort (et i))
+  (λ i → [model1Eq→Q]algStr m1EqA sort (et' i)) i j
 
 {-# TERMINATING #-}
-model1Eq→Q-algStr-joinTermQ : (m1EqA : Model1Eq)
-  → (λ (sort : Sort) → model1Eq→Q-algStr m1EqA sort ∘ joinTermQ sort)
-  ≡ (λ (sort : Sort) → model1Eq→Q-algStr m1EqA sort ∘ mapTermQ (model1Eq→Q-algStr m1EqA) sort)
-mapTermF-model1Eq→Q-algStr-joinTermQ : (m1EqA : Model1Eq)
-  → (λ (sort : Sort) → mapTermF (model1Eq→Q-algStr m1EqA) sort ∘ mapTermF joinTermQ sort)
-  ≡ (λ (sort : Sort) → mapTermF (model1Eq→Q-algStr m1EqA) sort ∘ mapTermF (mapTermQ (model1Eq→Q-algStr m1EqA)) sort)
-mapTerm1-model1Eq→Q-algStr-joinTermQ : (m1EqA : Model1Eq)
-  → (λ (sort : Sort) → mapTerm1 (model1Eq→Q-algStr m1EqA) sort ∘ mapTerm1 joinTermQ sort)
-  ≡ (λ (sort : Sort) → mapTerm1 (model1Eq→Q-algStr m1EqA) sort ∘ mapTerm1 (mapTermQ (model1Eq→Q-algStr m1EqA)) sort)
-model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (varQ t) =
-  model1Eq→Q-algStr m1EqA sort t
-model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (join1Q t) =
-  α1 sort (mapTerm1-model1Eq→Q-algStr-joinTermQ m1EqA i sort t)
-model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (joinFQ t) =
-  αF sort (mapTermF-model1Eq→Q-algStr-joinTermQ m1EqA i sort t)
+[model1Eq→Q]str-μ : (m1EqA : Model1Eq)
+  → [model1Eq→Q]algStr m1EqA ∘M joinTermQ
+  ≡ [model1Eq→Q]algStr m1EqA ∘M mapTermQ ([model1Eq→Q]algStr m1EqA)
+mapTermF-[model1Eq→Q]str-μ : (m1EqA : Model1Eq)
+  → mapTermF ([model1Eq→Q]algStr m1EqA) ∘M mapTermF joinTermQ
+  ≡ mapTermF ([model1Eq→Q]algStr m1EqA) ∘M mapTermF (mapTermQ ([model1Eq→Q]algStr m1EqA))
+mapTerm1-[model1Eq→Q]str-μ : (m1EqA : Model1Eq)
+  → mapTerm1 ([model1Eq→Q]algStr m1EqA) ∘M mapTerm1 joinTermQ
+  ≡ mapTerm1 ([model1Eq→Q]algStr m1EqA) ∘M mapTerm1 (mapTermQ ([model1Eq→Q]algStr m1EqA))
+[model1Eq→Q]str-μ m1EqA@(algebra msetA α1 , respectsEqA) i sort (varQ t) =
+  [model1Eq→Q]algStr m1EqA sort t
+[model1Eq→Q]str-μ m1EqA@(algebra msetA α1 , respectsEqA) i sort (join1Q t) =
+  α1 sort (mapTerm1-[model1Eq→Q]str-μ m1EqA i sort t)
+[model1Eq→Q]str-μ m1EqA@(algebra msetA α1 , respectsEqA) i sort (joinFQ t) =
+  αF sort (mapTermF-[model1Eq→Q]str-μ m1EqA i sort t)
   where αF : IsAlgebra ftrTermF msetA
-        αF = model1→F (algebra msetA α1) .fst .str
-model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (joinFQ-varF t j) =
+        αF = model1→F (algebra msetA α1) .fst .algStr
+[model1Eq→Q]str-μ m1EqA@(algebra msetA α1 , respectsEqA) i sort (joinFQ-varF t j) =
   idfun
     (Square
-      (λ j → model1Eq→Q-algStr m1EqA sort (joinTermQ sort (joinFQ-varF t j)))
-      (λ j → model1Eq→Q-algStr m1EqA sort
-               (mapTermQ (model1Eq→Q-algStr m1EqA) sort (joinFQ-varF t j)))
-      (λ i → αF sort (mapTermF-model1Eq→Q-algStr-joinTermQ m1EqA i sort (varF t)))
-      (λ i → model1Eq→Q-algStr-joinTermQ m1EqA i sort t)
+      (λ j → [model1Eq→Q]algStr m1EqA sort (joinTermQ sort (joinFQ-varF t j)))
+      (λ j → [model1Eq→Q]algStr m1EqA sort
+               (mapTermQ ([model1Eq→Q]algStr m1EqA) sort (joinFQ-varF t j)))
+      (λ i → αF sort (mapTermF-[model1Eq→Q]str-μ m1EqA i sort (varF t)))
+      (λ i → [model1Eq→Q]str-μ m1EqA i sort t)
     ) (toPathP (snd (msetA sort) _ _ _ _)) i j
   where αF : IsAlgebra ftrTermF msetA
-        αF = model1→F (algebra msetA α1) .fst .str
-model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (joinFQ-join1F t j) =
+        αF = model1→F (algebra msetA α1) .fst .algStr
+[model1Eq→Q]str-μ m1EqA@(algebra msetA α1 , respectsEqA) i sort (joinFQ-join1F t j) =
   idfun
     (Square
-      (λ j → (model1Eq→Q-algStr m1EqA sort ∘ joinTermQ sort) (joinFQ-join1F t j))
-      (λ j → (model1Eq→Q-algStr m1EqA sort
-                ∘ mapTermQ (model1Eq→Q-algStr m1EqA) sort) (joinFQ-join1F t j))
-      (λ i → αF sort (mapTermF-model1Eq→Q-algStr-joinTermQ m1EqA i sort (join1F t)))
-      (λ i → α1 sort (mapTerm1-model1Eq→Q-algStr-joinTermQ m1EqA i sort (mapTerm1 (λ sort₁ → joinFQ) sort t)))
+      (λ j → ([model1Eq→Q]algStr m1EqA sort ∘ joinTermQ sort) (joinFQ-join1F t j))
+      (λ j → ([model1Eq→Q]algStr m1EqA sort
+                ∘ mapTermQ ([model1Eq→Q]algStr m1EqA) sort) (joinFQ-join1F t j))
+      (λ i → αF sort (mapTermF-[model1Eq→Q]str-μ m1EqA i sort (join1F t)))
+      (λ i → α1 sort (mapTerm1-[model1Eq→Q]str-μ m1EqA i sort (mapTerm1 (λ sort₁ → joinFQ) sort t)))
     ) (toPathP (snd (msetA sort) _ _ _ _)) i j
   where αF : IsAlgebra ftrTermF msetA
-        αF = model1→F (algebra msetA α1) .fst .str
-model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (byAxiom axiom f j) =
+        αF = model1→F (algebra msetA α1) .fst .algStr
+[model1Eq→Q]str-μ m1EqA@(algebra msetA α1 , respectsEqA) i sort (byAxiom axiom f j) =
   idfun
     (Square
-      (λ j → (model1Eq→Q-algStr m1EqA sort ∘ joinTermQ sort) (byAxiom axiom f j))
-      (λ j → (model1Eq→Q-algStr m1EqA sort
-               ∘ mapTermQ (model1Eq→Q-algStr m1EqA) sort) (byAxiom axiom f j))
-      (λ i → αF sort (mapTermF-model1Eq→Q-algStr-joinTermQ m1EqA i sort (mapTermF f sort (lhs axiom))))
-      (λ i → αF sort (mapTermF-model1Eq→Q-algStr-joinTermQ m1EqA i sort (mapTermF f sort (rhs axiom))))
+      (λ j → ([model1Eq→Q]algStr m1EqA sort ∘ joinTermQ sort) (byAxiom axiom f j))
+      (λ j → ([model1Eq→Q]algStr m1EqA sort
+               ∘ mapTermQ ([model1Eq→Q]algStr m1EqA) sort) (byAxiom axiom f j))
+      (λ i → αF sort (mapTermF-[model1Eq→Q]str-μ m1EqA i sort (mapTermF f sort (lhs axiom))))
+      (λ i → αF sort (mapTermF-[model1Eq→Q]str-μ m1EqA i sort (mapTermF f sort (rhs axiom))))
     ) (toPathP (snd (msetA sort) _ _ _ _)) i j
   where αF : IsAlgebra ftrTermF msetA
-        αF = model1→F (algebra msetA α1) .fst .str
-model1Eq→Q-algStr-joinTermQ m1EqA@(algebra msetA α1 , respectsEqA) i sort (isSetTermQ t1 t2 et et' j k) = snd (msetA sort)
-  (model1Eq→Q-algStr-joinTermQ m1EqA i sort t1)
-  (model1Eq→Q-algStr-joinTermQ m1EqA i sort t2)
-  (λ j → model1Eq→Q-algStr-joinTermQ m1EqA i sort (et j))
-  (λ j → model1Eq→Q-algStr-joinTermQ m1EqA i sort (et' j)) j k
-mapTermF-model1Eq→Q-algStr-joinTermQ m1EqA =
-  (λ sort → mapTermF (model1Eq→Q-algStr m1EqA) sort ∘ mapTermF joinTermQ sort)
-    ≡⟨ sym (mapTermF-∘ (model1Eq→Q-algStr m1EqA) joinTermQ) ⟩
-  mapTermF (λ sort → model1Eq→Q-algStr m1EqA sort ∘ joinTermQ sort)
-    ≡⟨ cong mapTermF (model1Eq→Q-algStr-joinTermQ m1EqA) ⟩
-  mapTermF (λ sort → model1Eq→Q-algStr m1EqA sort ∘ mapTermQ (model1Eq→Q-algStr m1EqA) sort)
-    ≡⟨ mapTermF-∘ (model1Eq→Q-algStr m1EqA) (mapTermQ (model1Eq→Q-algStr m1EqA)) ⟩
-  (λ sort → mapTermF (model1Eq→Q-algStr m1EqA) sort ∘ mapTermF (mapTermQ (model1Eq→Q-algStr m1EqA)) sort) ∎
-mapTerm1-model1Eq→Q-algStr-joinTermQ m1EqA =
-  (λ sort → mapTerm1 (model1Eq→Q-algStr m1EqA) sort ∘ mapTerm1 joinTermQ sort)
-    ≡⟨ sym (mapTerm1-∘ (model1Eq→Q-algStr m1EqA) joinTermQ) ⟩
-  mapTerm1 (λ sort → model1Eq→Q-algStr m1EqA sort ∘ joinTermQ sort)
-    ≡⟨ cong mapTerm1 (model1Eq→Q-algStr-joinTermQ m1EqA) ⟩
-  mapTerm1 (λ sort → model1Eq→Q-algStr m1EqA sort ∘ mapTermQ (model1Eq→Q-algStr m1EqA) sort)
-    ≡⟨ mapTerm1-∘ (model1Eq→Q-algStr m1EqA) (mapTermQ (model1Eq→Q-algStr m1EqA)) ⟩
-  (λ sort → mapTerm1 (model1Eq→Q-algStr m1EqA) sort ∘ mapTerm1 (mapTermQ (model1Eq→Q-algStr m1EqA)) sort) ∎
+        αF = model1→F (algebra msetA α1) .fst .algStr
+[model1Eq→Q]str-μ m1EqA@(algebra msetA α1 , respectsEqA) i sort (isSetTermQ t1 t2 et et' j k) = snd (msetA sort)
+  ([model1Eq→Q]str-μ m1EqA i sort t1)
+  ([model1Eq→Q]str-μ m1EqA i sort t2)
+  (λ j → [model1Eq→Q]str-μ m1EqA i sort (et j))
+  (λ j → [model1Eq→Q]str-μ m1EqA i sort (et' j)) j k
+mapTermF-[model1Eq→Q]str-μ m1EqA =
+  (λ sort → mapTermF ([model1Eq→Q]algStr m1EqA) sort ∘ mapTermF joinTermQ sort)
+    ≡⟨ sym (mapTermF-∘ ([model1Eq→Q]algStr m1EqA) joinTermQ) ⟩
+  mapTermF (λ sort → [model1Eq→Q]algStr m1EqA sort ∘ joinTermQ sort)
+    ≡⟨ cong mapTermF ([model1Eq→Q]str-μ m1EqA) ⟩
+  mapTermF (λ sort → [model1Eq→Q]algStr m1EqA sort ∘ mapTermQ ([model1Eq→Q]algStr m1EqA) sort)
+    ≡⟨ mapTermF-∘ ([model1Eq→Q]algStr m1EqA) (mapTermQ ([model1Eq→Q]algStr m1EqA)) ⟩
+  (λ sort → mapTermF ([model1Eq→Q]algStr m1EqA) sort ∘ mapTermF (mapTermQ ([model1Eq→Q]algStr m1EqA)) sort) ∎
+mapTerm1-[model1Eq→Q]str-μ m1EqA =
+  (λ sort → mapTerm1 ([model1Eq→Q]algStr m1EqA) sort ∘ mapTerm1 joinTermQ sort)
+    ≡⟨ sym (mapTerm1-∘ ([model1Eq→Q]algStr m1EqA) joinTermQ) ⟩
+  mapTerm1 (λ sort → [model1Eq→Q]algStr m1EqA sort ∘ joinTermQ sort)
+    ≡⟨ cong mapTerm1 ([model1Eq→Q]str-μ m1EqA) ⟩
+  mapTerm1 (λ sort → [model1Eq→Q]algStr m1EqA sort ∘ mapTermQ ([model1Eq→Q]algStr m1EqA) sort)
+    ≡⟨ mapTerm1-∘ ([model1Eq→Q]algStr m1EqA) (mapTermQ ([model1Eq→Q]algStr m1EqA)) ⟩
+  (λ sort → mapTerm1 ([model1Eq→Q]algStr m1EqA) sort ∘ mapTerm1 (mapTermQ ([model1Eq→Q]algStr m1EqA)) sort) ∎
 
-model1Eq→Q-isEMAlgebra : (m1EqA : Model1Eq)
-  → IsEMAlgebra monadTermQ (algebra (m1EqA .fst .carrier) (model1Eq→Q-algStr m1EqA))
-str-η (model1Eq→Q-isEMAlgebra m1EqA@(algebra msetA α1 , respectsEqA)) = refl
-str-μ (model1Eq→Q-isEMAlgebra m1EqA@(algebra msetA α1 , respectsEqA)) = model1Eq→Q-algStr-joinTermQ m1EqA
+[model1Eq→Q]isEMAlgebra : (m1EqA : Model1Eq)
+  → IsEMAlgebra monadTermQ (algebra (m1EqA .fst .carrier) ([model1Eq→Q]algStr m1EqA))
+str-η ([model1Eq→Q]isEMAlgebra m1EqA@(algebra msetA α1 , respectsEqA)) = refl
+str-μ ([model1Eq→Q]isEMAlgebra m1EqA@(algebra msetA α1 , respectsEqA)) = [model1Eq→Q]str-μ m1EqA
 
 model1Eq→Q : Model1Eq → ModelQ
 carrier (fst (model1Eq→Q m1EqA@(algebra msetA α1 , respectsEqA))) = msetA
-str (fst (model1Eq→Q m1EqA@(algebra msetA α1 , respectsEqA))) = model1Eq→Q-algStr m1EqA
-snd (model1Eq→Q m1EqA@(algebra msetA α1 , respectsEqA)) = model1Eq→Q-isEMAlgebra m1EqA
+algStr (fst (model1Eq→Q m1EqA@(algebra msetA α1 , respectsEqA))) = [model1Eq→Q]algStr m1EqA
+snd (model1Eq→Q m1EqA@(algebra msetA α1 , respectsEqA)) = [model1Eq→Q]isEMAlgebra m1EqA
 
+-- The double $ is to signify that you need to apply funExt twice to get the exact lemma you need.
 {-# TERMINATING #-}
-ModelQHom1Eq→IsTermQAlgebraHom' : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
+[model1Eq→Q]strHom$$ : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
       (sort : Sort) (t : TermQ (mtyp (m1EqA .fst .carrier)) sort) →
-      carrierHom m1EqF sort (model1Eq→Q-algStr m1EqA sort t)
-      ≡ model1Eq→Q-algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort t)
-mapTermF-ModelQHom1Eq→IsTermQAlgebraHom' : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
+      carrierHom m1EqF sort ([model1Eq→Q]algStr m1EqA sort t)
+      ≡ [model1Eq→Q]algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort t)
+mapTermF-[model1Eq→Q]strHom$$ : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
       (sort : Sort) (t : TermF (TermQ (mtyp (m1EqA .fst .carrier))) sort) →
-      carrierHom m1EqF sort (model1→F-algStr (m1EqA .fst) sort (mapTermF (model1Eq→Q-algStr m1EqA) sort t))
-      ≡ model1→F-algStr (m1EqB .fst) sort
-        (mapTermF (model1Eq→Q-algStr m1EqB) sort (mapTermF (mapTermQ (carrierHom m1EqF)) sort t))
-mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom' : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
+      carrierHom m1EqF sort ([model1→F]algStr (m1EqA .fst) sort (mapTermF ([model1Eq→Q]algStr m1EqA) sort t))
+      ≡ [model1→F]algStr (m1EqB .fst) sort
+        (mapTermF ([model1Eq→Q]algStr m1EqB) sort (mapTermF (mapTermQ (carrierHom m1EqF)) sort t))
+mapTerm1-[model1Eq→Q]strHom$$ : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
       (sort : Sort) (t : Term1 (TermQ (mtyp (m1EqA .fst .carrier))) sort) →
-      carrierHom m1EqF sort (model1Eq→Q-algStr m1EqA sort (join1Q t))
-      ≡ model1Eq→Q-algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (join1Q t))
-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (varQ x) = refl
-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (join1Q t) =
-  mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t
-  {-f sort (str (fst m1EqA) sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t))
-    ≡⟨ funExt⁻ (funExt⁻ f-isalg1 sort) (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t) ⟩
-  str (fst m1EqB) sort (mapTerm1 f sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t))
+      carrierHom m1EqF sort ([model1Eq→Q]algStr m1EqA sort (join1Q t))
+      ≡ [model1Eq→Q]algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (join1Q t))
+[model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (varQ x) = refl
+[model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF@(algebraHom f f-isalg1) sort (join1Q t) =
+  mapTerm1-[model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort t
+  {-f sort (str (fst m1EqA) sort (mapTerm1 ([model1Eq→Q]algStr m1EqA) sort t))
+    ≡⟨ funExt⁻ (funExt⁻ f-isalg1 sort) (mapTerm1 ([model1Eq→Q]algStr m1EqA) sort t) ⟩
+  str (fst m1EqB) sort (mapTerm1 f sort (mapTerm1 ([model1Eq→Q]algStr m1EqA) sort t))
     ≡⟨ cong (str (fst m1EqB) sort) (sym (mapTerm1-∘ _ _) ≡$ sort ≡$S t) ⟩
   str (fst m1EqB) sort
-    (mapTerm1 (λ x x₁ → f x (model1Eq→Q-algStr m1EqA x x₁)) sort t)
+    (mapTerm1 (λ x x₁ → f x ([model1Eq→Q]algStr m1EqA x x₁)) sort t)
     ≡⟨ cong (str (fst m1EqB) sort) (funExt⁻ (funExt⁻ (cong mapTerm1 (
-      (λ sort' → f sort' ∘ model1Eq→Q-algStr m1EqA sort')
-        ≡⟨ (funExt λ sort' → funExt λ t' → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort' t') ⟩
-      (λ sort' → model1Eq→Q-algStr m1EqB sort' ∘ mapTermQ f sort') ∎
+      (λ sort' → f sort' ∘ [model1Eq→Q]algStr m1EqA sort')
+        ≡⟨ (funExt λ sort' → funExt λ t' → [model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort' t') ⟩
+      (λ sort' → [model1Eq→Q]algStr m1EqB sort' ∘ mapTermQ f sort') ∎
     )) sort) t) ⟩
   str (fst m1EqB) sort
-    (mapTerm1 (λ x x₁ → model1Eq→Q-algStr m1EqB x (mapTermQ f x x₁))
+    (mapTerm1 (λ x x₁ → [model1Eq→Q]algStr m1EqB x (mapTermQ f x x₁))
      sort t)
     ≡⟨ cong (str (fst m1EqB) sort) (mapTerm1-∘ _ _ ≡$ sort ≡$S t) ⟩
-  str (fst m1EqB) sort (mapTerm1 (model1Eq→Q-algStr m1EqB) sort (mapTerm1 (mapTermQ f) sort t)) ∎-}
-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort (joinFQ t) =
-  mapTermF-ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t
+  str (fst m1EqB) sort (mapTerm1 ([model1Eq→Q]algStr m1EqB) sort (mapTerm1 (mapTermQ f) sort t)) ∎-}
+[model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort (joinFQ t) =
+  mapTermF-[model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort t
 -- The following all follows from Sethood but there seems to be a de Bruijn error in agda-cubical?
-ModelQHom1Eq→IsTermQAlgebraHom'
+[model1Eq→Q]strHom$$
   m1EqA@(algebra msetA α1 , respectsEqA)
   m1EqB@(algebra msetB β1 , respectsEqB)
   m1EqF@(algebraHom f f-isalg1) sort (joinFQ-varF t j) i =
   idfun
     (Square
       (λ j → f sort
-         (model1Eq→Q-algStr (algebra msetA α1 , respectsEqA) sort t))
-      (λ j → model1Eq→Q-algStr (algebra msetB β1 , respectsEqB)
+         ([model1Eq→Q]algStr (algebra msetA α1 , respectsEqA) sort t))
+      (λ j → [model1Eq→Q]algStr (algebra msetB β1 , respectsEqB)
          sort (mapTermQ f sort t))
-      (λ i → mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
+      (λ i → mapTermF-[model1Eq→Q]strHom$$
          (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
          (algebraHom f f-isalg1) sort (varF t) i)
-      (λ i → ModelQHom1Eq→IsTermQAlgebraHom'
+      (λ i → [model1Eq→Q]strHom$$
          (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
          (algebraHom f f-isalg1) sort t i)
     ) (toPathP (snd (msetB sort) _ _ _ _)) i j
-ModelQHom1Eq→IsTermQAlgebraHom'
+[model1Eq→Q]strHom$$
   m1EqA@(algebra msetA α1 , respectsEqA)
   m1EqB@(algebra msetB β1 , respectsEqB)
   m1EqF@(algebraHom f f-isalg1) sort (joinFQ-join1F t j) i =
   idfun
     (Square
-      (λ j → carrierHom m1EqF sort (model1Eq→Q-algStr m1EqA sort (joinFQ-join1F t j)))
-      (λ j → model1Eq→Q-algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (joinFQ-join1F t j)))
-      (λ i → mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
+      (λ j → carrierHom m1EqF sort ([model1Eq→Q]algStr m1EqA sort (joinFQ-join1F t j)))
+      (λ j → [model1Eq→Q]algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (joinFQ-join1F t j)))
+      (λ i → mapTermF-[model1Eq→Q]strHom$$
          (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
          (algebraHom f f-isalg1) sort (join1F t) i)
-      (λ i → mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom'
+      (λ i → mapTerm1-[model1Eq→Q]strHom$$
          (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
          (algebraHom f f-isalg1) sort (mapTerm1 (λ sort₁ → joinFQ) sort t) i)
     ) (toPathP (snd (msetB sort) _ _ _ _)) i j
-ModelQHom1Eq→IsTermQAlgebraHom'
+[model1Eq→Q]strHom$$
   m1EqA@(algebra msetA α1 , respectsEqA)
   m1EqB@(algebra msetB β1 , respectsEqB)
   m1EqF@(algebraHom f f-isalg1) sort (byAxiom axiom g j) i =
   idfun
     (Square
-      (λ j → carrierHom m1EqF sort (model1Eq→Q-algStr m1EqA sort (byAxiom axiom g j)))
-      (λ j → model1Eq→Q-algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (byAxiom axiom g j)))
-      (λ i → mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
+      (λ j → carrierHom m1EqF sort ([model1Eq→Q]algStr m1EqA sort (byAxiom axiom g j)))
+      (λ j → [model1Eq→Q]algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort (byAxiom axiom g j)))
+      (λ i → mapTermF-[model1Eq→Q]strHom$$
          (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
          (algebraHom f f-isalg1) sort (mapTermF g sort (lhs axiom)) i)
-      (λ i → mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
+      (λ i → mapTermF-[model1Eq→Q]strHom$$
          (algebra msetA α1 , respectsEqA) (algebra msetB β1 , respectsEqB)
          (algebraHom f f-isalg1) sort (mapTermF g sort (rhs axiom)) i)
     ) (toPathP (snd (msetB sort) _ _ _ _)) i j
-ModelQHom1Eq→IsTermQAlgebraHom'
+[model1Eq→Q]strHom$$
   m1EqA@(algebra msetA α1 , respectsEqA)
   m1EqB@(algebra msetB β1 , respectsEqB)
   m1EqF@(algebraHom f f-isalg1) sort (isSetTermQ t1 t2 et et' j k) i =
   idfun
     (Cube
-      (λ j k → f sort (model1Eq→Q-algStr m1EqA sort (isSetTermQ t1 t2 et et' j k)))
-      (λ j k → model1Eq→Q-algStr m1EqB sort (mapTermQ f sort (isSetTermQ t1 t2 et et' j k)))
-      (λ i k → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort (et  k) i)
-      (λ i k → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort (et' k) i)
-      (λ i j → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t1 i)
-      (λ i j → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t2 i)
+      (λ j k → f sort ([model1Eq→Q]algStr m1EqA sort (isSetTermQ t1 t2 et et' j k)))
+      (λ j k → [model1Eq→Q]algStr m1EqB sort (mapTermQ f sort (isSetTermQ t1 t2 et et' j k)))
+      (λ i k → [model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort (et  k) i)
+      (λ i k → [model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort (et' k) i)
+      (λ i j → [model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort t1 i)
+      (λ i j → [model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort t2 i)
     ) (toPathP (isSet→isGroupoid (snd (msetB sort)) _ _ _ _ _ _)) i j k
-mapTermF-ModelQHom1Eq→IsTermQAlgebraHom'
+mapTermF-[model1Eq→Q]strHom$$
   m1EqA@(algebra msetA α1 , respectsEqA)
   m1EqB@(algebra msetB β1 , respectsEqB)
   m1EqF@(algebraHom f f-isalg1) sort t =
-    f sort (αF sort (mapTermF (model1Eq→Q-algStr m1EqA) sort t))
-      ≡⟨ funExt⁻ (funExt⁻ f-isalgF sort) (mapTermF (model1Eq→Q-algStr m1EqA) sort t) ⟩
-    βF sort (mapTermF f sort (mapTermF (model1Eq→Q-algStr m1EqA) sort t))
+    f sort (αF sort (mapTermF ([model1Eq→Q]algStr m1EqA) sort t))
+      ≡⟨ funExt⁻ (funExt⁻ f-isalgF sort) (mapTermF ([model1Eq→Q]algStr m1EqA) sort t) ⟩
+    βF sort (mapTermF f sort (mapTermF ([model1Eq→Q]algStr m1EqA) sort t))
       ≡⟨ cong (βF sort) (funExt⁻ (funExt⁻ (
-        (λ sort' → mapTermF f sort' ∘ mapTermF (model1Eq→Q-algStr m1EqA) sort')
-          ≡⟨ sym (mapTermF-∘ f (model1Eq→Q-algStr m1EqA)) ⟩
-        mapTermF (λ sort₁ → f sort₁ ∘ model1Eq→Q-algStr m1EqA sort₁)
-          ≡⟨ cong mapTermF (funExt λ sort' → funExt λ t' → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort' t') ⟩
-        mapTermF (λ sort₁ → model1Eq→Q-algStr m1EqB sort₁ ∘ mapTermQ f sort₁)
-          ≡⟨ mapTermF-∘ (model1Eq→Q-algStr m1EqB) (mapTermQ f) ⟩
-        (λ sort' → mapTermF (model1Eq→Q-algStr m1EqB) sort' ∘ mapTermF (mapTermQ f) sort') ∎
+        (λ sort' → mapTermF f sort' ∘ mapTermF ([model1Eq→Q]algStr m1EqA) sort')
+          ≡⟨ sym (mapTermF-∘ f ([model1Eq→Q]algStr m1EqA)) ⟩
+        mapTermF (λ sort₁ → f sort₁ ∘ [model1Eq→Q]algStr m1EqA sort₁)
+          ≡⟨ cong mapTermF (funExt λ sort' → funExt λ t' → [model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort' t') ⟩
+        mapTermF (λ sort₁ → [model1Eq→Q]algStr m1EqB sort₁ ∘ mapTermQ f sort₁)
+          ≡⟨ mapTermF-∘ ([model1Eq→Q]algStr m1EqB) (mapTermQ f) ⟩
+        (λ sort' → mapTermF ([model1Eq→Q]algStr m1EqB) sort' ∘ mapTermF (mapTermQ f) sort') ∎
       ) sort) t) ⟩
-    βF sort (mapTermF (model1Eq→Q-algStr m1EqB) sort (mapTermF (mapTermQ f) sort t)) ∎
+    βF sort (mapTermF ([model1Eq→Q]algStr m1EqB) sort (mapTermF (mapTermQ f) sort t)) ∎
   where αF : IsAlgebra ftrTermF msetA
-        αF = model1→F (algebra msetA α1) .fst .str
+        αF = model1→F (algebra msetA α1) .fst .algStr
         βF : IsAlgebra ftrTermF msetB
-        βF = model1→F (algebra msetB β1) .fst .str
+        βF = model1→F (algebra msetB β1) .fst .algStr
         f-isalgF : IsAlgebraHom ftrTermF (algebra msetA αF) (algebra msetB βF) f
         f-isalgF = strHom (model1→F-hom m1EqF)
-mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom'
+mapTerm1-[model1Eq→Q]strHom$$
   m1EqA@(algebra msetA α1 , respectsEqA)
   m1EqB@(algebra msetB β1 , respectsEqB)
   m1EqF@(algebraHom f f-isalg1) sort t =
-    f sort (α1 sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t))
-      ≡⟨ f-isalg1 ≡$ sort ≡$S mapTerm1 (model1Eq→Q-algStr m1EqA) sort t ⟩
-    β1 sort (mapTerm1 f sort (mapTerm1 (model1Eq→Q-algStr m1EqA) sort t))
-      ≡⟨ cong (β1 sort) (sym (mapTerm1-∘ f (model1Eq→Q-algStr m1EqA)) ≡$ sort ≡$S t) ⟩
-    β1 sort (mapTerm1 (λ sort' → f sort' ∘ (model1Eq→Q-algStr m1EqA) sort') sort t)
+    f sort (α1 sort (mapTerm1 ([model1Eq→Q]algStr m1EqA) sort t))
+      ≡⟨ f-isalg1 ≡$ sort ≡$S mapTerm1 ([model1Eq→Q]algStr m1EqA) sort t ⟩
+    β1 sort (mapTerm1 f sort (mapTerm1 ([model1Eq→Q]algStr m1EqA) sort t))
+      ≡⟨ cong (β1 sort) (sym (mapTerm1-∘ f ([model1Eq→Q]algStr m1EqA)) ≡$ sort ≡$S t) ⟩
+    β1 sort (mapTerm1 (λ sort' → f sort' ∘ ([model1Eq→Q]algStr m1EqA) sort') sort t)
       ≡⟨ cong (β1 sort)
-          (cong mapTerm1 (funExt λ sort' → funExt λ t' → ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort' t')
+          (cong mapTerm1 (funExt λ sort' → funExt λ t' → [model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort' t')
           ≡$ sort ≡$S t) ⟩
-    β1 sort (mapTerm1 (λ sort' → (model1Eq→Q-algStr m1EqB) sort' ∘ mapTermQ f sort') sort t)
-      ≡⟨ cong (β1 sort) (mapTerm1-∘ (model1Eq→Q-algStr m1EqB) (mapTermQ f) ≡$ sort ≡$S t) ⟩
-    β1 sort (mapTerm1 (model1Eq→Q-algStr m1EqB) sort (mapTerm1 (mapTermQ f) sort t)) ∎
+    β1 sort (mapTerm1 (λ sort' → ([model1Eq→Q]algStr m1EqB) sort' ∘ mapTermQ f sort') sort t)
+      ≡⟨ cong (β1 sort) (mapTerm1-∘ ([model1Eq→Q]algStr m1EqB) (mapTermQ f) ≡$ sort ≡$S t) ⟩
+    β1 sort (mapTerm1 ([model1Eq→Q]algStr m1EqB) sort (mapTerm1 (mapTermQ f) sort t)) ∎
 
 {-
 
@@ -527,22 +527,22 @@ mapTerm1-ModelQHom1Eq→IsTermQAlgebraHom'
   {!!}
 -}
 
-ModelQHom1Eq→IsTermQAlgebraHom : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
+[model1Eq→Q]strHom : ∀ m1EqA m1EqB → (m1EqF : Model1EqHom m1EqA m1EqB) →
       (λ (sort : Sort) (t : TermQ (mtyp (m1EqA .fst .carrier)) sort)
-        → carrierHom m1EqF sort (model1Eq→Q-algStr m1EqA sort t))
+        → carrierHom m1EqF sort ([model1Eq→Q]algStr m1EqA sort t))
       ≡
       (λ (sort : Sort) (t : TermQ (mtyp (m1EqA .fst .carrier)) sort)
-        → model1Eq→Q-algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort t))
-ModelQHom1Eq→IsTermQAlgebraHom m1EqA m1EqB m1EqF i sort t =
-  ModelQHom1Eq→IsTermQAlgebraHom' m1EqA m1EqB m1EqF sort t i
+        → [model1Eq→Q]algStr m1EqB sort (mapTermQ (carrierHom m1EqF) sort t))
+[model1Eq→Q]strHom m1EqA m1EqB m1EqF i sort t =
+  [model1Eq→Q]strHom$$ m1EqA m1EqB m1EqF sort t i
 
-ModelQHom1Eq→ModelQHom : ∀ m1EqA m1EqB → Model1EqHom m1EqA m1EqB → ModelQHom (model1Eq→Q m1EqA) (model1Eq→Q m1EqB)
-carrierHom (ModelQHom1Eq→ModelQHom m1EqA m1EqB m1EqF) = carrierHom m1EqF
-strHom (ModelQHom1Eq→ModelQHom m1EqA m1EqB m1EqF) = ModelQHom1Eq→IsTermQAlgebraHom m1EqA m1EqB m1EqF
+[model1Eq→Q]hom : ∀ m1EqA m1EqB → Model1EqHom m1EqA m1EqB → ModelQHom (model1Eq→Q m1EqA) (model1Eq→Q m1EqB)
+carrierHom ([model1Eq→Q]hom m1EqA m1EqB m1EqF) = carrierHom m1EqF
+strHom ([model1Eq→Q]hom m1EqA m1EqB m1EqF) = [model1Eq→Q]strHom m1EqA m1EqB m1EqF
 
 ftrModel1Eq→Q : Functor catModel1Eq catModelQ
 F-ob ftrModel1Eq→Q = model1Eq→Q
-F-hom ftrModel1Eq→Q {m1EqA} {m1EqB} = ModelQHom1Eq→ModelQHom m1EqA m1EqB
+F-hom ftrModel1Eq→Q {m1EqA} {m1EqB} = [model1Eq→Q]hom m1EqA m1EqB
 F-id ftrModel1Eq→Q = AlgebraHom≡ ftrTermQ refl
 F-seq ftrModel1Eq→Q f g = AlgebraHom≡ ftrTermQ refl
 
@@ -556,19 +556,19 @@ ftrModelQ→F = EMFunctor monadTermF→Q
 modelQ→F : ModelQ → ModelF
 modelQ→F = F-ob ftrModelQ→F
 
-modelQ→F-respectsEqTheoryF : (mA : ModelQ) → respectsEqTheoryF (modelQ→F mA)
-modelQ→F-respectsEqTheoryF mA@(algebra msetA αQ , isEMA) {sort} axiom f = cong (αQ sort) (
+[modelQ→F]respectsEqTheoryF : (mA : ModelQ) → respectsEqTheoryF (modelQ→F mA)
+[modelQ→F]respectsEqTheoryF mA@(algebra msetA αQ , isEMA) {sort} axiom f = cong (αQ sort) (
   termF→Q sort (mapTermF f sort (lhs axiom))
     ≡⟨ sym (funExt⁻ (funExt⁻ lemma sort) (lhs axiom)) ⟩
   joinFQ (mapTermF (λ sort' x → varQ (f sort' x)) sort (lhs axiom))
-    ≡⟨ modelQ→F-respectsEqTheoryF' ⟩
+    ≡⟨ [modelQ→F]respectsEqTheoryF' ⟩
   joinFQ (mapTermF (λ sort' x → varQ (f sort' x)) sort (rhs axiom))
     ≡⟨ funExt⁻ (funExt⁻ lemma sort) (rhs axiom) ⟩
   termF→Q sort (mapTermF f sort (rhs axiom)) ∎
   )
-  where modelQ→F-respectsEqTheoryF' : joinFQ (mapTermF (λ sort' x → pureTermQ sort' (f sort' x)) sort (lhs axiom))
+  where [modelQ→F]respectsEqTheoryF' : joinFQ (mapTermF (λ sort' x → pureTermQ sort' (f sort' x)) sort (lhs axiom))
                                      ≡ joinFQ (mapTermF (λ sort' x → pureTermQ sort' (f sort' x)) sort (rhs axiom))
-        modelQ→F-respectsEqTheoryF' = byAxiom axiom (λ sort' → pureTermQ sort' ∘ f sort')
+        [modelQ→F]respectsEqTheoryF' = byAxiom axiom (λ sort' → pureTermQ sort' ∘ f sort')
         lemma : (λ (sort : Sort) → joinFQ ∘ mapTermF (λ sort' x → pureTermQ sort' (f sort' x)) sort)
               ≡ (λ (sort : Sort) → termF→Q sort ∘ mapTermF f sort)
         lemma =
@@ -579,7 +579,7 @@ modelQ→F-respectsEqTheoryF mA@(algebra msetA αQ , isEMA) {sort} axiom f = con
           (λ sort → termF→Q sort ∘ mapTermF f sort) ∎
 
 ftrModelQ→FEq : Functor catModelQ catModelFEq
-ftrModelQ→FEq = ToFullSubcategory catModelQ catModelF respectsEqTheoryF ftrModelQ→F modelQ→F-respectsEqTheoryF
+ftrModelQ→FEq = ToFullSubcategory catModelQ catModelF respectsEqTheoryF ftrModelQ→F [modelQ→F]respectsEqTheoryF
 
 modelQ→FEq : ModelQ → ModelFEq
 modelQ→FEq = F-ob ftrModelQ→FEq
@@ -587,16 +587,16 @@ modelQ→FEq = F-ob ftrModelQ→FEq
 ---------
 
 {-# TERMINATING #-}
-model1Eq→F→Q-algStr : (m1Eq : Model1Eq)
-  → (λ (sort : Sort) → model1Eq→Q-algStr m1Eq sort ∘ termF→Q sort)
-   ≡ (λ (sort : Sort) → model1→F-algStr (fst m1Eq) sort)
-model1Eq→F→Q-algStr m1Eq@(algebra msetA α , respectsEqTheory1A) i sort (varF x) = x
-model1Eq→F→Q-algStr m1Eq@(algebra msetA α , respectsEqTheory1A) i sort (join1F t) = (
-    α sort (mapTerm1 (model1Eq→Q-algStr m1Eq) sort (mapTerm1 termF→Q sort t))
+[model1Eq→Q→F]algStr : (m1Eq : Model1Eq)
+  → [model1Eq→Q]algStr m1Eq ∘M termF→Q
+   ≡ [model1→F]algStr (fst m1Eq)
+[model1Eq→Q→F]algStr m1Eq@(algebra msetA α , respectsEqTheory1A) i sort (varF x) = x
+[model1Eq→Q→F]algStr m1Eq@(algebra msetA α , respectsEqTheory1A) i sort (join1F t) = (
+    α sort (mapTerm1 ([model1Eq→Q]algStr m1Eq) sort (mapTerm1 termF→Q sort t))
       ≡⟨ congS (α sort) (sym (mapTerm1-∘ _ _) ≡$ sort ≡$S t) ⟩
-    α sort (mapTerm1 (λ sort' → model1Eq→Q-algStr m1Eq sort' ∘ termF→Q sort') sort t)
-      ≡⟨ (λ i → α sort (mapTerm1 (model1Eq→F→Q-algStr m1Eq i) sort t)) ⟩
-    α sort (mapTerm1 (model1→F-algStr (fst m1Eq)) sort t) ∎
+    α sort (mapTerm1 (λ sort' → [model1Eq→Q]algStr m1Eq sort' ∘ termF→Q sort') sort t)
+      ≡⟨ (λ i → α sort (mapTerm1 ([model1Eq→Q→F]algStr m1Eq i) sort t)) ⟩
+    α sort (mapTerm1 ([model1→F]algStr (fst m1Eq)) sort t) ∎
   ) i
 
 model1Eq→Q→FEq : modelQ→FEq ∘ model1Eq→Q ≡ model1Eq→FEq
@@ -604,7 +604,7 @@ model1Eq→Q→FEq = funExt λ (m1Eq@(algebra msetA α , respectsEqTheory1A)) �
   Σ≡Prop isProp-respectsEqTheoryF (
     Σ≡Prop (λ _ → isPropIsEMAlgebra monadTermF) (cong₂ algebra
       refl
-      (model1Eq→F→Q-algStr m1Eq)
+      ([model1Eq→Q→F]algStr m1Eq)
     )
   )
 
@@ -615,18 +615,18 @@ ftrModel1Eq→Q→FEq = Functor≡
 
 {-# TERMINATING #-}
 modelQ→1Eq→Q-algStr : (mA : ModelQ)
-  → model1Eq→Q-algStr (modelFEq→1Eq (modelQ→FEq mA))
-   ≡ mA .fst .str
+  → [model1Eq→Q]algStr (modelFEq→1Eq (modelQ→FEq mA))
+   ≡ mA .fst .algStr
 modelQ→1Eq→Q-algStr mA = foldModelQ-uniq2 (mA .fst .carrier) mA
   (algebraHom
-    (model1Eq→Q-algStr (modelFEq→1Eq (modelQ→FEq mA)))
-    ( model1Eq→Q-algStr-joinTermQ (modelFEq→1Eq (modelQ→FEq mA))
-    ∙ funExt λ sort → cong (_∘ mapTermQ (model1Eq→Q-algStr (modelFEq→1Eq (modelQ→FEq mA))) sort)
+    ([model1Eq→Q]algStr (modelFEq→1Eq (modelQ→FEq mA)))
+    ( [model1Eq→Q]str-μ (modelFEq→1Eq (modelQ→FEq mA))
+    ∙ funExt λ sort → cong (_∘ mapTermQ ([model1Eq→Q]algStr (modelFEq→1Eq (modelQ→FEq mA))) sort)
       (funExt⁻ (modelQ→1Eq→Q-algStr mA) sort) -- induction
     )
   )
   (algebraHom
-    (λ a → mA .fst .str a)
+    (λ a → mA .fst .algStr a)
     (mA .snd .str-μ)
   )
   (sym (mA .snd .str-η))

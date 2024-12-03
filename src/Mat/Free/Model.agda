@@ -108,7 +108,7 @@ foldModelF-nat msetX mFA mFB mFG f i = mFFoldModelF-nat msetX mFA mFB mFG f i .c
 mFFoldModelF-uniq : (msetX : MSet) → (mFA : ModelF)
   → (f : catMSet [ msetX , F-ob ftrForgetModelF mFA ])
   → (mFG : catModelF [ F-ob ftrFreeModelF msetX , mFA ])
-  → (λ sort → mFG .carrierHom sort ∘ pureTermF sort) ≡ f
+  → mFG .carrierHom ∘M pureTermF ≡ f
   → mFFoldModelF msetX mFA f ≡ mFG
 mFFoldModelF-uniq msetX mFA f mFG ef =
   mFFoldModelF msetX mFA f
@@ -124,28 +124,27 @@ mFFoldModelF-uniq msetX mFA f mFG ef =
 foldModelF-uniq : (msetX : MSet) → (mFA : ModelF)
   → (f : catMSet [ msetX , F-ob ftrForgetModelF mFA ])
   → (mFG : catModelF [ F-ob ftrFreeModelF msetX , mFA ])
-  → (λ sort → mFG .carrierHom sort ∘ pureTermF sort) ≡ f
+  → mFG .carrierHom ∘M pureTermF ≡ f
   → foldModelF msetX mFA f ≡ mFG .carrierHom
 foldModelF-uniq msetX mFA f mFG ef i = mFFoldModelF-uniq msetX mFA f mFG ef i .carrierHom
 
 foldModelF-uniq2 : (msetX : MSet) → (mFA : ModelF)
   → (mFG mFH : catModelF [ F-ob ftrFreeModelF msetX , mFA ])
-  → (λ (sort : Sort) → mFG .carrierHom sort ∘ pureTermF sort)
-   ≡ (λ (sort : Sort) → mFH .carrierHom sort ∘ pureTermF sort)
+  → mFG .carrierHom ∘M pureTermF ≡ mFH .carrierHom ∘M pureTermF
   → mFG .carrierHom ≡ mFH .carrierHom
 foldModelF-uniq2 msetX mFA mFG mFH e =
   mFG .carrierHom
-    ≡⟨ sym (foldModelF-uniq msetX mFA (λ sort → mFG .carrierHom sort ∘ pureTermF sort) mFG refl) ⟩
-  foldModelF msetX mFA (λ sort → mFG .carrierHom sort ∘ pureTermF sort)
-    ≡⟨ foldModelF-uniq msetX mFA (λ sort → mFG .carrierHom sort ∘ pureTermF sort) mFH (sym e) ⟩
+    ≡⟨ sym (foldModelF-uniq msetX mFA (mFG .carrierHom ∘M pureTermF) mFG refl) ⟩
+  foldModelF msetX mFA (mFG .carrierHom ∘M pureTermF)
+    ≡⟨ foldModelF-uniq msetX mFA (mFG .carrierHom ∘M pureTermF) mFH (sym e) ⟩
   mFH .carrierHom ∎
 
 -- Sending models of Term1 to models of TermF
 module _ where
   {-# TERMINATING #-}
   [model1→F]algStr : ((algebra msetA α) : Model1) → IsAlgebra ftrTermF msetA
-  [model1→F]algStr (algebra msetA α) sort (varF a) = a
-  [model1→F]algStr (algebra msetA α) sort (join1F t) =
+  [model1→F]algStr (algebra msetA α) sort (varF' a) = a
+  [model1→F]algStr (algebra msetA α) sort (join1F' t) =
     α sort (mapTerm1 ([model1→F]algStr (algebra msetA α)) sort t)
     --α sort (term1 o λ p → [model1→F]algStr (algebra msetA α) (arity o ! p) (args p))
 
@@ -157,8 +156,8 @@ module _ where
     (tta : TermF (TermF (mtyp msetA)) sort) →
     ([model1→F]algStr m1a ∘M joinTermF) sort tta ≡
     ([model1→F]algStr m1a ∘M mapTermF ([model1→F]algStr m1a)) sort tta
-  [model1→F]str-μ$$ m1a@(algebra msetA α) sort (varF ta) = refl
-  [model1→F]str-μ$$ m1a@(algebra msetA α) sort (join1F t) =
+  [model1→F]str-μ$$ m1a@(algebra msetA α) sort (varF' ta) = refl
+  [model1→F]str-μ$$ m1a@(algebra msetA α) sort (join1F' t) =
     congS (α sort) (((
       (λ sort' → mapTerm1 ([model1→F]algStr m1a) sort' ∘ mapTerm1 joinTermF sort')
         ≡⟨ sym (mapTerm1-∘ ([model1→F]algStr m1a) joinTermF) ⟩
@@ -181,8 +180,8 @@ module _ where
   [model1→F]strHom$$ : ∀ {(algebra msetA α) (algebra msetB β) : Algebra ftrTerm1} → ((algebraHom f isalgF)
     : Model1Hom (algebra msetA α) (algebra msetB β)) → ∀ sort ta
     → (f ∘M [model1→F]algStr (algebra msetA α)) sort ta ≡ ([model1→F]algStr (algebra msetB β) ∘M mapTermF f) sort ta
-  [model1→F]strHom$$ {algebra msetA α} {algebra msetB β} (algebraHom f commut) sort (varF a) = refl
-  [model1→F]strHom$$ {algebra msetA α} {algebra msetB β} (algebraHom f commut) sort (join1F t) = ((
+  [model1→F]strHom$$ {algebra msetA α} {algebra msetB β} (algebraHom f commut) sort (varF' a) = refl
+  [model1→F]strHom$$ {algebra msetA α} {algebra msetB β} (algebraHom f commut) sort (join1F' t) = ((
       (λ sort' → f sort' ∘ α sort' ∘ mapTerm1 ([model1→F]algStr (algebra msetA α)) sort')
         ≡⟨ cong (λ h sort' → h sort' ∘ mapTerm1 ([model1→F]algStr (algebra msetA α)) sort') commut ⟩
       (λ sort' → β sort' ∘ mapTerm1 f sort' ∘ mapTerm1 ([model1→F]algStr (algebra msetA α)) sort')
@@ -210,10 +209,10 @@ module _ where
 -- sending models of TermF to models of Term1
 module _ where
   nt1→F : NatTrans ftrTerm1 ftrTermF
-  N-ob nt1→F msetA sort t = join1F (mapTerm1 pureTermF sort t)
+  N-ob nt1→F msetA sort t = join1F' (mapTerm1 pureTermF sort t)
   N-hom nt1→F f =
-    (λ sort' → join1F ∘ mapTerm1 pureTermF sort' ∘ mapTerm1 f sort')
-      ≡⟨ congS (λ h sort' → join1F ∘ h sort') (
+    (λ sort' → join1F' ∘ mapTerm1 pureTermF sort' ∘ mapTerm1 f sort')
+      ≡⟨ congS (λ h sort' → join1F' ∘ h sort') (
         (λ sort' → mapTerm1 pureTermF sort' ∘ mapTerm1 f sort')
           ≡⟨ sym (mapTerm1-∘ pureTermF f) ⟩
         mapTerm1 (λ sort' → pureTermF sort' ∘ f sort')
@@ -222,9 +221,9 @@ module _ where
           ≡⟨ mapTerm1-∘ (mapTermF f) pureTermF ⟩
         (λ sort' → mapTerm1 (mapTermF f) sort' ∘ mapTerm1 pureTermF sort') ∎
       ) ⟩
-    (λ sort' → join1F ∘ mapTerm1 (mapTermF f) sort' ∘ mapTerm1 pureTermF sort')
+    (λ sort' → join1F' ∘ mapTerm1 (mapTermF f) sort' ∘ mapTerm1 pureTermF sort')
       ≡⟨⟩
-    (λ sort' → mapTermF f sort' ∘ join1F ∘ mapTerm1 pureTermF sort') ∎
+    (λ sort' → mapTermF f sort' ∘ join1F' ∘ mapTerm1 pureTermF sort') ∎
 
   ftrModelF→1 : Functor catModelF catModel1
   ftrModelF→1 = funcComp {-{D = AlgebrasCategory ftrTermF}{E = catModel1}{C = catModelF}-}
@@ -240,7 +239,7 @@ module _ where
   ftrModel1→F→1 = Functor≡
     (λ where
       (algebra msetA α) → cong₂ algebra refl (
-          (λ sort' → [model1→F]algStr (algebra msetA α) sort' ∘ join1F ∘ mapTerm1 pureTermF sort')
+          (λ sort' → [model1→F]algStr (algebra msetA α) sort' ∘ join1F' ∘ mapTerm1 pureTermF sort')
             ≡⟨⟩
           (λ sort' → α sort' ∘ mapTerm1 ([model1→F]algStr (algebra msetA α)) sort' ∘ mapTerm1 pureTermF sort')
             ≡⟨ congS (λ h sort' → α sort' ∘ h sort') (
@@ -275,31 +274,31 @@ module _ where
       open IsEMAlgebra
       lemma : ∀ ((algebra msetA α) : Algebra ftrTermF) (isEMA : IsEMAlgebra monadTermF (algebra msetA α))
         (sort : Sort) (ta : TermF (λ sort₁ → fst (msetA sort₁)) sort) →
-        [model1→F]algStr (algebra msetA (λ sort' → α sort' ∘ join1F ∘ mapTerm1 pureTermF sort')) sort ta
+        [model1→F]algStr (algebra msetA (λ sort' → α sort' ∘ join1F' ∘ mapTerm1 pureTermF sort')) sort ta
         ≡ α sort ta
-      lemma (algebra msetA α) isEMA sort (varF a) = sym ((str-η isEMA ≡$ sort) ≡$ a)
-      lemma (algebra msetA α) isEMA sort (join1F t) = ((
-          (λ sort' → α sort' ∘ join1F ∘ mapTerm1 pureTermF sort' ∘
-            mapTerm1 ([model1→F]algStr (algebra msetA (λ sort' → α sort' ∘ join1F ∘ mapTerm1 pureTermF sort'))) sort')
-            ≡⟨ congS (λ h sort' → α sort' ∘ join1F ∘ mapTerm1 pureTermF sort' ∘ h sort')
+      lemma (algebra msetA α) isEMA sort (varF' a) = sym ((str-η isEMA ≡$ sort) ≡$ a)
+      lemma (algebra msetA α) isEMA sort (join1F' t) = ((
+          (λ sort' → α sort' ∘ join1F' ∘ mapTerm1 pureTermF sort' ∘
+            mapTerm1 ([model1→F]algStr (algebra msetA (λ sort' → α sort' ∘ join1F' ∘ mapTerm1 pureTermF sort'))) sort')
+            ≡⟨ congS (λ h sort' → α sort' ∘ join1F' ∘ mapTerm1 pureTermF sort' ∘ h sort')
                  (cong mapTerm1 (funExt λ sort' → funExt λ ta → lemma (algebra msetA α) isEMA sort' ta)) ⟩
-          (λ sort' → α sort' ∘ join1F ∘ mapTerm1 pureTermF sort' ∘ mapTerm1 α sort')
-            ≡⟨ congS (λ h sort' → α sort' ∘ join1F ∘ h sort') (sym (mapTerm1-∘ pureTermF α)) ⟩
-          (λ sort' → α sort' ∘ join1F ∘ mapTerm1 (λ sort₁ → pureTermF sort₁ ∘ α sort₁) sort')
+          (λ sort' → α sort' ∘ join1F' ∘ mapTerm1 pureTermF sort' ∘ mapTerm1 α sort')
+            ≡⟨ congS (λ h sort' → α sort' ∘ join1F' ∘ h sort') (sym (mapTerm1-∘ pureTermF α)) ⟩
+          (λ sort' → α sort' ∘ join1F' ∘ mapTerm1 (λ sort₁ → pureTermF sort₁ ∘ α sort₁) sort')
             ≡⟨⟩
-          (λ sort' → α sort' ∘ join1F ∘ mapTerm1 (λ sort₁ → mapTermF α sort₁ ∘ pureTermF sort₁) sort')
-            ≡⟨ congS (λ h sort' → α sort' ∘ join1F ∘ h sort') (mapTerm1-∘ (mapTermF α) pureTermF) ⟩
-          (λ sort' → α sort' ∘ join1F ∘ mapTerm1 (mapTermF α) sort' ∘ mapTerm1 pureTermF sort')
+          (λ sort' → α sort' ∘ join1F' ∘ mapTerm1 (λ sort₁ → mapTermF α sort₁ ∘ pureTermF sort₁) sort')
+            ≡⟨ congS (λ h sort' → α sort' ∘ join1F' ∘ h sort') (mapTerm1-∘ (mapTermF α) pureTermF) ⟩
+          (λ sort' → α sort' ∘ join1F' ∘ mapTerm1 (mapTermF α) sort' ∘ mapTerm1 pureTermF sort')
             ≡⟨⟩
-          (λ sort' → α sort' ∘ mapTermF α sort' ∘ join1F ∘ mapTerm1 pureTermF sort')
-            ≡⟨ congS (λ h sort' → h sort' ∘ join1F ∘ mapTerm1 pureTermF sort') (sym (str-μ isEMA)) ⟩
-          (λ sort' → α sort' ∘ joinTermF sort' ∘ join1F ∘ mapTerm1 pureTermF sort')
+          (λ sort' → α sort' ∘ mapTermF α sort' ∘ join1F' ∘ mapTerm1 pureTermF sort')
+            ≡⟨ congS (λ h sort' → h sort' ∘ join1F' ∘ mapTerm1 pureTermF sort') (sym (str-μ isEMA)) ⟩
+          (λ sort' → α sort' ∘ joinTermF sort' ∘ join1F' ∘ mapTerm1 pureTermF sort')
             ≡⟨⟩
-          (λ sort' → α sort' ∘ join1F ∘ mapTerm1 joinTermF sort' ∘ mapTerm1 pureTermF sort')
-            ≡⟨ congS (λ h sort' → α sort' ∘ join1F ∘ h sort') (sym (mapTerm1-∘ joinTermF pureTermF)) ⟩
-          (λ sort' → α sort' ∘ join1F ∘ mapTerm1 (λ sort'' → idfun _) sort')
-            ≡⟨ congS (λ h sort' → α sort' ∘ join1F ∘ h sort') mapTerm1-id ⟩
-          (λ sort' → α sort' ∘ join1F) ∎
+          (λ sort' → α sort' ∘ join1F' ∘ mapTerm1 joinTermF sort' ∘ mapTerm1 pureTermF sort')
+            ≡⟨ congS (λ h sort' → α sort' ∘ join1F' ∘ h sort') (sym (mapTerm1-∘ joinTermF pureTermF)) ⟩
+          (λ sort' → α sort' ∘ join1F' ∘ mapTerm1 (λ sort'' → idfun _) sort')
+            ≡⟨ congS (λ h sort' → α sort' ∘ join1F' ∘ h sort') mapTerm1-id ⟩
+          (λ sort' → α sort' ∘ join1F') ∎
         ) ≡$ sort) ≡$S t
 
 -- After updating the cubical library, you'll have to refer to wild categories instead of precategories.

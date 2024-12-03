@@ -7,7 +7,7 @@ open import Cubical.Data.List.FinData renaming (lookup to _!_)
 open import Cubical.Data.Sigma
 open import Cubical.Foundations.Structure hiding (str)
 open import Cubical.Categories.Category
-import Cubical.Categories.Category.Precategory as P
+open import Cubical.Categories.Category.Precategory as P
 open import Cubical.Categories.Functor
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Monad.Base
@@ -47,25 +47,25 @@ private
 
 {- SyntaxQ monad
    -------------
-   For the non-equality constructors, `varQ` and `join1Q` are all you need.
+   For the non-equality constructors, `varQ'` and `join1Q` are all you need.
    However, in `byAxion` we want to easily refer to `joinFQ` without relying on too much computation (I guess).
    Alternatively, we could suffice with `joinFQ`, but then we have to state correctness w.r.t. `joinF` which
    is again a heavy-duty definition.
 -}
 data TermQ (X : MType) : MType where
-  varQ : ∀ {sortOut} → X sortOut → TermQ X sortOut
+  varQ' : ∀ {sortOut} → X sortOut → TermQ X sortOut
   join1Q : ∀ {sortOut} → Term1 (TermQ X) sortOut → TermQ X sortOut
   joinFQ : ∀ {sortOut} → TermF (TermQ X) sortOut → TermQ X sortOut
-  joinFQ-varF : ∀ {sortOut} → (t : TermQ X sortOut) → joinFQ (varF t) ≡ t
-  joinFQ-join1F : ∀ {sortOut} → (t : Term1 (TermF (TermQ X)) sortOut)
-    → joinFQ (join1F t) ≡ join1Q (mapTerm1 (λ sort → joinFQ) sortOut t)
+  joinFQ-varF' : ∀ {sortOut} → (t : TermQ X sortOut) → joinFQ (varF' t) ≡ t
+  joinFQ-join1F' : ∀ {sortOut} → (t : Term1 (TermF (TermQ X)) sortOut)
+    → joinFQ (join1F' t) ≡ join1Q (mapTerm1 (λ sort → joinFQ) sortOut t)
   byAxiom : ∀ {sortOut : Sort} → (axiom : Axiom sortOut) → (f : ∀ sort → mtyp (msetArity axiom) sort → TermQ X sort)
     → joinFQ (mapTermF f sortOut (lhs axiom))
     ≡ joinFQ (mapTermF f sortOut (rhs axiom))
   isSetTermQ : ∀ {sortOut} → isSet (TermQ X sortOut)
 
-varQ-M : ∀ {X} → (X →M TermQ X)
-varQ-M sort = varQ
+varQ : ∀ {X} → (X →M TermQ X)
+varQ sort = varQ'
 
 join1Q-M : ∀ {X} → (Term1 (TermQ X) →M TermQ X)
 join1Q-M sort = join1Q
@@ -73,11 +73,11 @@ join1Q-M sort = join1Q
 joinFQ-M : ∀ {X} → (TermF (TermQ X) →M TermQ X)
 joinFQ-M sort = joinFQ
 
-joinFQ-varF-M : ∀ {X} → joinFQ-M ∘M varF-M ≡ idfunM (TermQ X)
-joinFQ-varF-M {X} i sort t = joinFQ-varF t i
+joinFQ-varF : ∀ {X} → joinFQ-M ∘M varF ≡ idfunM (TermQ X)
+joinFQ-varF {X} i sort t = joinFQ-varF' t i
 
-joinFQ-join1F-M : ∀ {X} → joinFQ-M {X} ∘M join1F-M ≡ join1Q-M ∘M mapTerm1 joinFQ-M
-joinFQ-join1F-M i sort t = joinFQ-join1F t i
+joinFQ-join1F : ∀ {X} → joinFQ-M {X} ∘M join1F ≡ join1Q-M ∘M mapTerm1 joinFQ-M
+joinFQ-join1F i sort t = joinFQ-join1F' t i
 
 -- TermQ acting on MSets
 msetTermQ : MSet → MSet
@@ -87,13 +87,13 @@ snd (msetTermQ msetX sortOut) = isSetTermQ
 -- Components of TermQ as a functor
 {-# TERMINATING #-}
 mapTermQ : ∀ {X Y} → (X →M Y) → (TermQ X →M TermQ Y)
-mapTermQ f sort (varQ x) = varQ (f sort x)
+mapTermQ f sort (varQ' x) = varQ' (f sort x)
 mapTermQ f sort (join1Q t) = join1Q (mapTerm1 (mapTermQ f) sort t)
 mapTermQ f sort (joinFQ t) = joinFQ (mapTermF (mapTermQ f) sort t)
-mapTermQ f sort (joinFQ-varF t i) = joinFQ-varF (mapTermQ f sort t) i
-mapTermQ f sort (joinFQ-join1F t i) = ((
-    joinFQ-M ∘M join1F-M ∘M mapTerm1 (mapTermF (mapTermQ f))
-      ≡⟨ cong (_∘M mapTerm1 (mapTermF (mapTermQ f))) joinFQ-join1F-M ⟩
+mapTermQ f sort (joinFQ-varF' t i) = joinFQ-varF' (mapTermQ f sort t) i
+mapTermQ f sort (joinFQ-join1F' t i) = ((
+    joinFQ-M ∘M join1F ∘M mapTerm1 (mapTermF (mapTermQ f))
+      ≡⟨ cong (_∘M mapTerm1 (mapTermF (mapTermQ f))) joinFQ-join1F ⟩
     join1Q-M ∘M mapTerm1 joinFQ-M ∘M mapTerm1 (mapTermF (mapTermQ f))
       ≡⟨ cong (join1Q-M ∘M_) (sym (mapTerm1-∘ _ _)) ⟩
     join1Q-M ∘M mapTerm1 (joinFQ-M ∘M mapTermF (mapTermQ f))
@@ -118,24 +118,24 @@ mapTermQ f sort (isSetTermQ t1 t2 et et' i j) = isSetTermQ
 mapTermQ-id : ∀ {X} → mapTermQ (idfunM X) ≡ idfunM (TermQ X)
 mapTermF-mapTermQ-id : ∀ {X} → mapTermF (mapTermQ (idfunM X)) ≡ idfunM (TermF (TermQ X))
 mapTerm1-mapTermQ-id : ∀ {X} → mapTerm1 (mapTermQ (idfunM X)) ≡ idfunM (Term1 (TermQ X))
-mapTermQ-id i sort (varQ x) = varQ x
+mapTermQ-id i sort (varQ' x) = varQ' x
 mapTermQ-id i sort (join1Q t) = join1Q (mapTerm1-mapTermQ-id i sort t)
 mapTermQ-id i sort (joinFQ t) = joinFQ (mapTermF-mapTermQ-id i sort t)
-mapTermQ-id {X = X} i sort (joinFQ-varF t j) = --{!joinFQ-varF (mapTermQ-id i sort t) j!}
+mapTermQ-id {X = X} i sort (joinFQ-varF' t j) = --{!joinFQ-varF' (mapTermQ-id i sort t) j!}
   idfun
     (Square
-      (λ j → joinFQ-varF (mapTermQ (idfunM X) sort t) j)
-      (λ j → idfun (TermQ X sort) (joinFQ-varF t j))
-      (λ i → joinFQ (mapTermF-mapTermQ-id i sort (varF t)))
+      (λ j → joinFQ-varF' (mapTermQ (idfunM X) sort t) j)
+      (λ j → idfun (TermQ X sort) (joinFQ-varF' t j))
+      (λ i → joinFQ (mapTermF-mapTermQ-id i sort (varF' t)))
       (λ i → mapTermQ-id i sort t)
     ) (toPathP (isSetTermQ _ _ _ _)) i j
-mapTermQ-id i sort (joinFQ-join1F t j) =
+mapTermQ-id i sort (joinFQ-join1F' t j) =
   idfun
     (Square
-      (λ j → mapTermQ (λ sort' → idfun _) sort (joinFQ-join1F t j))
+      (λ j → mapTermQ (λ sort' → idfun _) sort (joinFQ-join1F' t j))
         --(term1 o (λ p → mapTermF (mapTermQ (λ sort₁ x → x)) (arity o ! p) (args p))) j)
-      (λ j → joinFQ-join1F t j)
-      (λ i → joinFQ (mapTermF-mapTermQ-id i sort (join1F t)))
+      (λ j → joinFQ-join1F' t j)
+      (λ i → joinFQ (mapTermF-mapTermQ-id i sort (join1F' t)))
       (λ i → join1Q (mapTerm1-mapTermQ-id i sort (mapTerm1 (λ sort₁ → joinFQ) sort t)))
         --(term1 o λ p → joinFQ (mapTermF-mapTermQ-id i (arity o ! p) (args p)))
     ) (toPathP (isSetTermQ _ _ _ _)) i j
@@ -166,24 +166,24 @@ mapTermF-mapTermQ-∘ : ∀ {X Y Z : MType} (g : Y →M Z) (f : X →M Y)
   → mapTermF (mapTermQ (g ∘M f)) ≡ mapTermF (mapTermQ g) ∘M mapTermF (mapTermQ f)
 mapTerm1-mapTermQ-∘ : ∀ {X Y Z : MType} (g : Y →M Z) (f : X →M Y)
   → mapTerm1 (mapTermQ (g ∘M f)) ≡ mapTerm1 (mapTermQ g) ∘M mapTerm1 (mapTermQ f)
-mapTermQ-∘ g f i sort (varQ x) = varQ (g sort (f sort x))
+mapTermQ-∘ g f i sort (varQ' x) = varQ' (g sort (f sort x))
 mapTermQ-∘ g f i sort (join1Q t) = join1Q (mapTerm1-mapTermQ-∘ g f i sort t)
 mapTermQ-∘ g f i sort (joinFQ t) = joinFQ (mapTermF-mapTermQ-∘ g f i sort t)
-mapTermQ-∘ g f i sort (joinFQ-varF t j) =
+mapTermQ-∘ g f i sort (joinFQ-varF' t j) =
   idfun
     (Square
-      (λ j → joinFQ-varF (mapTermQ (λ sort₁ → g sort₁ ∘ f sort₁) sort t) j)
-      (λ j → (mapTermQ g sort ∘ mapTermQ f sort) (joinFQ-varF t j))
-      (λ i → joinFQ (mapTermF-mapTermQ-∘ g f i sort (varF t)))
+      (λ j → joinFQ-varF' (mapTermQ (λ sort₁ → g sort₁ ∘ f sort₁) sort t) j)
+      (λ j → (mapTermQ g sort ∘ mapTermQ f sort) (joinFQ-varF' t j))
+      (λ i → joinFQ (mapTermF-mapTermQ-∘ g f i sort (varF' t)))
       λ i → mapTermQ-∘ g f i sort t
     )
     (toPathP (isSetTermQ _ _ _ _)) i j
-mapTermQ-∘ g f i sort (joinFQ-join1F (term1 o args) j) =
+mapTermQ-∘ g f i sort (joinFQ-join1F' (term1 o args) j) =
   idfun
     (Square
-      (λ j → mapTermQ (λ sort' → g sort' ∘ f sort') sort (joinFQ-join1F (term1 o args) j))
-      (λ j → (mapTermQ g sort ∘ mapTermQ f sort) (joinFQ-join1F (term1 o args) j))
-      (λ i → joinFQ (mapTermF-mapTermQ-∘ g f i sort (join1F (term1 o args))))
+      (λ j → mapTermQ (λ sort' → g sort' ∘ f sort') sort (joinFQ-join1F' (term1 o args) j))
+      (λ j → (mapTermQ g sort ∘ mapTermQ f sort) (joinFQ-join1F' (term1 o args) j))
+      (λ i → joinFQ (mapTermF-mapTermQ-∘ g f i sort (join1F' (term1 o args))))
       (λ i → join1Q (mapTerm1-mapTermQ-∘ g f i sort (mapTerm1 (λ sort₁ → joinFQ) sort (term1 o args))))
     )
     (toPathP (isSetTermQ _ _ _ _)) i j
@@ -212,17 +212,17 @@ F-seq ftrTermQ f g = mapTermQ-∘ g f
 
 -- Components of TermQ as a monad
 pureTermQ : {X : MType} → (X →M TermQ X)
-pureTermQ = varQ-M
+pureTermQ = varQ
 
 {-# TERMINATING #-}
 joinTermQ : {X : MType} → (TermQ (TermQ X) →M TermQ X)
-joinTermQ sort (varQ t) = t
+joinTermQ sort (varQ' t) = t
 joinTermQ sort (join1Q t) = join1Q (mapTerm1 joinTermQ sort t)
 joinTermQ sort (joinFQ t) = joinFQ (mapTermF joinTermQ sort t)
-joinTermQ sort (joinFQ-varF t i) = joinFQ-varF (joinTermQ sort t) i
-joinTermQ sort (joinFQ-join1F t i) = ((
-    joinFQ-M ∘M join1F-M ∘M mapTerm1 (mapTermF joinTermQ)
-      ≡⟨ cong (_∘M mapTerm1 (mapTermF joinTermQ)) joinFQ-join1F-M ⟩
+joinTermQ sort (joinFQ-varF' t i) = joinFQ-varF' (joinTermQ sort t) i
+joinTermQ sort (joinFQ-join1F' t i) = ((
+    joinFQ-M ∘M join1F ∘M mapTerm1 (mapTermF joinTermQ)
+      ≡⟨ cong (_∘M mapTerm1 (mapTermF joinTermQ)) joinFQ-join1F ⟩
     join1Q-M ∘M mapTerm1 joinFQ-M ∘M mapTerm1 (mapTermF joinTermQ)
       ≡⟨ cong (join1Q-M ∘M_) (sym (mapTerm1-∘ _ _)) ⟩
     join1Q-M ∘M mapTerm1 (joinFQ-M ∘M mapTermF joinTermQ)
@@ -250,24 +250,24 @@ mapTermF-joinTermQ-nat : ∀ {X Y : MType} → (f : X →M Y) →
   mapTermF joinTermQ ∘M mapTermF (mapTermQ (mapTermQ f)) ≡ mapTermF (mapTermQ f) ∘M mapTermF joinTermQ
 mapTerm1-joinTermQ-nat : ∀ {X Y : MType} → (f : X →M Y) →
   mapTerm1 joinTermQ ∘M mapTerm1 (mapTermQ (mapTermQ f)) ≡ mapTerm1 (mapTermQ f) ∘M mapTerm1 joinTermQ
-joinTermQ-nat f i sort (varQ t) = mapTermQ f sort t
+joinTermQ-nat f i sort (varQ' t) = mapTermQ f sort t
 joinTermQ-nat f i sort (join1Q t) = join1Q (mapTerm1-joinTermQ-nat f i sort t)
 joinTermQ-nat f i sort (joinFQ t) = joinFQ (mapTermF-joinTermQ-nat f i sort t)
-joinTermQ-nat f i sort (joinFQ-varF t j) =
+joinTermQ-nat f i sort (joinFQ-varF' t j) =
   idfun
     (Square
-      (λ j → (joinTermQ sort ∘ mapTermQ (mapTermQ f) sort) (joinFQ-varF t j))
-      (λ j → (mapTermQ f sort ∘ joinTermQ sort) (joinFQ-varF t j))
-      (λ i → joinFQ (mapTermF-joinTermQ-nat f i sort (varF t)))
+      (λ j → (joinTermQ sort ∘ mapTermQ (mapTermQ f) sort) (joinFQ-varF' t j))
+      (λ j → (mapTermQ f sort ∘ joinTermQ sort) (joinFQ-varF' t j))
+      (λ i → joinFQ (mapTermF-joinTermQ-nat f i sort (varF' t)))
       (λ i → joinTermQ-nat f i sort t)
     )
     (toPathP (isSetTermQ _ _ _ _)) i j
-joinTermQ-nat f i sort (joinFQ-join1F t@(term1 o args) j) =
+joinTermQ-nat f i sort (joinFQ-join1F' t@(term1 o args) j) =
   idfun
     (Square
-      (λ j → (joinTermQ sort ∘ mapTermQ (mapTermQ f) sort) (joinFQ-join1F (term1 o args) j))
-      (λ j → (mapTermQ f sort ∘ joinTermQ sort) (joinFQ-join1F (term1 o args) j))
-      (λ i → joinFQ (mapTermF-joinTermQ-nat f i sort (join1F (term1 o args))))
+      (λ j → (joinTermQ sort ∘ mapTermQ (mapTermQ f) sort) (joinFQ-join1F' (term1 o args) j))
+      (λ j → (mapTermQ f sort ∘ joinTermQ sort) (joinFQ-join1F' (term1 o args) j))
+      (λ i → joinFQ (mapTermF-joinTermQ-nat f i sort (join1F' (term1 o args))))
       (λ i → join1Q (mapTerm1-joinTermQ-nat f i sort (mapTerm1 (λ sort₁ → joinFQ) sort (term1 o args))))
     )
     (toPathP (isSetTermQ _ _ _ _)) i j
@@ -309,24 +309,24 @@ mapTermF-joinTermQ-lUnit : ∀ {X : MType} →
   mapTermF joinTermQ ∘M mapTermF (mapTermQ pureTermQ) ≡ idfunM (TermF (TermQ X))
 mapTerm1-joinTermQ-lUnit : ∀ {X : MType} →
   mapTerm1 joinTermQ ∘M mapTerm1 (mapTermQ pureTermQ) ≡ idfunM (Term1 (TermQ X))
-joinTermQ-lUnit i sort (varQ x) = varQ x
+joinTermQ-lUnit i sort (varQ' x) = varQ' x
 joinTermQ-lUnit i sort (join1Q t) = join1Q (mapTerm1-joinTermQ-lUnit i sort t)
 joinTermQ-lUnit i sort (joinFQ t) = joinFQ (mapTermF-joinTermQ-lUnit i sort t)
-joinTermQ-lUnit i sort (joinFQ-varF t j) =
+joinTermQ-lUnit i sort (joinFQ-varF' t j) =
   idfun
     (Square
-      (λ j → (joinTermQ sort ∘ mapTermQ pureTermQ sort) (joinFQ-varF t j))
-      (λ j → joinFQ-varF t j)
-      (λ i → joinFQ (mapTermF-joinTermQ-lUnit i sort (varF t)))
+      (λ j → (joinTermQ sort ∘ mapTermQ pureTermQ sort) (joinFQ-varF' t j))
+      (λ j → joinFQ-varF' t j)
+      (λ i → joinFQ (mapTermF-joinTermQ-lUnit i sort (varF' t)))
       (λ i → joinTermQ-lUnit i sort t)
     )
     (toPathP (isSetTermQ _ _ _ _)) i j
-joinTermQ-lUnit i sort (joinFQ-join1F t j) =
+joinTermQ-lUnit i sort (joinFQ-join1F' t j) =
   idfun
     (Square
-      (λ j → (joinTermQ sort ∘ mapTermQ pureTermQ sort) (joinFQ-join1F t j))
-      (λ j → joinFQ-join1F t j)
-      (λ i → joinFQ (mapTermF-joinTermQ-lUnit i sort (join1F t)))
+      (λ j → (joinTermQ sort ∘ mapTermQ pureTermQ sort) (joinFQ-join1F' t j))
+      (λ j → joinFQ-join1F' t j)
+      (λ i → joinFQ (mapTermF-joinTermQ-lUnit i sort (join1F' t)))
       (λ i → join1Q (mapTerm1-joinTermQ-lUnit i sort (mapTerm1 (λ sort₁ → joinFQ) sort t)))
     )
     (toPathP (isSetTermQ _ _ _ _)) i j
@@ -368,24 +368,24 @@ mapTermF-joinTermQ-assoc : ∀ {X : MType} →
   mapTermF (joinTermQ {X = X}) ∘M mapTermF (mapTermQ joinTermQ) ≡ mapTermF joinTermQ ∘M mapTermF joinTermQ
 mapTerm1-joinTermQ-assoc : ∀ {X : MType} →
   mapTerm1 (joinTermQ {X = X}) ∘M mapTerm1 (mapTermQ joinTermQ) ≡ mapTerm1 joinTermQ ∘M mapTerm1 joinTermQ
-joinTermQ-assoc i sort (varQ t) = joinTermQ sort t
+joinTermQ-assoc i sort (varQ' t) = joinTermQ sort t
 joinTermQ-assoc i sort (join1Q t) = join1Q (mapTerm1-joinTermQ-assoc i sort t)
 joinTermQ-assoc i sort (joinFQ t) = joinFQ (mapTermF-joinTermQ-assoc i sort t)
-joinTermQ-assoc i sort (joinFQ-varF t j) =
+joinTermQ-assoc i sort (joinFQ-varF' t j) =
   idfun
     (Square
-      (λ j → (joinTermQ sort ∘ mapTermQ joinTermQ sort) (joinFQ-varF t j))
-      (λ j → (joinTermQ sort ∘ joinTermQ sort) (joinFQ-varF t j))
-      (λ i → joinFQ (mapTermF-joinTermQ-assoc i sort (varF t)))
+      (λ j → (joinTermQ sort ∘ mapTermQ joinTermQ sort) (joinFQ-varF' t j))
+      (λ j → (joinTermQ sort ∘ joinTermQ sort) (joinFQ-varF' t j))
+      (λ i → joinFQ (mapTermF-joinTermQ-assoc i sort (varF' t)))
       (λ i → joinTermQ-assoc i sort t)
     )
     (toPathP (isSetTermQ _ _ _ _)) i j
-joinTermQ-assoc i sort (joinFQ-join1F t j) =
+joinTermQ-assoc i sort (joinFQ-join1F' t j) =
   idfun
     (Square
-      (λ j → (joinTermQ sort ∘ mapTermQ joinTermQ sort) (joinFQ-join1F t j))
-      (λ j → (joinTermQ sort ∘ joinTermQ sort) (joinFQ-join1F t j))
-      (λ i → joinFQ (mapTermF-joinTermQ-assoc i sort (join1F t)))
+      (λ j → (joinTermQ sort ∘ mapTermQ joinTermQ sort) (joinFQ-join1F' t j))
+      (λ j → (joinTermQ sort ∘ joinTermQ sort) (joinFQ-join1F' t j))
+      (λ i → joinFQ (mapTermF-joinTermQ-assoc i sort (join1F' t)))
       (λ i → join1Q (mapTerm1-joinTermQ-assoc i sort (mapTerm1 (λ sort₁ → joinFQ) sort t)))
     )
     (toPathP (isSetTermQ _ _ _ _)) i j
@@ -437,13 +437,13 @@ monadTermQ = ftrTermQ , ismonadTermQ
 
 {-# TERMINATING #-}
 termF→Q : ∀ {X : MType} → (TermF X →M TermQ X)
-termF→Q sort (varF x) = varQ x
-termF→Q sort (join1F t) = join1Q (mapTerm1 termF→Q sort t)
+termF→Q sort (varF' x) = varQ' x
+termF→Q sort (join1F' t) = join1Q (mapTerm1 termF→Q sort t)
 
 {-# TERMINATING #-}
 termF→Q-nat : ∀ {X Y : MType} → (f : X →M Y) → termF→Q ∘M mapTermF f ≡ mapTermQ f ∘M termF→Q
-termF→Q-nat f i sort (varF x) = varQ (f sort x)
-termF→Q-nat f i sort (join1F t) = (congS (join1Q-M ∘M_) (
+termF→Q-nat f i sort (varF' x) = varQ' (f sort x)
+termF→Q-nat f i sort (join1F' t) = (congS (join1Q-M ∘M_) (
   mapTerm1 termF→Q ∘M mapTerm1 (mapTermF f)
     ≡⟨ (sym (mapTerm1-∘ _ _)) ⟩
   mapTerm1 (termF→Q ∘M mapTermF f)
@@ -455,8 +455,8 @@ termF→Q-nat f i sort (join1F t) = (congS (join1Q-M ∘M_) (
 
 {-# TERMINATING #-}
 termF→Q-joinTermF : ∀ {X : MType} → termF→Q {X} ∘M joinTermF ≡ joinTermQ ∘M termF→Q ∘M mapTermF termF→Q
-termF→Q-joinTermF i sort (varF t) = termF→Q sort t
-termF→Q-joinTermF i sort (join1F t) = (congS (join1Q-M ∘M_) (
+termF→Q-joinTermF i sort (varF' t) = termF→Q sort t
+termF→Q-joinTermF i sort (join1F' t) = (congS (join1Q-M ∘M_) (
   mapTerm1 termF→Q ∘M mapTerm1 joinTermF
     ≡⟨ sym (mapTerm1-∘ _ _) ⟩
   mapTerm1 (termF→Q ∘M joinTermF)
@@ -482,10 +482,10 @@ snd monadTermF→Q = ismonadTermF→Q
 
 {-# TERMINATING #-}
 joinFQ-mapTermF-pureTermQ : ∀ {X : MType} → joinFQ-M {X} ∘M mapTermF pureTermQ ≡ termF→Q
-joinFQ-mapTermF-pureTermQ i sort (varF x) = joinFQ-varF (varQ x) i
-joinFQ-mapTermF-pureTermQ i sort (join1F t) = ((
-    joinFQ-M ∘M join1F-M ∘M mapTerm1 (mapTermF pureTermQ)
-      ≡⟨ congS (_∘M mapTerm1 (mapTermF pureTermQ)) joinFQ-join1F-M ⟩
+joinFQ-mapTermF-pureTermQ i sort (varF' x) = joinFQ-varF' (varQ' x) i
+joinFQ-mapTermF-pureTermQ i sort (join1F' t) = ((
+    joinFQ-M ∘M join1F ∘M mapTerm1 (mapTermF pureTermQ)
+      ≡⟨ congS (_∘M mapTerm1 (mapTermF pureTermQ)) joinFQ-join1F ⟩
     join1Q-M ∘M mapTerm1 (joinFQ-M) ∘M mapTerm1 (mapTermF pureTermQ)
       ≡⟨ congS (join1Q-M ∘M_) (sym (mapTerm1-∘ _ _)) ⟩
     join1Q-M ∘M mapTerm1 (joinFQ-M ∘M mapTermF pureTermQ)
